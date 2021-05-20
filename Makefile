@@ -31,6 +31,8 @@ jumpStart:
 	sudo apt-get install wget gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
 
+
+
 # Installs packages that some supplied tutorial packages depend on (not crucial).
 .PHONEY: installRuntimeDependencies
 installPackages:
@@ -46,9 +48,10 @@ fetchFiles: _build/latest_poplog_base.tar.bz2 _build/docs.tar.bz2 _build/package
             _build/poplogout.sh _build/poplogout.csh
 	mkdir -p _build
 	(cd _build; tar jxf latest_poplog_base.tar.bz2)
-	(cd _build/poplog_base; tar jxf ../../docs.tar.bz2)
-	(cd _build/poplog_base; tar jxf ../../packages-V16.tar.bz2)
-	cp poplogout.*sh poplog_base/
+	sed -i 's/$$POP__cc -v -Wl,-export-dynamic/$$POP__cc -v -no-pie -Wl,-export-dynamic/' _build/poplog_base/pop/src/syscomp/x86_64/asmout.p
+	(cd _build/poplog_base; tar jxf ../docs.tar.bz2)
+	(cd _build/poplog_base; tar jxf ../packages-V16.tar.bz2)
+	(cd _build; cp poplogout.*sh poplog_base/)
 
 _build/poplogout.%:
 	mkdir -p _build
