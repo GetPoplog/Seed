@@ -21,6 +21,7 @@ help:
 	#   jumpstart - installs the dependencies for a full Poplog SDK experience.
 	#   clean - removes all the build artefacts
 
+
 .PHONEY: clean
 clean:
 	rm -rf ./_build
@@ -31,7 +32,26 @@ jumpStart:
 	sudo apt-get install wget gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
 
+# This target ensures that we have a working popc, poplink, poplibr. It is the equivalent of
+# Waldek's build_pop0 script.
+_build/poplog_base/pop/pop/popc \
+_build/poplog_base/pop/pop/poplibr \
+_build/poplog_base/pop/pop/poplink: _build/poplog_base/pop/pop/corepop
+	$(MAKE) buildPopcAndFriends
 
+.PHONEY: buildPopcAndFriends
+buildPopcAndFriends:
+	echo '--------------------------------------------------------------------------------' >> _build/log.txt
+	echo 'Running build_pop0 ...' >> _build.log
+	(cd _build/poplog_base; /bin/sh build_pop0 ) 2>&1 >> _build/log.txt
+
+
+# This target ensures that we have an unpacked base system.
+_build/poplog_base/pop/pop/corepop:
+	$(MAKE) fetchPoplogBaseFiles
+	# TODO: ensure corepop is working
+	# Temporary hack
+	cp /usr/local/poplog/current_usepop/pop/pop/corepop _build/poplog_base/pop/pop/
 
 # Installs packages that some supplied tutorial packages depend on (not crucial).
 .PHONEY: installRuntimeDependencies
@@ -39,19 +59,24 @@ installPackages:
 	sudo apt-get install espeak 
 
 # Extras for a more complete experience (entirely optional).
-.PHONEY: installExtras
-installExtras:
+.PHONEY: installCompleteUX
+installCompleteUX:
 	sudo apt-get install tcsh xterm
 
-.PHONEY: fetchFiles
-fetchFiles: _build/latest_poplog_base.tar.bz2 _build/docs.tar.bz2 _build/packages-V16.tar.bz2 \
-            _build/poplogout.sh _build/poplogout.csh
+.PHONEY: fetchPoplogBaseFiles
+fetchPoplogBaseFiles: _build/latest_poplog_base.tar.bz2
 	mkdir -p _build
 	(cd _build; tar jxf latest_poplog_base.tar.bz2)
 	sed -i 's/$$POP__cc -v -Wl,-export-dynamic/$$POP__cc -v -no-pie -Wl,-export-dynamic/' _build/poplog_base/pop/src/syscomp/x86_64/asmout.p
-	(cd _build/poplog_base; tar jxf ../docs.tar.bz2)
-	(cd _build/poplog_base; tar jxf ../packages-V16.tar.bz2)
-	(cd _build; cp poplogout.*sh poplog_base/)
+
+.PHONEY: fetchExtraFiles
+fetchExtraFiles: _build/docs.tar.bz2 _build/packages-V16.tar.bz2 \
+            _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
+	(cd _build/poplog_base/pop; tar jxf ../../docs.tar.bz2)
+	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
+
+_build/poplog_base/pop/com/poplogout.%: _build/poplogout.%
+	(cd _build; cp poplogout.*sh poplog_base/pop/com/)
 
 _build/poplogout.%:
 	mkdir -p _build
