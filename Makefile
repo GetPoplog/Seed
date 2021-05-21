@@ -21,7 +21,6 @@ help:
 	#   jumpstart - installs the dependencies for a full Poplog SDK experience.
 	#   clean - removes all the build artefacts
 
-
 .PHONEY: clean
 clean:
 	rm -rf ./_build
@@ -29,29 +28,41 @@ clean:
 # Installs the dependencies needed during the build phase.
 .PHONEY: jumpStart
 jumpStart:
-	sudo apt-get install wget gcc build-essential libc6 libncurses5 libncurses5-dev \
-	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
+	sudo apt-get update \
+        && sudo apt-get install -y wget gcc build-essential libc6 libncurses5 libncurses5-dev \
+           libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
+
+# This target ensures that we rebuild popc, poplink, poplibr on top of the newcorepop.
+# It is effectively Waldek's build_pop2 script.
+_build/basepop11: _build/newcorepop
+	echo '--------------------------------------------------------------------------------' >> _build/log.txt
+	echo 'Running build_pop2 ...' >> _build.log
+	(cd _build/poplog_base; /bin/sh build_pop2 ) 2>&1 >> _build/log.txt
+	ln _build/poplog_base/pop/pop/basepop11 _build/basepop11
+	
 
 # This target ensures that we have a working popc, poplink, poplibr. It is the equivalent of
 # Waldek's build_pop0 script.
-_build/poplog_base/pop/pop/popc \
-_build/poplog_base/pop/pop/poplibr \
-_build/poplog_base/pop/pop/poplink: _build/poplog_base/pop/pop/corepop
-	$(MAKE) buildPopcAndFriends
-
-.PHONEY: buildPopcAndFriends
-buildPopcAndFriends:
+_build/newcorepop: _build/corepop
 	echo '--------------------------------------------------------------------------------' >> _build/log.txt
 	echo 'Running build_pop0 ...' >> _build.log
 	(cd _build/poplog_base; /bin/sh build_pop0 ) 2>&1 >> _build/log.txt
+	cp  _build/poplog_base/pop/pop/newpop11 _build/newcorepop
+
+_build/poplog_base/pop/pop/newpop.psv: _build/corepop
+	export usepop=$(abspath ./_build/poplog_base) \
+        && . ./_build/poplog_base/pop/com/poplog.sh \
+        && (cd $$popsys; ./corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 
-# This target ensures that we have an unpacked base system.
-_build/poplog_base/pop/pop/corepop:
+# This target ensures that we have an unpacked base system with a valid corepop file.
+_build/corepop:
 	$(MAKE) fetchPoplogBaseFiles
-	# TODO: ensure corepop is working
-	# Temporary hack
+	# TODO: Fix up c_core.c - Temporary hack
+	cp /usr/local/poplog/current_usepop/pop/extern/lib/c_core.c _build/poplog_base/pop/extern/lib/
+	# TODO: ensure corepop is working - Temporary hack
 	cp /usr/local/poplog/current_usepop/pop/pop/corepop _build/poplog_base/pop/pop/
+	ln _build/poplog_base/pop/pop/corepop _build/corepop
 
 # Installs packages that some supplied tutorial packages depend on (not crucial).
 .PHONEY: installRuntimeDependencies
@@ -67,6 +78,7 @@ installCompleteUX:
 fetchPoplogBaseFiles: _build/latest_poplog_base.tar.bz2
 	mkdir -p _build
 	(cd _build; tar jxf latest_poplog_base.tar.bz2)
+	# TODO: Figure out how to include NO-PIE.
 	sed -i 's/$$POP__cc -v -Wl,-export-dynamic/$$POP__cc -v -no-pie -Wl,-export-dynamic/' _build/poplog_base/pop/src/syscomp/x86_64/asmout.p
 
 .PHONEY: fetchExtraFiles
