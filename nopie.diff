@@ -1,0 +1,12 @@
+diff -ru trunk/pop/src/syscomp/x86_64/asmout.p /home/s/prow/p-wyk4/pp6/pop/src/syscomp/x86_64/asmout.p
+--- trunk/pop/src/syscomp/x86_64/asmout.p	2019-03-10 17:40:19.855051382 +0100
++++ trunk/pop/src/syscomp/x86_64/asmout.p	2019-06-26 13:02:17.469420016 +0200
+@@ -382,7 +381,7 @@
+ 
+     ;;; Use C compiler to link
+ constant
+-    cc_link_command_header = '$POP__cc -v -Wl,-export-dynamic -Wl,-no-as-needed -o $IM \\\n'
++    cc_link_command_header = '$POP__cc -v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed -o $IM \\\n'
+ ;
+ 
+ #_ELSE

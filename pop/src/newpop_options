@@ -1,0 +1,11 @@
+link
+install
+startup
+images
+	prolog
+	clisp
+	pml
+
+commands
+	ved
+        xved
