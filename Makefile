@@ -1,10 +1,32 @@
 # This is a makefile that can be used to acquire Poplog, build and install it locally.
 # It should be added to the folder in which Poplog will be maintained e.g. /usr/local/poplog.
 # Within that folder, there may be multiple versions of Poplog living side-by-side. 
+# 
 # e.g   /usr/local/poplog
-#           Makefie             <- this file
+#           Makefile            <- this file
 #           current_usepop      <- symlink to the currently active Poplog version e.g. versions/V16
 #           versions/V16        <- an example  Poplog system
+#
+# The build process involves quite a lot of compilation and linking in-place, unfortunately.
+# So this Makefile is driven by the creation of 'proxy files' in the _build folder. Each proxy
+# files stands for the completion of a major phase of the build process.
+#
+# Proxy files:
+#
+#     _build/corepop
+#         This file is a corepop executable that works on this system. It represents the
+#         discovery of a viable executable. This should be sufficient to reconstruct working
+#         system tools.
+#
+#     _build/newcorepop
+#         This file is a new corepop executable that has been rebuilt on this system and
+#         represents a reliable baseline for the rest of the system. It implies that the 
+#         system tools (popc, poplink, poplibr) are working and that the Poplog ecosystem 
+#         can be reconstructed.
+#
+#     _build/basepop11
+#         This file is a viable full Poplog executable. It represents a complete rebuil
+#         if the Poplog system including all system images (prolog.psv, clisp.psv etc).
 #
 
 POPLOG_HOME:=$(shell pwd)
@@ -29,14 +51,15 @@ clean:
 .PHONEY: jumpStart
 jumpStart:
 	sudo apt-get update \
-        && sudo apt-get install -y wget gcc build-essential libc6 libncurses5 libncurses5-dev \
+        && sudo apt-get install -y make wget git \
+           gcc build-essential libc6 libncurses5 libncurses5-dev \
            libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the newcorepop.
 # It is effectively Waldek's build_pop2 script.
 _build/basepop11: _build/newcorepop
 	echo '--------------------------------------------------------------------------------' >> _build/log.txt
-	echo 'Running build_pop2 ...' >> _build.log
+	echo 'Running build_pop2 ...' >> _build/log.txt
 	(cd _build/poplog_base; /bin/sh build_pop2 ) 2>&1 >> _build/log.txt
 	ln _build/poplog_base/pop/pop/basepop11 _build/basepop11
 	
@@ -45,13 +68,13 @@ _build/basepop11: _build/newcorepop
 # Waldek's build_pop0 script.
 _build/newcorepop: _build/corepop
 	echo '--------------------------------------------------------------------------------' >> _build/log.txt
-	echo 'Running build_pop0 ...' >> _build.log
+	echo 'Running build_pop0 ...' >> _build/log.txt
 	(cd _build/poplog_base; /bin/sh build_pop0 ) 2>&1 >> _build/log.txt
 	cp  _build/poplog_base/pop/pop/newpop11 _build/newcorepop
 
 _build/poplog_base/pop/pop/newpop.psv: _build/corepop
 	export usepop=$(abspath ./_build/poplog_base) \
-        && . ./_build/poplog_base/pop/com/poplog.sh \
+        && . ./_build/poplog_base/pop/com/popenv.sh \
         && (cd $$popsys; ./corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 
@@ -106,4 +129,11 @@ _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	wget -P _build http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2
 
+
+.PHONEY: makeindexes
+makeindexes:
+	mkdir -p _build
+	export usepop=$(abspath ./_build/poplog_base) \
+        && . ./_build/poplog_base/pop/com/popenv.sh \
+	&& $$usepop/pop/com/makeindexes > _build/makeindexes.log
 
