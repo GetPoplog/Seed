@@ -30,6 +30,9 @@
 #
 
 POPLOG_HOME:=$(shell pwd)
+BASE_REPO:=/home/steve/Base
+DOCS_REPO:=/home/steve/Docs
+COREPOPS_REPO:=/home/steve/Corepops
 
 .PHONEY: help
 help:
@@ -98,7 +101,21 @@ installCompleteUX:
 	sudo apt-get install tcsh xterm
 
 .PHONEY: fetchPoplogBaseFiles
-fetchPoplogBaseFiles: _build/latest_poplog_base.tar.bz2
+fetchPoplogBaseFiles: _build/popenv.sh
+	true
+
+_build/popenv.sh:
+	mkdir -p _build/Base
+	git archive --remote=$(BASE_REPO) master | ( cd _build/Base; tar xf - )
+	$(MAKE) -C _build/Base
+	mkdir -p _build/poplog_base
+	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	# Create the proxy file to signal that we are done.
+	cp _build/poplog_base/pop/com/popenv.sh _build/
+
+
+.PHONEY: fetchPoplogBaseFiles1
+fetchPoplogBaseFiles1: _build/latest_poplog_base.tar.bz2
 	mkdir -p _build
 	(cd _build; tar jxf latest_poplog_base.tar.bz2)
 	# TODO: Figure out how to include NO-PIE.
