@@ -93,7 +93,8 @@ _build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh m
 	touch _build/Stage1.proxy
 
 makeStage2.sh  makeSystemTools.sh  mk_cross  relinkCorepop.sh:
-	git archive --remote=$(SEED_REPO) master $@ | tar xf -
+	# Fetch all at the same time for efficiency.
+	git archive --remote=$(SEED_REPO) master makeStage2.sh  makeSystemTools.sh  mk_cross  relinkCorepop.sh | tar xf -
 
 _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 	touch _build/Newpop.proxy
