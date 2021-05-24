@@ -61,28 +61,50 @@ help:
 	# write-access to this folder.
 	#
 	# Valid targets are:
-	#   jumpstart - installs the dependencies for a full Poplog SDK experience.
-	#   clean - removes all the build artefacts
+	#   jumpstart - installs the packages this installation depends on.
+	#   clean - removes all the build artefacts.
 
 .PHONEY: clean
 clean:
 	rm -rf ./_build
 
-# Installs the dependencies needed during the build phase.
+# Installs the dependencies
+#   Needed to fetch resources: make wget git
+#   Needed for building Poplog:  
+#       build-essential libc6 libncurses5 libncurses5-dev 
+#       libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
+#   Needed at run-time by some tutorials
+#       espeak
+#   Optional - not included as these are not part of the essential package but
+#   are properly supported by Poplog.
+#       tcsh xterm
+#
 _build/JumpStart.proxy:
 	sudo apt-get update \
         && sudo apt-get install -y make wget git \
            gcc build-essential libc6 libncurses5 libncurses5-dev \
-           libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
-	touch JumpStart.proxy
+           libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
+	   espeak
+	touch $@
+
+_build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
+	touch $@
+
+_build/Packages.proxy: _build/packages-V16.tar.bz2
+	mkdir -p _build
+	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
+	touch $@
+
+_build/Docs.proxy: _build/Base.proxy
+	git archive --remote=$(DOCS_REPO) master | ( cd _build/poplog_base; tar xf - )
+	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
 # It is effectively Waldek's build_pop2 script.
-_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy
+_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy makeStage2.sh makeSystemTools.sh mk_cross
 	sh makeSystemTools.sh
 	sh makeStage2.sh
-	#(cd _build/poplog_base; /bin/sh build_pop2 ) 2>&1 >> _build/log.txt
-	touch _build/Stage2.proxy
+	touch $@
 	
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop 
 # in newpop11. It is the equivalent of Waldek's build_pop0 script.
@@ -90,14 +112,17 @@ _build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh m
 	sh makeSystemTools.sh
 	sh relinkCorepop.sh
 	cp _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
-	touch _build/Stage1.proxy
+	touch $@
 
-makeStage2.sh  makeSystemTools.sh  mk_cross  relinkCorepop.sh:
-	# Fetch all at the same time for efficiency.
-	git archive --remote=$(SEED_REPO) master makeStage2.sh  makeSystemTools.sh  mk_cross  relinkCorepop.sh | tar xf -
+# If this Makefile is checked out as part of a git-repo these files will aleady exist. (In
+# fact this script assumes they all exist or are all missing.) But if this Makefile is 
+# distributed standalone then it needs to fetch from the repo as independent files.
+makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh:
+	# Fetch all at the same time for efficiency. Do not use $@ or you can get 4 fetches.
+	git archive --remote=$(SEED_REPO) master makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh | tar xf -
 
 _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
-	touch _build/Newpop.proxy
+	touch $@
 
 # N.B. This target needs the freshly built corepop from relinkCorepop.sh, hence the dependency 
 # on Stage1.
@@ -113,21 +138,7 @@ _build/Corepops.proxy: _build/Base.proxy
 	cp _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
 	$(MAKE) -C _build/Corepops corepop
 	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
-	touch _build/Corepops.proxy
-
-# Installs packages that some supplied tutorial packages depend on (not crucial).
-.PHONEY: installRuntimeDependencies
-installPackages:
-	sudo apt-get install espeak 
-
-# Extras for a more complete experience (entirely optional).
-.PHONEY: installCompleteUX
-installCompleteUX:
-	sudo apt-get install tcsh xterm
-
-.PHONEY: fetchPoplogBaseFiles
-fetchPoplogBaseFiles: _build/Base.proxy
-	true
+	touch $@
 
 # TODO: add dependency ... _build/Base.proxy: _build/JumpStart.proxy
 _build/Base.proxy:
@@ -136,15 +147,7 @@ _build/Base.proxy:
 	$(MAKE) -C _build/Base build
 	mkdir -p _build/poplog_base
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
-	# Create the proxy file to signal that we are done.
-	touch _build/Base.proxy
-
-
-.PHONEY: fetchExtraFiles
-fetchExtraFiles: _build/docs.tar.bz2 _build/packages-V16.tar.bz2 \
-            _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
-	(cd _build/poplog_base/pop; tar jxf ../../docs.tar.bz2)
-	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
+	touch $@ # Create the proxy file to signal that we are done.
 
 _build/poplog_base/pop/com/poplogout.%: _build/poplogout.%
 	(cd _build; cp poplogout.*sh poplog_base/pop/com/)
@@ -153,23 +156,15 @@ _build/poplogout.%:
 	mkdir -p _build
 	wget -P _build https://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/$(notdir $@)
 
-#_build/latest_poplog_base.tar.bz2:
-#	mkdir -p _build
-#	wget -P _build http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/latest_poplog_base.tar.bz2
-
-_build/docs.tar.bz2: 
-	mkdir -p _build
-	wget -P _build http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/docs.tar.bz2
-
 _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	wget -P _build http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2
 
-
-.PHONEY: makeindexes
-makeindexes:
-	mkdir -p _build
+_build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
         && . ./_build/poplog_base/pop/com/popenv.sh \
 	&& $$usepop/pop/com/makeindexes > _build/makeindexes.log
+	touch $@
 
+_build/Done.proxy: _build/MakeIndexes.proxy _build/ExtraScripts.proxy
+	true
