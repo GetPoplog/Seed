@@ -71,7 +71,11 @@ BASE_REPO:=/home/steve/Base
 DOCS_REPO:=/home/steve/Docs
 COREPOPS_REPO:=/home/steve/Corepops
 
-.PHONEY: help
+.PHONY: all
+all: build
+	# Target "all" completed
+
+.PHONY: help
 help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
 	# It should be in the folder in which Poplog will be maintained e.g. /usr/local/poplog.
@@ -80,12 +84,29 @@ help:
 	# write-access to this folder.
 	#
 	# Valid targets are:
+	#   all/build - creates a complete build-tree in _build/poplog_base
+	#   install - installs Poplog into $(POPLOG_HOME) folder as V16
+	#   uninstall - removes Poplog 
 	#   jumpstart - installs the packages this installation depends on.
 	#   clean - removes all the build artefacts.
+	#   help - this explanation, for more info read the Makefile comments.
 
-.PHONEY: clean
+.PHONY: build
+build: _build/Done.proxy
+	# Target "build" completed
+
+.PHONY: install
+install:
+	echo 'To be continued'
+
+.PHONY: uninstall
+uninstall:
+	echo 'To be continued'
+
+.PHONY: clean
 clean:
 	rm -rf ./_build
+	# Target "clean" completed
 
 # Installs the dependencies
 #   Needed to fetch resources: make wget git
@@ -189,4 +210,4 @@ _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.
 	touch $@
 
 _build/Done.proxy: _build/MakeIndexes.proxy
-	true
+	touch $@
