@@ -47,6 +47,7 @@
 #
 
 POPLOG_HOME:=$(shell pwd)
+SEED_REPO:=/home/steve/Seed
 BASE_REPO:=/home/steve/Base
 DOCS_REPO:=/home/steve/Docs
 COREPOPS_REPO:=/home/steve/Corepops
@@ -78,8 +79,6 @@ _build/JumpStart.proxy:
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
 # It is effectively Waldek's build_pop2 script.
 _build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy
-	# Oddly we do not patch pglink as well. Mistake?
-	#ln -f _build/poplog_base/pop/pop/corepop _build/poplog_base/pop/pop/pglink
 	sh makeSystemTools.sh
 	sh makeStage2.sh
 	#(cd _build/poplog_base; /bin/sh build_pop2 ) 2>&1 >> _build/log.txt
@@ -87,11 +86,14 @@ _build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy
 	
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop 
 # in newpop11. It is the equivalent of Waldek's build_pop0 script.
-_build/Stage1.proxy: _build/Corepops.proxy
+_build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh mk_cross
 	sh makeSystemTools.sh
 	sh relinkCorepop.sh
 	cp _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
 	touch _build/Stage1.proxy
+
+makeStage2.sh  makeSystemTools.sh  mk_cross  relinkCorepop.sh:
+	git archive --remote=$(SEED_REPO) master $@ | tar xf -
 
 _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 	touch _build/Newpop.proxy
@@ -101,7 +103,7 @@ _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
         && . ./_build/poplog_base/pop/com/popenv.sh \
-        && (cd $$popsys; ./corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
+        && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
 _build/Corepops.proxy: _build/Base.proxy
@@ -110,7 +112,6 @@ _build/Corepops.proxy: _build/Base.proxy
 	cp _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
 	$(MAKE) -C _build/Corepops corepop
 	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
-	ln -f _build/poplog_base/pop/pop/corepop _build/poplog_base/pop/pop/pglink
 	touch _build/Corepops.proxy
 
 # Installs packages that some supplied tutorial packages depend on (not crucial).
@@ -127,10 +128,11 @@ installCompleteUX:
 fetchPoplogBaseFiles: _build/Base.proxy
 	true
 
-_build/Base.proxy: _build/JumpStart.proxy
+# TODO: add dependency ... _build/Base.proxy: _build/JumpStart.proxy
+_build/Base.proxy:
 	mkdir -p _build/Base
 	git archive --remote=$(BASE_REPO) master | ( cd _build/Base; tar xf - )
-	$(MAKE) -C _build/Base
+	$(MAKE) -C _build/Base build
 	mkdir -p _build/poplog_base
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
 	# Create the proxy file to signal that we are done.

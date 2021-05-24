@@ -1,4 +1,8 @@
 #!/bin/sh
+set -e
+
+export usepop=`pwd`/_build/poplog_base
+. $usepop/pop/com/popenv.sh
 
 # echo "mklibpop"
 cd $popexternlib
@@ -10,17 +14,17 @@ cd $popcom
 
 cd $usepop/pop/obj
     # saving library files in old
-    mkdir old
-    mv *.* old
+    mkdir -p old
+    mv *.* old || true # *.* might match nothing so '|| true' is required.
 
 # Recompiling base system
 cd $usepop/pop/src
-    popc -c -nosys $POP_arch/*.[ps] *.p
-    poplibr -c ../obj/src.wlb *.w
+    popc -c -nosys $POP_arch/*.[ps] *.p || true
+    poplibr -c ../obj/src.wlb *.w || true
 
 cd $usepop/pop/ved/src/
-    popc -c -nosys -wlib \( ../../src/ \) *.p
-    poplibr -c ../../obj/vedsrc.wlb *.w
+    popc -c -nosys -wlib \( ../../src/ \) *.p || true
+    poplibr -c ../../obj/vedsrc.wlb *.w || true
 
 cd $usepop/pop/x/src/
     popc -c -nosys -wlib \( ../../src/ \) *.p
