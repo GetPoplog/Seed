@@ -44,6 +44,25 @@
 #         It does not include documentation or Aaron Sloman's packages extension.
 #         And by implication it does not include the doc indexes.
 #
+#     _build/Docs.proxy
+#         This represents the addition of the Poplog documentation into the
+#         build-tree.
+#
+#     _build/Packages.proxy
+#         This represents the addition of the additional packages library
+#         curated by Aaron Sloman into the build-tree.
+#
+#     _build/MakeIndexes.proxy
+#         Making indexes should be a very late stage as it will build index
+#         files all over the place. The limitation of building index files statically
+#         is a nuisance and it would be nice to replace this with a more
+#         dynamic system so that user libraries automatically get added into
+#         the search.
+#
+#     _build/Done.proxy
+#         This file represents the completion of the build-tree in the
+#         _build/poplog_base folder. This can be moved to the appropriate 
+#         place.
 #
 
 POPLOG_HOME:=$(shell pwd)
@@ -87,6 +106,9 @@ _build/JumpStart.proxy:
 	   espeak
 	touch $@
 
+# It is not clear that these scripts should be included or not. If they are it makes
+# more sense to include them in the Base repo. TO BE CONFIRMED - until then these
+# will be omitted.
 _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
 	touch $@
 
@@ -160,11 +182,11 @@ _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	wget -P _build http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2
 
-_build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
+_build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
         && . ./_build/poplog_base/pop/com/popenv.sh \
-	&& $$usepop/pop/com/makeindexes > _build/makeindexes.log
+	&& env PATH=$$popsys:$$PATH $$usepop/pop/com/makeindexes > _build/makeindexes.log
 	touch $@
 
-_build/Done.proxy: _build/MakeIndexes.proxy _build/ExtraScripts.proxy
+_build/Done.proxy: _build/MakeIndexes.proxy
 	true

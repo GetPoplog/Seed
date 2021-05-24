@@ -1,8 +1,11 @@
 #!/bin/sh
 set -e
 
-export usepop=`pwd`/_build/poplog_base
+usepop=`pwd`/_build/poplog_base
+export usepop
 . $usepop/pop/com/popenv.sh
+PATH=$popsys:$PATH
+export PATH
 
 # echo "mklibpop"
 cd $popexternlib
