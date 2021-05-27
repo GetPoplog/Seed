@@ -125,6 +125,7 @@ _build/JumpStart.proxy:
            gcc build-essential libc6 libncurses5 libncurses5-dev \
            libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	   espeak
+	mkdir -p _build/
 	touch $@
 
 # It is not clear that these scripts should be included or not. If they are it makes
@@ -206,7 +207,7 @@ _build/packages-V16.tar.bz2:
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
         && . ./_build/poplog_base/pop/com/popenv.sh \
-	&& env PATH=$$popsys:$$PATH $$usepop/pop/com/makeindexes > _build/makeindexes.log
+	&& env PATH="$$popsys:$$PATH" $$usepop/pop/com/makeindexes > _build/makeindexes.log
 	touch $@
 
 _build/Done.proxy: _build/MakeIndexes.proxy

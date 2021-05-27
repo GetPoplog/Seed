@@ -4,10 +4,12 @@ SEED_DIR=`pwd`
 
 # Run the initialisation files to set up additional environment
 # variables.
-export usepop=`pwd`/_build/poplog_base
+usepop=`pwd`/_build/poplog_base
+export usepop
 . $usepop/pop/com/popenv.sh
 
-export POP__as=/usr/bin/as
+POP__as=/usr/bin/as
+export POP__as
 POP_arch=x86_64
 
 # Rebuilding system images
