@@ -1,0 +1,20 @@
+#!/bin/sh
+### --- The University of Birmingham 2005. -----------------------------
+### $usepop/pop/com/mkstartup
+### Previously $usepop/pop/com/mkstartup.bham
+# Author:           Aaron Sloman (15 Jan 2005)
+#			based on $popcom/mkstartup
+# Documentation:
+# Related Files:    See files compiled below
+
+### Is -nonwriteable safe?
+### Removed it. Mon Feb  6 16:38:10 GMT 1995
+### Replaced it 16 Jan 2005
+
+packages=$usepop/pop/packages
+export packages
+
+$popsys/basepop11 %nort %noinit \
+	$popliblib/mkimage.p \
+	-nodebug -nonwriteable -install $usepop/pop/lib/psv/startup.psv \
+		startup

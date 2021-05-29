@@ -1,0 +1,48 @@
+#!/bin/sh
+# --- Copyright University of Sussex 1998. All rights reserved. ----------
+# File:             C.unix/com/get_archive_args
+# Purpose:          Get arguments for building archives/shared libraries
+# Author:           John Gibson, Feb 27 1997 (see revisions)
+# Documentation:
+# Related Files:
+
+# Usage: get_archive_args [sh|csh] [ -I<directory> ... ]
+
+Shell=$1
+shift
+
+# Which C compiler to use
+CC=${POP__cc:-cc}
+
+# Where to find include files
+IDIRS=-I.
+while [ $# -ne 0 ]; do
+	case $1 in
+		-I*) IDIRS="$IDIRS $1";;
+	esac
+	shift
+done
+
+# Compiler flags
+CFLAGS=-O
+CFLAGS="-fpic $CFLAGS"
+
+# Archive commands
+LDLIBS=
+LIBEXTN=.so
+AR='gcc -g -shared -o $LIBNAME'
+RANLIB=
+
+# Output commands to set variables in caller shell -- this must be
+# eval'ed by the caller. AR and RANLIB must then be eval'ed after
+# setting LIBNAME.
+
+	echo "CC='$CC'; IDIRS='$IDIRS'; CFLAGS='$CFLAGS'; LIBEXTN='$LIBEXTN'; AR='$AR'; LDLIBS='$LDLIBS'; RANLIB='$RANLIB'"
+
+
+
+# --- Revision History ---------------------------------------------------
+# --- Robert Duncan, Nov  3 1998 Added definition of CC
+# --- Robert Duncan, Aug 10 1998  Added cases for DG/UX (SVR4)
+# --- Julian Clinton, Aug  7 1998  Added '-Ae' to HP/UX CFLAGS
+# --- John Gibson, May 12 1998  Added AIX code

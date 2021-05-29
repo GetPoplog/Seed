@@ -1,0 +1,19 @@
+# Contents of x86_64/
+
+This file provides a partial description of the contents of this folder.
+
+* asmout.p - symbolic link to one of asmout.p.after_nopie or asmout.p.before_nopie, excluded
+  from the git archive, so that changes are not picked up. This must match the pattern *.p
+  so that it is included in the compilation of SysPop11 files.
+
+* asmout.p.after_nopie - a version of asmout.p prior to GCC having the -no-pie option. It may
+  not have the suffix *.p as we do not want the *.p globbing to include this file.
+
+* asmout.p.before_nopie - the normal version of asmout.p that compiles using -no-pie. 
+  We want this option in order to avoid creating code that is tagged as position independent.
+  This inhibits Address Space Randomisation, which Poplog currently is incompatible with.
+  
+* genproc.p
+
+* sysdefs.p
+
