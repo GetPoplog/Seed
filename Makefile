@@ -1,6 +1,6 @@
 # This is a makefile that can be used to acquire Poplog, build and install it locally.
-# It should be added to the folder in which Poplog will be maintained e.g. /usr/local/poplog.
-# Within that folder, there may be multiple versions of Poplog living side-by-side. 
+# It will be installed into $(POPLOG_HOME_DIR), which is by default /usr/local/poplog.
+# This folder supports multiple versions via the symlink current_usepop.
 # 
 # e.g   /usr/local/poplog
 #           Makefile            <- this file
@@ -65,51 +65,126 @@
 #         place.
 #
 
-POPLOG_HOME:=$(shell pwd)
+# This is the folder in which the new Poplog build will be installed. To install Poplog 
+# somewhere different, such as /opt/poplog either edit this line or try:
+#     make install POPLOG_HOME_DIR=/opt/poplog
+POPLOG_HOME_DIR:=/usr/local/poplog
+VERSION_DIR:=V16
+POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
+POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/current_usepop
+
+# This is the folder where the link to the poplog-shell executable will be installed.
+# TODO: The poplog-shell has not been written yet, so this is a placeholder.
+EXEC_DIR:=/usr/local/bin
+
 SEED_REPO:=/home/steve/Seed
 BASE_REPO:=/home/steve/Base
 DOCS_REPO:=/home/steve/Docs
 COREPOPS_REPO:=/home/steve/Corepops
 
+# We need some support scripts. These might be checked out of git or downloaded
+# by git-archive. If the latter then we must clean them up on "make clean", which
+# is signalled by the file _build/CleanSupportScripts.flag.
+SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh
+CLEAN_SUPPORT_SCRIPTS_FLAG=_build/CleanSupportScripts.flag
+
 .PHONY: all
-all: build
+all: jumpstart
+	$(MAKE) build
 	# Target "all" completed
 
 .PHONY: help
 help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
-	# It should be in the folder in which Poplog will be maintained e.g. /usr/local/poplog.
-	# This folder will become $POPLOG_HOME. Within it there may be multiple versions of 
-	# Poplog living side-by-side. The current version will be symlinked. You must have 
-	# write-access to this folder.
+	# Poplog will be installed in $(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
+	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), checked out 
+	# from the git repo and pulling updates to the script with git pull :). 
+	# TODO: Insert git repo URL here.
+	#
+	# Within $(POPLOG_HOME_DIR) there may be multiple versions of Poplog living 
+	# side-by-side. The current version will be symlinked via a link called
+	# current_usepop. You must have write-access to this folder during the 
+	# "make install" step. (And during all the steps if you keep the Makefile
+	# in the home-dir.)
 	#
 	# Valid targets are:
-	#   all/build - creates a complete build-tree in _build/poplog_base
+	#   all - installs dependencies and produces a build-tree
+	#   build - creates a complete build-tree in _build/poplog_base
 	#   install - installs Poplog into $(POPLOG_HOME) folder as V16
-	#   uninstall - removes Poplog 
+	#   uninstall - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz
+	#   really-uninstall-poplog - removes Poplog and does not create a backup.
 	#   jumpstart - installs the packages this installation depends on.
-	#   clean - removes all the build artefacts.
+	#   clean - removes all the build artifacts.
 	#   help - this explanation, for more info read the Makefile comments.
 
 .PHONY: build
 build: _build/Done.proxy
 	# Target "build" completed
 
+# At the start of the installation we must be able to cope with all these use-cases.
+#   1. $(POPLOG_HOME_DIR) does not exist. We will mkdir -p the folder and then install V16
+#      and set the current_usepop symlink to it.
+#   2. $(POPLOG_HOME_DIR) exists and does not have a copy of this distribution. 
+#      We will delete the symlink (if it exists) and continue as case 1.
+#   3. $(POPLOG_HOME_DIR) exists and has already got a copy of this distribution. We will 
+#      backup the old distro to V16.origin and continue as case 1.
+#   4. $(POPLOG_HOME_DIR) exists and has already got a copy of this distribution AND a backup 
+#      already exists in V16.orig. We will backup the V16 distro to V16.prev, and then continue 
+#      as case 1.
+#   5. $(POPLOG_HOME_DIR) exists and has already got a copy of this distribution AND 
+#      a backup already exists in V16.orig AND a prev version already exists. In this case 
+#      we obliterate the V16.prev and continue as case 4.
 .PHONY: install
 install:
-	echo 'To be continued'
+	[ -f _build/Done.proxy ] # We have successfully built the new distro? Else fail!
+	if [ -d $(POPLOG_VERSION_DIR) ] \
+	&& [ -d $(POPLOG_VERSION_DIR).orig ] \
+	&& [ -d $(POPLOG_VERSION_DIR).prev ]; then \
+	    rm -rf $(POPLOG_VERSION_DIR).prev; \
+	fi
+	if [ -d $(POPLOG_VERSION_DIR) ] \
+	&& [ -d $(POPLOG_VERSION_DIR).orig ]; then \
+	    mv $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_DIR).prev; \
+	fi
+	if [ -d $(POPLOG_VERSION_DIR) ]; then \
+	    mv $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_DIR).orig; \
+	fi
+	mkdir -p $(POPLOG_VERSION_DIR)
+	rm -f $(POPLOG_VERSION_SYMLINK)
+	( cd _build/poplog_base; tar cf - . ) | ( cd $(POPLOG_VERSION_DIR); tar xf - )
+	ln -s $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_SYMLINK)
+	# Target "install" completed
 
+# No messing around - this is not a version change (we don't have a target for that)
+# but a complete removal of all installed Poplogs. This is potentially disasterous, 
+# so we make a backup and shove it in /tmp and hope that the system cleanup policy
+# will clean it up eventually.
 .PHONY: uninstall
 uninstall:
-	echo 'To be continued'
+	(cd $(POPLOG_HOME_DIR); tar cf - .) | gzip > /tmp/POPLOG_HOME_DIR.tgz
+	$(MAKE) really-uninstall-poplog
+	# A BACKUP HAS BEEN LEFT IN /tmp/POPLOG_HOME_DIR.tgz. REMOVE THIS TO SAVE SPACE.
+	# Target "uninstall" completed
+
+.PHONY: really-uninstall-poplog
+really-uninstall-poplog:
+	# A sanity check to protect against a mistake with a bad $(POPLOG_HOME_DIR).
+	[ -f $(POPLOG_VERSION_DIR)/pop/pop/com/popenv.sh ] # Can we find a characteristic file?
+	# OK, let's take out the home-directory.
+	rm -rf $(POPLOG_HOME_DIR)
+	# TODO: We will need to remove the symlink to the poplog-shell here.
 
 .PHONY: clean
 clean:
+	# The flag file should live in _build, so we must do this first.
+	if [ -e $(CLEAN_SUPPORT_SCRIPTS_FLAG) ]; then rm -f $(SUPPORT_SCRIPTS); fi
+	# Now we clean up the main bulk of the artifacts.
 	rm -rf ./_build
 	# Target "clean" completed
 
 # Installs the dependencies
-#   Needed to fetch resources: make wget git
+#   Needed to fetch resources: 
+#       make wget git
 #   Needed for building Poplog:  
 #       build-essential libc6 libncurses5 libncurses5-dev 
 #       libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
@@ -129,7 +204,7 @@ _build/JumpStart.proxy:
 	touch $@
 
 # It is not clear that these scripts should be included or not. If they are it makes
-# more sense to include them in the Base repo. TO BE CONFIRMED - until then these
+# more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
 # will be omitted.
 _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
 	touch $@
@@ -161,10 +236,14 @@ _build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh m
 # If this Makefile is checked out as part of a git-repo these files will aleady exist. (In
 # fact this script assumes they all exist or are all missing.) But if this Makefile is 
 # distributed standalone then it needs to fetch from the repo as independent files.
-makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh:
+$(SUPPORT_SCRIPTS):
+	# If we fetch by git-archive, we need to mark them for cleaning. 
+	mkdir -p _build
+	touch $(CLEAN_SUPPORT_SCRIPTS_FLAG)
 	# Fetch all at the same time for efficiency. Do not use $@ or you can get 4 fetches.
-	git archive --remote=$(SEED_REPO) master makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh | tar xf -
-
+	#git archive --remote=$(SEED_REPO) master makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh | tar xf -
+	git archive --remote=$(SEED_REPO) master $(SUPPORT_SCRIPTS) | tar xf -
+	
 _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 	touch $@
 
@@ -184,7 +263,6 @@ _build/Corepops.proxy: _build/Base.proxy
 	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
 	touch $@
 
-# TODO: add dependency ... _build/Base.proxy: _build/JumpStart.proxy
 _build/Base.proxy:
 	mkdir -p _build/Base
 	git archive --remote=$(BASE_REPO) master | ( cd _build/Base; tar xf - )
