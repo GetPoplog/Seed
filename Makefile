@@ -7,6 +7,9 @@
 #           current_usepop      <- symlink to the currently active Poplog version e.g. versions/V16
 #           versions/V16        <- an example  Poplog system
 #
+# For help on how to use this Makefile please try "make help". The rest of this intro explains
+# the strategy used for the fairly elaborate build process.
+#
 # The build process involves quite a lot of compilation and linking in-place, unfortunately.
 # So this Makefile is driven by the creation of 'proxy files' in the _build folder. Each proxy
 # files stands for the completion of a major phase of the build process.
