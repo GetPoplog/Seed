@@ -80,13 +80,14 @@ POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/current_usepop
 # TODO: The poplog-shell has not been written yet, so this is a placeholder.
 EXEC_DIR:=/usr/local/bin
 
-SEED_REPO:=/home/steve/Seed
-BASE_REPO:=/home/steve/Base
-DOCS_REPO:=/home/steve/Docs
-COREPOPS_REPO:=/home/steve/Corepops
+MAIN_BRANCH:=main
+SEED_TARBALL_URL:=https://github.com/GetPoplog/Seed/archive/$(MAIN_BRANCH).tar.gz
+BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(MAIN_BRANCH).tar.gz
+DOCS_TARBALL_URL:=https://github.com/GetPoplog/Docs/archive/$(MAIN_BRANCH).tar.gz
+COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(MAIN_BRANCH).tar.gz
 
 # We need some support scripts. These might be checked out of git or downloaded
-# by git-archive. If the latter then we must clean them up on "make clean", which
+# by curl. If the latter then we must clean them up on "make clean", which
 # is signalled by the file _build/CleanSupportScripts.flag.
 SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh
 CLEAN_SUPPORT_SCRIPTS_FLAG=_build/CleanSupportScripts.flag
@@ -101,8 +102,8 @@ help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
 	# Poplog will be installed in $(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
 	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), checked out 
-	# from the git repo and pulling updates to the script with git pull :). 
-	# TODO: Insert git repo URL here.
+	# from the git repo at https://github.com/GetPoplog/Seed.git and pulling updates to the
+	# script with git pull :). 
 	#
 	# Within $(POPLOG_HOME_DIR) there may be multiple versions of Poplog living 
 	# side-by-side. The current version will be symlinked via a link called
@@ -187,7 +188,7 @@ clean:
 
 # Installs the dependencies
 #   Needed to fetch resources: 
-#       make wget git
+#       make curl git
 #   Needed for building Poplog:  
 #       build-essential libc6 libncurses5 libncurses5-dev 
 #       libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
@@ -199,7 +200,7 @@ clean:
 #
 _build/JumpStart.proxy:
 	sudo apt-get update \
-        && sudo apt-get install -y make wget git \
+        && sudo apt-get install -y make curl git \
            gcc build-essential libc6 libncurses5 libncurses5-dev \
            libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	   espeak
@@ -218,7 +219,7 @@ _build/Packages.proxy: _build/packages-V16.tar.bz2
 	touch $@
 
 _build/Docs.proxy: _build/Base.proxy
-	git archive --remote=$(DOCS_REPO) master | ( cd _build/poplog_base; tar xf - )
+	curl -LsS $(DOCS_TARBALL_URL) | ( cd _build/poplog_base; tar zxf - --exclude LICENSE --strip-components=1 )
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
@@ -241,11 +242,11 @@ _build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh m
 # distributed standalone then it needs to fetch from the repo as independent files.
 $(SUPPORT_SCRIPTS):
 	# If we fetch by git-archive, we need to mark them for cleaning. 
-	mkdir -p _build
 	touch $(CLEAN_SUPPORT_SCRIPTS_FLAG)
 	# Fetch all at the same time for efficiency. Do not use $@ or you can get 4 fetches.
-	#git archive --remote=$(SEED_REPO) master makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh | tar xf -
-	git archive --remote=$(SEED_REPO) master $(SUPPORT_SCRIPTS) | tar xf -
+	mkdir -p _build/Seed
+	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
+	(cd _build/Seed; cp $(SUPPORT_SCRIPTS) ../..)
 	
 _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 	touch $@
@@ -260,7 +261,7 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
 # This target ensures that we have an unpacked base system with a valid corepop file.
 _build/Corepops.proxy: _build/Base.proxy
 	mkdir -p _build/Corepops
-	git archive --remote=$(COREPOPS_REPO) master | ( cd _build/Corepops; tar xf - )
+	curl -LsS $(COREPOPS_TARBALL_URL) | ( cd _build/Corepops; tar zxf - --strip-components=1 )
 	cp _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
 	$(MAKE) -C _build/Corepops corepop
 	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
@@ -268,7 +269,7 @@ _build/Corepops.proxy: _build/Base.proxy
 
 _build/Base.proxy:
 	mkdir -p _build/Base
-	git archive --remote=$(BASE_REPO) master | ( cd _build/Base; tar xf - )
+	curl -LsS $(BASE_TARBALL_URL) | ( cd _build/Base; tar zxf - --strip-components=1)
 	$(MAKE) -C _build/Base build
 	mkdir -p _build/poplog_base
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
@@ -279,11 +280,11 @@ _build/poplog_base/pop/com/poplogout.%: _build/poplogout.%
 
 _build/poplogout.%:
 	mkdir -p _build
-	wget -P _build https://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/$(notdir $@)
+	curl -LsS https://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/$(notdir $@) > $@
 
 _build/packages-V16.tar.bz2:
 	mkdir -p _build
-	wget -P _build http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2
+	curl -LsS http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2 > $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
