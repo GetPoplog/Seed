@@ -2,19 +2,23 @@
 
 This is a repository of scripts for installing Poplog onto your local machine. 
 When it is run it will download the other files it needs from several other 
-repositories in this organisation plus contributory packages from the [FreePoplog](https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html) 
+repositories in this organisation plus contributory packages from the 
+[FreePoplog](https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html) 
 site.
 
 At the moment we only support installing Poplog onto Linux x86_64 systems i.e.
 64-bit Linux on Intel. We expect to extend this to include 32-bit and other Unix
-systems that Poplog has run on. Because dependencies are installed using `apt` 
-at the moment, we are currently limited to Debian-derived distros such as 
-Ubuntu, Mint and Debian itself.
+systems that Poplog has run on. 
+
+CAVEAT: At the moment we install dependencies using `apt` and so we are currently 
+limited to installing on Debian-derived distros such as Ubuntu, Mint and Debian 
+itself. If you are on Centos, SUSE or other Linux distribution you will need to 
+handle the dependencies yourself. We will address this as soon as we can.
 
 ## How to Install Poplog using this resource
 
-If you have a desktop system with `sudo`, `make` and `git` installed then the 
-simplest approach is to clone this repo to a new local folder as follows:
+If you have a desktop system with `apt`, `sudo`, `make` and `git` installed then 
+the simplest approach is to clone this repo to a new local folder as follows:
 ```
 git clone https://github.com/GetPoplog/Seed.git
 cd Seed
