@@ -86,7 +86,7 @@ Setpop
 Edit your `~/.login` file and insert the following at the end of
 the file, which will include the setup from a separate file. 
 
-```csh
+```shell
 source ~/.config/poplog/setup.csh
 ```
 
@@ -95,7 +95,7 @@ is a rich and complex environment and putting the set-up in a separate file give
 it plenty of room to grow without clogging up your start-up file.
 
 Now create `~/.config/poplog/setup.csh` and insert these lines:
-```csh
+```shell
 setenv usepop=/usr/local/poplog/current_usepop
 . $usepop/pop/com/popenv.csh
 setenv PATH=$popsys\:$PATH\:$popcom
@@ -104,7 +104,7 @@ setenv PATH=$popsys\:$PATH\:$popcom
 Try this out with the command `source ~/.config/poplog/setup.sh` and then 
 `pop11`. The latter will drop you into the Pop-11 REPL. Which will look
 something like this:
-```
+```shell
 $ pop11
 
 Sussex Poplog (Version 16.0001 Sat Jan 30 19:13:48 CST 2021)
