@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Get minimum dependencies.
 sudo apt update && sudo apt install -y make curl
