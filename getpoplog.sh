@@ -7,7 +7,7 @@ sudo apt update && sudo apt install -y make curl
 TMP_DIR=`mktemp -d -t ci-XXXXXXXXXX`
 mkdir -p $TMP_DIR
 cd $TMPDIR
-echo "Using temporary directory $TMPDIR as a build folder"
+echo "Using temporary directory $TMP_DIR as a build folder"
 curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/Makefile > Makefile
 
 make jumpstart    # fetch dependencies (Debian based systems only)
