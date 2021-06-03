@@ -198,6 +198,10 @@ clean:
 #   are properly supported by Poplog.
 #       tcsh xterm
 #
+.PHONY: jumpstart
+jumpstart: _build/JumpStart.proxy
+	true
+
 _build/JumpStart.proxy:
 	sudo apt-get update \
         && sudo apt-get install -y make curl \
