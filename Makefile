@@ -204,7 +204,7 @@ jumpstart: _build/JumpStart.proxy
 
 _build/JumpStart.proxy:
 	sudo apt-get update \
-        && sudo apt-get install -y make curl \
+        && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y make curl \
            gcc build-essential libc6 libncurses5 libncurses5-dev \
            libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	   espeak
