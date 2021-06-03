@@ -1,10 +1,11 @@
 #!/bin/sh
 
 # Get minimum dependencies.
-sudo apt install make curl
+sudo apt update && sudo apt install -y make curl
 
 # Retrieve our Makefile in a temporary directory
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
+mkdir -p $TMP_DIR
 cd $TMPDIR
 echo "Using temporary directory $TMPDIR as a build folder"
 curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/Makefile > Makefile
