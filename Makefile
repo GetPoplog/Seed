@@ -188,7 +188,7 @@ clean:
 
 # Installs the dependencies
 #   Needed to fetch resources: 
-#       make curl git
+#       make curl
 #   Needed for building Poplog:  
 #       build-essential libc6 libncurses5 libncurses5-dev 
 #       libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
@@ -200,7 +200,7 @@ clean:
 #
 _build/JumpStart.proxy:
 	sudo apt-get update \
-        && sudo apt-get install -y make curl git \
+        && sudo apt-get install -y make curl \
            gcc build-essential libc6 libncurses5 libncurses5-dev \
            libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	   espeak
@@ -241,7 +241,7 @@ _build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh m
 # fact this script assumes they all exist or are all missing.) But if this Makefile is 
 # distributed standalone then it needs to fetch from the repo as independent files.
 $(SUPPORT_SCRIPTS):
-	# If we fetch by git-archive, we need to mark them for cleaning. 
+	# If we fetch by curl, we need to mark them for cleaning. 
 	touch $(CLEAN_SUPPORT_SCRIPTS_FLAG)
 	# Fetch all at the same time for efficiency. Do not use $@ or you can get 4 fetches.
 	mkdir -p _build/Seed
