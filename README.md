@@ -38,9 +38,11 @@ sh GetPoplog.sh
 ```
 
 When the script finishes successfully, it will install Poplog into `/usr/local/poplog`.
-Although this is simple, it does not give you much chance to see what is going on
-or make any changes. If you want more control over what it does or change where it
-installs the software, try the "make" based installation method.
+
+Although this 1-line script is easy to use, it does not give you much chance to see 
+what is going on or make any changes. If you know a bit about Linux commands and 
+want more control over what it does (e.g. change where it installs the software)
+then try the next "make" based installation method.
 
 ### More flexible install using make
 
