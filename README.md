@@ -182,6 +182,11 @@ Follow the instructions for /bin/bash users but edit your `~/.profile`
 file rather than `~/.bash_profile`. We have deliberately kept the 
 initial scripts compatible across these very closely related shells.
 
+### Set-up for /bin/zsh
+
+Follow the instructions for /bin/bash users but edit your `~/.zshenv` 
+file rather than `~/.bash_profile`. We have deliberately kept the 
+initial scripts compatible across these very closely related shells.
 
 ## Our Aims
 
