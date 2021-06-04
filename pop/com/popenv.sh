@@ -256,7 +256,7 @@ POP_XOL_EXLIBS="x=openlook/${XOL_VER}: $XOL_DIRS $XOL_FILES"
 POP_XT_EXLIBS="x=mit/1100${XT_VER}: $XT_DIRS $XT_FILES"
 
 # Default for X link -- used by pglink/poplink option -xlink (or nothing)
-POP_XLINK_EXLIBS===POP_${XLINK}_EXLIBS
+POP_XLINK_EXLIBS="==POP_${XLINK}_EXLIBS"
 
 # Default include directory for compiling pop X sources
 POP_X_INCLUDE=${X_INCL-/usr/include}
