@@ -17,18 +17,65 @@ handle the dependencies yourself. We will address this as soon as we can.
 
 ## How to Install Poplog using this resource
 
+### Single-line install using curl
+
+The simplest way to install Poplog on a debian-based distribution is to run the
+below command at the command-line. It will need you to have curl, sudo and apt
+already installed. The first thing it will do is ask for permission to install
+packages that it depends on.
+
+```sh
+curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/v0.1/main/GetPoplog.sh | sh
+```
+
+When the script finishes successfully, it will install Poplog into `/usr/local/poplog`.
+Although this is simple, it does not give you much chance to see what is going on
+or make any changes. If you want more control over what it does or change where it
+installs the software, try the "make" based installation method.
+
+### More flexible install using make
+
 If you have a desktop system with `apt`, `sudo`, `make` and `git` installed then 
-the simplest approach is to clone this repo to a new local folder as follows:
+a flexible approach is to clone this repo to a new local folder as follows:
+
 ```
 git clone https://github.com/GetPoplog/Seed.git
 cd Seed
+```
+
+This will create a folder called `Seed` in your current directory, which can
+be renamed or moved to any location you like. This folder contains a Makefile
+and some helper-shell scripts that you can use to install Poplog in a 
+controlled fashion.
+
+The first thing you will need to do is install the packages that Poplog depends
+on. You only need to do this once. There's a shortcut for doing this:
+
+```sh
 make jumpstart     # fetch all dependencies
+```
+
+After this you build and install in the usual way. The following commands
+will build a new Poplog system in the temporary `_build` folder and then
+install it into the default location, which is `/usr/local/poplog`. 
+
+```sh
 make build         # this takes a while
 sudo make install  # installs into /usr/local/poplog
 ```
 
-After this has been done, you will find a new Poplog system has been
-installed into `/usr/local/poplog`.
+If you want to override the installation location, you can override the
+POPLOG_HOME variable during the install phase like this:
+
+```sh
+sudo make install POPLOG_HOME_DIR=/opt/poplog
+```
+
+When you have finished installing Poplog, you can tidy up afterwards with the 
+following:
+```sh
+make clean
+```
 
 ## How to Set-up your Login Account to use Poplog
 
