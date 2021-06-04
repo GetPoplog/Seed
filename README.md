@@ -25,7 +25,16 @@ already installed. The first thing it will do is ask for permission to install
 packages that it depends on.
 
 ```sh
-curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/v0.1/main/GetPoplog.sh | sh
+curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
+```
+
+If you want to check the script out before running it you might prefer fetching
+it to a file and then running it.
+
+```sh
+curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh -o GetPoplog.sh
+# Now check GetPoplog.sh .... and run it.
+sh GetPoplog.sh
 ```
 
 When the script finishes successfully, it will install Poplog into `/usr/local/poplog`.
