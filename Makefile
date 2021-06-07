@@ -77,7 +77,6 @@ POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
 POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/current_usepop
 
 # This is the folder where the link to the poplog-shell executable will be installed.
-# TODO: The poplog-shell has not been written yet, so this is a placeholder.
 EXEC_DIR:=/usr/local/bin
 
 MAIN_BRANCH:=main
@@ -157,6 +156,7 @@ install:
 	rm -f $(POPLOG_VERSION_SYMLINK)
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(POPLOG_VERSION_DIR); tar xf - )
 	ln -s $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_SYMLINK)
+	ln -s $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
 	# Target "install" completed
 
 # No messing around - this is not a version change (we don't have a target for that)
@@ -176,7 +176,7 @@ really-uninstall-poplog:
 	[ -f $(POPLOG_VERSION_DIR)/pop/pop/com/popenv.sh ] # Can we find a characteristic file?
 	# OK, let's take out the home-directory.
 	rm -rf $(POPLOG_HOME_DIR)
-	# TODO: We will need to remove the symlink to the poplog-shell here.
+	rm -f $(EXEC_DIR)/poplog
 
 .PHONY: clean
 clean:
@@ -290,11 +290,17 @@ _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	curl -LsS http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2 > $@
 
+_build/PoplogCommander.proxy: _build/Stage2.proxy
+	sh makePoplogCommander.sh > _build/poplog.c
+	( cd _build && gcc -Wall -o poplog poplog.c )
+	mv _build/poplog _build/poplog_base/pop/pop/
+	touch $@
+
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
         && . ./_build/poplog_base/pop/com/popenv.sh \
 	&& env PATH="$$popsys:$$PATH" $$usepop/pop/com/makeindexes > _build/makeindexes.log
 	touch $@
 
-_build/Done.proxy: _build/MakeIndexes.proxy
+_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy
 	touch $@
