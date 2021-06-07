@@ -14,9 +14,9 @@ void printUsage( int argc, char * const argv[] ) {
 ( sed -e 's/"/\\"/g' | sed -e 's/.*/    puts( "&" );/') << \****
 Usage: poplog [command-word] [options] [file(s)]
 
-The poplog "commander" runs various Poplog commands (pop11, prolog, etc) with
+This poplog "commander" runs various Poplog commands (pop11, prolog, etc) with
 the special environment variables and $PATH they require. The 'command-word'
-determines what command is actually.
+determines what command is actually invoked.
 
 INTERPRETER COMMANDS
 
