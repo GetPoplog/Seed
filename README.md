@@ -90,7 +90,6 @@ make clean
 
 ## Getting Started with the new poplog executable
 
-123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_
 This distribution of Poplog includes a new `poplog` executable. This provides a
 simple way of running any of Poplog's commands. For example, without any arguments
 it starts up a Pop-11 read-eval-print loop.
