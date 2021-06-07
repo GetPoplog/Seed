@@ -181,12 +181,12 @@ static_assert( false, "Not defined for operating systems other than Darwin nor L
 #endif
 
 void truncatePopCom( char * base ) {
-    const char * const required_suffix = "/pop/com";
+    const char * const required_suffix = "/pop/pop";
     size_t len = strlen( base );
     if ( strcmp( required_suffix, &base[ len - 8 ] ) == 0 ) {
         base[ len - strlen( required_suffix ) ] = '\0';
     } else {
-        fprintf( stderr, "Poplog installation folder missing $popcom folder\n" );
+        fprintf( stderr, "Poplog installation folder missing $popsys folder\n" );
         exit( EXIT_FAILURE );
     }
 }
