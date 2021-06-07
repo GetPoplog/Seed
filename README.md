@@ -88,12 +88,51 @@ following:
 make clean
 ```
 
+## Getting Started with the new poplog executable
+
+123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_
+This distribution of Poplog includes a new `poplog` executable. This provides a
+simple way of running any of Poplog's commands. For example, without any arguments
+it starts up a Pop-11 read-eval-print loop.
+
+```sh
+$ poplog
+
+Sussex Poplog (Version 16.0001 Mon May 17 13:04:57 EDT 2021)
+Copyright (c) 1982-1999 University of Sussex. All rights reserved.
+
+Setpop
+: 
+```
+
+To find out all the features that this 'commander' makes available please type
+`poplog --help`, as shown below:
+```sh
+$ poplog --help 
+Usage: poplog [command-word] [options] [file(s)]
+
+The poplog "commander" runs various Poplog commands (pop11, prolog, etc) with
+the special environment variables and $PATH they require. The 'command-word'
+determines what command is actually run.
+
+INTERPRETER COMMANDS
+
+poplog (pop11|prolog|clisp|pml) [options]
+poplog (pop11|prolog|clisp|pml) [options] [file]
+
+... output truncated ...
+```
+
+
 ## How to Set-up your Login Account to use Poplog
 
-Once Poplog is installed, you will need to set up your login account to use
-it. Poplog requires your $PATH to be extended so that the commands are available
-and also available to each other. It also requires many environment variables
-to be added. 
+Before the new poplog executable, the standard way to use Poplog was to 'source'
+a set-up script into your login shell. If you prefer that more long-standing 
+way to use Poplog, follow these instructions.
+
+Poplog's features requires your $PATH to be extended so that the commands are 
+available and also available to each other. And they also requires many environment 
+variables to be added. 
 
 The setup is slightly different depending on what shell you are using, so we 
 provide setup procedures for bash, zsh, csh and tcsh users. And if you don't know 
@@ -109,28 +148,28 @@ Just check to see which one of these you have got in your home directory. The
 commonest is `.bash_profile`, so that's what we use in this example.
 
 Edit your `~/.bash_profile` file and insert the following at the end of
-the file, which will include the setup from a separate file. 
+the file, which will include the setup from a separate file.
 
 ```sh
-. ~/.config/poplog/setup.sh
+. ~/.poplog/setup.sh
 ```
 
 It is a good idea to separate the setup-file from your `~/.bash_profile`. Poplog
-is a rich and complex environment and putting the set-up in a separate file gives
-it plenty of room to grow without clogging up your start-up file. (And it also 
-makes it easy to include into `.bashrc` files for environments where the 
-`.bash_profile` is not included.)
+is a rich and complex environment and putting your set-up in a separate file gives
+it plenty of room to grow without clogging up your start-up file. We recommend
+putting this script in `~/.poplog` and making this your `$poplib`.
 
-Now create `~/.config/poplog/setup.sh` and insert these lines:
+Now create `~/.poplog/setup.sh` and insert these lines:
 ```sh
+poplib=~/.poplog
+export poplib
 usepop=/usr/local/poplog/current_usepop
 export usepop
-. $usepop/pop/com/popenv.sh
-PATH=$popsys\:$PATH\:$popcom
-export PATH
+# The poplog.sh script prints a banner - redirect to /dev/null.
+. $usepop/pop/com/poplog.sh > /dev/null
 ```
 
-Try this out with the command `. ~/.config/poplog/setup.sh` and then 
+Try this out with the command `. ~/.poplog/setup.sh` and then 
 `pop11`. The latter will drop you into the Pop-11 REPL. Which will look
 something like this:
 ```
@@ -149,21 +188,23 @@ Edit your `~/.login` file and insert the following at the end of
 the file, which will include the setup from a separate file. 
 
 ```shell
-source ~/.config/poplog/setup.csh
+source ~/.poplog/setup.csh
 ```
 
 It is a good idea to separate the setup-file from your `~/.login`. Poplog
 is a rich and complex environment and putting the set-up in a separate file gives
-it plenty of room to grow without clogging up your start-up file.
+it plenty of room to grow without clogging up your start-up file. We recommend
+putting this script in `~/.poplog` and making this your `$poplib`.
 
-Now create `~/.config/poplog/setup.csh` and insert these lines:
+Now create `~/.poplog/setup.csh` and insert these lines:
 ```shell
+setenv poplib=~/.poplog
 setenv usepop=/usr/local/poplog/current_usepop
-. $usepop/pop/com/popenv.csh
-setenv PATH=$popsys\:$PATH\:$popcom
+# The poplog.csh script prints a banner - redirect to /dev/null.
+. $usepop/pop/com/poplog.csh > /dev/null
 ```
 
-Try this out with the command `source ~/.config/poplog/setup.sh` and then 
+Try this out with the command `source ~/.poplog/setup.sh` and then 
 `pop11`. The latter will drop you into the Pop-11 REPL. Which will look
 something like this:
 ```shell
