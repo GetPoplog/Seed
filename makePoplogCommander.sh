@@ -260,11 +260,23 @@ int main( int argc, char *const argv[] ) {
 ****
 echo
 
-env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh && env)' \
+CODE1=`env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh && env)' | sort \
 | grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base );/'
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base );/'`
+
+CODE2=`env -i sh -c '(usepop="_build/poplog_base/pop/.." && . $usepop/pop/com/popenv.sh && env)' | sort \
+| grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
+| sed -e 's!_build/poplog_base/pop/..![//USEPOP//]!g' \
+| sed -e 's/"/\\"/g' \
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base );/'`
+
+if [ "$CODE1" != "$CODE2" ]; then
+    exit 1
+fi
+
+echo "$CODE1"
 echo 
 
 # Note that poplib needs special handling. The algorithm used in $popcom/popenv.sh
