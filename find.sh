@@ -8,7 +8,7 @@ for i in "supplied.corepop" `ls -1r ${OSNAME}/${ARCH}/*.corepop`; do
     output=`./$i ":sysexit()" 2>&1`
     if [ -z "$output" ]; then 
         echo $i
-        break
+        exit 0
     fi 
 done
 # If no good executable can be found, exit with an error code.

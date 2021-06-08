@@ -14,9 +14,9 @@ clean:
 	rm -f corepop
 
 # This target will search the collection of corepop images and
-# find the most recent working version and leave it in the file
+# find the most recent working version and leave a copy in the file
 # called corepop at top-level.
 corepop:
-	mv $(shell /bin/sh ./find.sh) corepop
+	COREPOP=`/bin/sh ./find.sh 2>/dev/null` && [ ! -z "$$COREPOP" ] && cp -p "$$COREPOP" corepop
 	test -e corepop
 	
