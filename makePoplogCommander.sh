@@ -261,7 +261,7 @@ int main( int argc, char *const argv[] ) {
 echo
 
 env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh && env)' \
-| grep -v '^\(_\|SHLVL\|PWD|poplib\)=' \
+| grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
 | sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base );/'
@@ -275,7 +275,12 @@ cat << \****
     {
         char * home = getenv( "HOME" );
         if ( home != NULL ) {
-            setenv( "poplib", home, 0 );
+            const char * const folder = ".poplog";
+            char * path = malloc( strlen( home ) + 1 + strlen( folder ) + 1 );
+            char * p = stpcpy( path, home );
+            p = stpcpy( p, "/" );
+            p = stpcpy( p, folder );
+            setenv( "poplib", path, 0 );
         }
     }
 ****
