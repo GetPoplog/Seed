@@ -62,6 +62,10 @@
 #         dynamic system so that user libraries automatically get added into
 #         the search.
 #
+#     _build/PoplogCommander.proxy
+#         This represents the successful compilation of the commander-tool
+#         and its insertion into the Poplog-tree.
+#
 #     _build/Done.proxy
 #         This file represents the completion of the build-tree in the
 #         _build/poplog_base folder. This can be moved to the appropriate 
