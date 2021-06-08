@@ -257,6 +257,8 @@ int main( int argc, char *const argv[] ) {
         exit( EXIT_FAILURE );
     }
     truncatePopCom( base );
+
+    setenv( "usepop", base, 1 );
 ****
 echo
 
