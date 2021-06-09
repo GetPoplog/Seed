@@ -181,6 +181,7 @@ really-uninstall-poplog:
 	# OK, let's take out the home-directory.
 	rm -rf $(POPLOG_HOME_DIR)
 	rm -f $(EXEC_DIR)/poplog
+	rm -f $(EXEC_DIR)/poplogV??
 
 .PHONY: clean
 clean:
