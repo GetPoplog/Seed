@@ -157,10 +157,10 @@ install:
 	    mv $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_DIR).orig; \
 	fi
 	mkdir -p $(POPLOG_VERSION_DIR)
-	rm -f $(POPLOG_VERSION_SYMLINK)
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(POPLOG_VERSION_DIR); tar xf - )
-	ln -s $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_SYMLINK)
-	ln -s $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
+	ln -sf $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_SYMLINK)
+	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
+	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/poplog$(VERSION_DIR)
 	# Target "install" completed
 
 # No messing around - this is not a version change (we don't have a target for that)
@@ -177,10 +177,11 @@ uninstall:
 .PHONY: really-uninstall-poplog
 really-uninstall-poplog:
 	# A sanity check to protect against a mistake with a bad $(POPLOG_HOME_DIR).
-	[ -f $(POPLOG_VERSION_DIR)/pop/pop/com/popenv.sh ] # Can we find a characteristic file?
+	[ -f $(POPLOG_VERSION_DIR)/pop/com/popenv.sh ] # Can we find a characteristic file?
 	# OK, let's take out the home-directory.
 	rm -rf $(POPLOG_HOME_DIR)
 	rm -f $(EXEC_DIR)/poplog
+	rm -f $(EXEC_DIR)/poplogV??
 
 .PHONY: clean
 clean:
