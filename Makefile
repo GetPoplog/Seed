@@ -177,7 +177,7 @@ uninstall:
 .PHONY: really-uninstall-poplog
 really-uninstall-poplog:
 	# A sanity check to protect against a mistake with a bad $(POPLOG_HOME_DIR).
-	[ -f $(POPLOG_VERSION_DIR)/pop/pop/com/popenv.sh ] # Can we find a characteristic file?
+	[ -f $(POPLOG_VERSION_DIR)/pop/com/popenv.sh ] # Can we find a characteristic file?
 	# OK, let's take out the home-directory.
 	rm -rf $(POPLOG_HOME_DIR)
 	rm -f $(EXEC_DIR)/poplog
