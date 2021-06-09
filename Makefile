@@ -92,7 +92,7 @@ COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(MAIN_BRANC
 # We need some support scripts. These might be checked out of git or downloaded
 # by curl. If the latter then we must clean them up on "make clean", which
 # is signalled by the file _build/CleanSupportScripts.flag.
-SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh
+SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh makePoplogCommander.sh
 CLEAN_SUPPORT_SCRIPTS_FLAG=_build/CleanSupportScripts.flag
 
 .PHONY: all
@@ -249,6 +249,7 @@ _build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh m
 # fact this script assumes they all exist or are all missing.) But if this Makefile is 
 # distributed standalone then it needs to fetch from the repo as independent files.
 $(SUPPORT_SCRIPTS):
+	mkdir -p _build
 	# If we fetch by curl, we need to mark them for cleaning. 
 	touch $(CLEAN_SUPPORT_SCRIPTS_FLAG)
 	# Fetch all at the same time for efficiency. Do not use $@ or you can get 4 fetches.
@@ -294,7 +295,7 @@ _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	curl -LsS http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2 > $@
 
-_build/PoplogCommander.proxy: _build/Stage2.proxy
+_build/PoplogCommander.proxy: _build/Stage2.proxy makePoplogCommander.sh
 	mkdir -p _build/cmdr
 	sh makePoplogCommander.sh > _build/cmdr/poplog.c
 	( cd _build/cmdr && gcc -Wall -o poplog poplog.c )
