@@ -1,6 +1,14 @@
 #!/bin/sh
 # This is a script that will output the C source for a poplog-shell 
-# program.
+# program. Sections of C-code and shell script are interleaved which
+# makes it harder to pick out comments - so a more emphatic style is
+# used.
+
+################################################################################
+# Generate the header files for the commander-tool. Note how we use \**** as
+# the Here Document marker. The backslash escapes the content so we don't have
+# to worry about further escaping.
+################################################################################
 
 cat << \****
 #include <stdio.h>
@@ -8,6 +16,16 @@ cat << \****
 #include <stdlib.h>
 #include <regex.h>
 
+****
+
+################################################################################
+# Generate the printUsage function. This is essentially a list of calls to
+# `puts` with constant strings. To make the content easier to work with we
+# include it from a Here Document and transform it into the appropriate C
+# calls using 'sed'.
+################################################################################
+
+cat << \****
 void printUsage( int argc, char * const argv[] ) {
 ****
 
@@ -109,11 +127,18 @@ poplog poplibr [option] [w-library] [w-files]
 
 ****
 
-
 cat << \****
 }
+****
 
-const char * const USEPOP = "[//USEPOP//]";
+################################################################################
+# Now we have the selfHome function. I have included this from some of my
+# own software and it retains the Darwin code as well as the linux code. 
+# Arguably this should be removed but it serves as a guide for how to cope
+# with different Unixes.
+################################################################################
+
+cat << \****
 
 //	http://sourceforge.net/p/predef/wiki/OperatingSystems/
 // 
@@ -179,6 +204,18 @@ char * selfHome() {
 static_assert( false, "Not defined for operating systems other than Darwin nor Linux." );
 
 #endif
+
+****
+
+################################################################################
+# Now we have the main bulk of the code, Note that the
+# USEPOP string is intended to be a distinctive value that will not occur as
+# part of a normal filename.
+################################################################################
+
+cat << \****
+
+const char * const USEPOP = "[//USEPOP//]";
 
 void truncatePopCom( char * base ) {
     const char * const required_suffix = "/pop/pop";
@@ -262,6 +299,21 @@ int main( int argc, char *const argv[] ) {
 ****
 echo
 
+################################################################################
+# We now run the popenv.sh script inside a clean environment to capture the 
+# set of environment variables needed. We then need to replace any matches
+# of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
+# This will allow us to dynamically substitute with the selfHome'd value
+# at run-time. 
+#
+# This is inherently a weak strategy because it relies on being able to 
+# identify substitutions of $usepop. We improve its robustness by doing the
+# process twice with different values of $usepop - using the '..' trick.
+# If the resultant code is not identical we have a problem and we halt.
+# (N.B It is probably not necessary to run the variables through sort but I 
+# couldn't find a clear guarantee that env generates a sorted list.)
+################################################################################
+
 CODE1=`env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh && env)' | sort \
 | grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base![//USEPOP//]!g' \
@@ -281,9 +333,11 @@ fi
 echo "$CODE1"
 echo 
 
+################################################################################
 # Note that poplib needs special handling. The algorithm used in $popcom/popenv.sh
-# is to set poplib if not already defined to $HOME. It's unclear that this is a
-# good idea.
+# is to set poplib if not already defined to $HOME. Using $HOME for this is
+# a bad idea and we depart from that by introducing a dot-folder ".poplog".
+################################################################################
 
 cat << \****
     {
@@ -299,6 +353,10 @@ cat << \****
     }
 ****
 echo 
+
+################################################################################
+# And now we handle the different cases of the Poplog commands. 
+################################################################################
 
 cat << \****
     extendPath( getenv( "popsys" ), getenv( "PATH" ), getenv( "popcom" ) );
@@ -316,6 +374,7 @@ cat << \****
             0
 ****
 
+# Interpreter and tools that simply need to be run as-is.
 for i in basepop11 pop11 prolog clisp pml popc poplibr poplink
 do
 echo '            || strcmp( "'$i'", argv[1] ) == 0'
@@ -328,6 +387,7 @@ cat << \****
             0
 ****
 
+# Implied pop11 commands
 for i in ved im 'help' teach doc ref
 do
 echo '            || strcmp( "'$i'", argv[1] ) == 0'
