@@ -78,7 +78,8 @@
 POPLOG_HOME_DIR:=/usr/local/poplog
 VERSION_DIR:=V16
 POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
-POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/current_usepop
+SYMLINK:=current_usepop
+POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 
 # This is the folder where the link to the poplog-shell executable will be installed.
 EXEC_DIR:=/usr/local/bin
@@ -158,7 +159,7 @@ install:
 	fi
 	mkdir -p $(POPLOG_VERSION_DIR)
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(POPLOG_VERSION_DIR); tar xf - )
-	ln -sf $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_SYMLINK)
+	cd $(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
 	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/poplog$(VERSION_DIR)
 	# Target "install" completed
