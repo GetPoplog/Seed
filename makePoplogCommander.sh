@@ -30,18 +30,18 @@ void printUsage( int argc, char * const argv[] ) {
 ****
 
 ( sed -e 's/"/\\"/g' | sed -e 's/.*/    puts( "&" );/') << \****
-Usage: poplog [command-word] [options] [file(s)]
+Usage: poplog [action-word] [options] [file(s)]
 
 This poplog "commander" runs various Poplog commands (pop11, prolog, etc) with
-the special environment variables and $PATH they require. The 'command-word'
+the special environment variables and $PATH they require. The 'action-word'
 determines what command is actually invoked.
 
-INTERPRETER COMMANDS
+INTERPRETER ACTIONS
 
-poplog (pop11|prolog|clisp|pml) [options]
-poplog (pop11|prolog|clisp|pml) [options] [file]
-poplog (pop11|prolog|clisp|pml) [options] :[expression]
-poplog (pop11|prolog|clisp|pml) [options] [vedcommand] [files]...
+poplog (pop11|prolog|clisp|pml) [OPTION]...
+poplog (pop11|prolog|clisp|pml) [OPTION]... [FILE]
+poplog (pop11|prolog|clisp|pml) [OPTION]... :[EXPRESSION]
+poplog (pop11|prolog|clisp|pml) [OPTION]... [VEDCOMMAND] [FILE]...
 
     Poplog supports four different languages out of the box: Pop11,
     Prolog, Common Lisp and Standard ML specified by one of the
@@ -73,40 +73,53 @@ poplog (pop11|prolog|clisp|pml) [options] [vedcommand] [files]...
     3. If a file-like argument starting with a ':' is found, it is treated as
     an expression, executed and then Poplog exits.
 
-    4. When a vedcommand argument is supplied it causes Poplog to go straight
+    4. When a VEDCOMMAND argument is supplied it causes Poplog to go straight
     into the editor (Ved) and can be any of the following: ved, im, help, ref,
     teach. For example:
 
         % poplog clisp im  # Starts Poplog's immediate mode in Common Lisp.
 
 
-POP-11 SHORTHAND COMMANDS
+POP-11 SHORTHAND ACTIONS
 
-poplog [options]
+poplog [OPTION]...
     Starts up in Pop-11. Same as: poplog pop11
 
-poplog [options] ved [files]
-    Opens the listed files in the editor. Same as: poplog [options] pop11 ved [files]
+poplog [OPTION]... ved [FILE]...
+    Opens the listed files in the editor. Same as: 
+    
+        % poplog [OPTION]... pop11 ved [FILE]...
 
-poplog [options] xved [files]
+poplog [OPTION]... xved [FILE]...
     Opens the listed files in the X-Windows editor (XVed).
-    Same as: poplog [options] pop11 xved [files]
+    Same as: 
+    
+        % poplog [OPTION]... pop11 xved [FILE]...
 
-poplog [options] im [file]
-    Open an immediate mode window on the file, if supplied, or a temporary
-    file. Same as: poplog [options] pop11 im [file]
+poplog [OPTION]... im [FILE]
+    Open an immediate mode window on the FILE, if supplied, or a temporary
+    file. Same as: 
+    
+        % poplog [OPTION]... pop11 im [FILE]
 
-poplog [options] (help|teach|doc|ref) [topic]
-    Searches for the named topic using the relevant documentation sections.
+poplog [OPTION]... (help|teach|doc|ref) [TOPIC]
+    Searches for the named TOPIC using the relevant documentation sections.
     If found opens a buffer in the editor and otherwise drops into a REPL.
 
 
-UTILITY COMMANDS
+UTILITY ACTIONS
 
 poplog --help
     A special case that shows this usage information.
 
-poplog exec [program] [arguments]
+poplog env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]
+    Runs the 'env' command in the Poplog environment, allowing you to 
+    override any environment variables. N.B. the same effect can be
+    achieved by 
+
+        % poplog exec env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]
+
+poplog exec [PROGRAM] [ARG]...
     Runs an arbitrary program in the Poplog environment i.e. with the special
     environment variables and $PATH set up. A typical use of this is
 
@@ -117,9 +130,9 @@ poplog exec [program] [arguments]
 
 COMPILING AND LINKING WITH POPC
 
-poplog popc [options] [file]
-poplog poplink [options-and-files]
-poplog poplibr [option] [w-library] [w-files]
+poplog popc [OPTION]... [FILE]
+poplog poplink [OPTION_OR_FILE]...
+poplog poplibr [OPTION] [W-LIBRARY] [W-FILE]...
     Runs the specialised compiler and linking commands. See the in-editor
     help on these commands.
 
