@@ -375,7 +375,7 @@ cat << \****
 ****
 
 # Interpreter and tools that simply need to be run as-is.
-for i in basepop11 pop11 prolog clisp pml popc poplibr poplink
+for i in basepop11 pop11 prolog clisp pml popc poplibr poplink env
 do
 echo '            || strcmp( "'$i'", argv[1] ) == 0'
 done
