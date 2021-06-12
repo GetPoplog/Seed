@@ -233,7 +233,7 @@ jumpstart-ubuntu:
 jumpstart-fedora:
 	sudo dnf install \
 	gcc glibc-devel tcsh ncurses-devel libXext-devel libX11-devel \
-	ncurses-devel libXt-devel openmotif-devel xterm wget espeak bzip2
+	libXt-devel openmotif-devel xterm wget espeak bzip2
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
