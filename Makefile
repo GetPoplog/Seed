@@ -93,7 +93,7 @@ SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh makeP
 CLEAN_SUPPORT_SCRIPTS_FLAG=_build/CleanSupportScripts.flag
 
 .PHONY: all
-all: jumpstart
+all:
 	$(MAKE) build
 	# Target "all" completed
 
@@ -119,12 +119,22 @@ help:
 	#   really-uninstall-poplog - removes Poplog and does not create a backup.
 	#   relink-and-build - a more complex build process that can relink the 
 	#       corepop executable and is useful for O/S upgrades.
-	#   jumpstart-debian - installs the packages a Debian installation needs
-	#       This includes Ubuntu, Mint, Kali, Purism etc
-	#   jumpstart-fedora - installs the packages a Fedora installation needs.
-	#       This probably is the same for Centos but not tested yet.
+	#   jumpstart-ubuntu - installs the packages a Ubuntu system needs
+	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#   jumpstart-* - and more, try `make help-jumpstart`
 	#   clean - removes all the build artifacts.
 	#   help - this explanation, for more info read the Makefile comments.
+
+.PHONY: help-jumpstart
+help-jumpstart:
+	# Jumpstarts are targets that install the dependencies for a particular
+	# Linux distribution. Installing dependencies are not part of a normal
+	# build process and they are provided as a convenience to admins.
+	#
+	# Valid targets are:
+	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
+	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#
 
 .PHONY: build
 build: _build/Done.proxy
@@ -205,8 +215,8 @@ clean:
 #   are properly supported by Poplog.
 #       tcsh xterm
 #
-.PHONY: jumpstart-debian
-jumpstart-debian:
+.PHONY: jumpstart-ubuntu
+jumpstart-ubuntu:
 	sudo apt-get update \
     && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
     make curl \
