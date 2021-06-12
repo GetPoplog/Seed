@@ -388,7 +388,7 @@ cat << \****
 ****
 
 # Interpreter and tools that simply need to be run as-is.
-for i in basepop11 pop11 prolog clisp pml popc poplibr poplink env
+for i in basepop11 pop11 prolog clisp pml popc poplibr poplink env ved xved
 do
 echo '            || strcmp( "'$i'", argv[1] ) == 0'
 done
@@ -400,7 +400,7 @@ cat << \****
             0
 ****
 
-# Implied pop11 commands
+# Implied pop11 commands N.B. 'ved' appears here as well but not xved.
 for i in ved im 'help' teach doc ref
 do
 echo '            || strcmp( "'$i'", argv[1] ) == 0'
@@ -418,8 +418,13 @@ cat << \****
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
-        } else if ( strcmp( "exec", argv[1] ) == 0 ) {
-            execvp( argv[2], &argv[2] );
+       } else if ( strcmp( "exec", argv[1] ) == 0 ) {
+            if ( argc >= 3 ) {
+                execvp( argv[2], &argv[2] );
+            } else {
+                fprintf( stderr, "Too few arguments for exec action\n" );
+                return EXIT_FAILURE;
+            }
         } else {
 	    fprintf( stderr, "Unexpected arguments:" );
             for ( int i = 1; i < argc; i++ ) {
