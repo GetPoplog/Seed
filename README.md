@@ -10,14 +10,9 @@ At the moment we only support installing Poplog onto Linux x86_64 systems i.e.
 64-bit Linux on Intel. We expect to extend this to include 32-bit and other Unix
 systems that Poplog has run on. 
 
-CAVEAT: At the moment we install dependencies using `apt` and so we are currently 
-limited to installing on Debian-derived distros such as Ubuntu, Mint and Debian 
-itself. If you are on Centos, SUSE or other Linux distribution you will need to 
-handle the dependencies yourself. We will address this as soon as we can.
-
 ## How to Install Poplog using this resource
 
-### Single-line install using curl
+### Single-line install using curl (Debian-based distributions only)
 
 The simplest way to install Poplog on a debian-based distribution is to run the
 below command at the command-line. It will need you to have curl, sudo and apt
@@ -60,10 +55,12 @@ and some helper-shell scripts that you can use to install Poplog in a
 controlled fashion.
 
 The first thing you will need to do is install the packages that Poplog depends
-on. You only need to do this once. There's a shortcut for doing this:
+on. You only need to do this once. There are shortcuts for doing this on Debian,
+Ubuntu and Fedora. You can list these 'jumpstarts' with `make help-jumpstart`. 
+They are all named in a straighforward way.
 
 ```sh
-make jumpstart     # fetch all dependencies
+make jumpstart-ubuntu     # fetch all dependencies for Ubuntu
 ```
 
 After this you build and install in the usual way. The following commands
