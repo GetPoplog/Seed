@@ -135,6 +135,7 @@ help-jumpstart:
 	#   jumpstart-debian - installs the packages a Debian system needs
 	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
 	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#   jumpstart-opensuse-leap - installs the packages a openSUSE Leap system needs.
 	#
 
 .PHONY: build
