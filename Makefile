@@ -16,10 +16,6 @@
 #
 # Proxy files:
 #
-#     _build/JumpStart.proxy
-#         This file signals that all the required packages have been apt-installed so that
-#         the rest of the installation can proceed.
-#         
 #     _build/Base.proxy
 #         This file is a script that represents the successful copying of the Base system
 #         after its own Makefile has been successfully run.
@@ -97,19 +93,19 @@ SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh makeP
 CLEAN_SUPPORT_SCRIPTS_FLAG=_build/CleanSupportScripts.flag
 
 .PHONY: all
-all: jumpstart
+all:
 	$(MAKE) build
 	# Target "all" completed
 
 .PHONY: help
 help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
-	# Poplog will be installed in $(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
+	# Poplog will be installed in $$(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
 	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), checked out 
 	# from the git repo at https://github.com/GetPoplog/Seed.git and pulling updates to the
 	# script with git pull :). 
 	#
-	# Within $(POPLOG_HOME_DIR) there may be multiple versions of Poplog living 
+	# Within $$(POPLOG_HOME_DIR) there may be multiple versions of Poplog living 
 	# side-by-side. The current version will be symlinked via a link called
 	# current_usepop. You must have write-access to this folder during the 
 	# "make install" step. (And during all the steps if you keep the Makefile
@@ -123,9 +119,23 @@ help:
 	#   really-uninstall-poplog - removes Poplog and does not create a backup.
 	#   relink-and-build - a more complex build process that can relink the 
 	#       corepop executable and is useful for O/S upgrades.
-	#   jumpstart - installs the packages this installation depends on.
+	#   jumpstart-ubuntu - installs the packages a Ubuntu system needs
+	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#   jumpstart-* - and more, try `make help-jumpstart`
 	#   clean - removes all the build artifacts.
 	#   help - this explanation, for more info read the Makefile comments.
+
+.PHONY: help-jumpstart
+help-jumpstart:
+	# Jumpstarts are targets that install the dependencies for a particular
+	# Linux distribution. Installing dependencies are not part of a normal
+	# build process and they are provided as a convenience to admins.
+	#
+	# Valid targets are:
+	#   jumpstart-debian - installs the packages a Debian system needs
+	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
+	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#
 
 .PHONY: build
 build: _build/Done.proxy
@@ -206,18 +216,24 @@ clean:
 #   are properly supported by Poplog.
 #       tcsh xterm
 #
-.PHONY: jumpstart
-jumpstart: _build/JumpStart.proxy
-	true
-
-_build/JumpStart.proxy:
+.PHONY: jumpstart-debian
+jumpstart-debian:
 	sudo apt-get update \
-        && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y make curl \
-           gcc build-essential libc6 libncurses5 libncurses5-dev \
-           libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
-	   espeak
-	mkdir -p _build/
-	touch $@
+    && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    make curl \
+    gcc build-essential libc6 libncurses5 libncurses5-dev \
+    libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
+    espeak
+
+.PHONY: jumpstart-ubuntu
+jumpstart-ubuntu:
+	$(MAKE) jumpstart-debian
+
+.PHONY: jumpstart-fedora
+jumpstart-fedora:
+	sudo dnf install \
+	gcc glibc-devel tcsh ncurses-devel libXext-devel libX11-devel \
+	ncurses-devel libXt-devel openmotif-devel xterm wget espeak bzip2
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
