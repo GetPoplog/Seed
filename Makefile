@@ -219,11 +219,11 @@ clean:
 .PHONY: jumpstart-debian
 jumpstart-debian:
 	sudo apt-get update \
-    && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    make curl \
-    gcc build-essential libc6 libncurses5 libncurses5-dev \
-    libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
-    espeak
+	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+	make curl \
+	gcc build-essential libc6 libncurses5 libncurses5-dev \
+	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
+	espeak
 
 .PHONY: jumpstart-ubuntu
 jumpstart-ubuntu:
@@ -232,8 +232,17 @@ jumpstart-ubuntu:
 .PHONY: jumpstart-fedora
 jumpstart-fedora:
 	sudo dnf install \
-	gcc glibc-devel tcsh ncurses-devel libXext-devel libX11-devel \
-	libXt-devel openmotif-devel xterm wget espeak bzip2
+	curl make bzip2 \
+	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
+	libXt-devel openmotif-devel xterm espeak
+
+.PHONY: jumpstart-opensuse-leap
+jumpstart-opensuse-leap:
+	sudo zypper --non-interactive install \
+	curl make bzip2 \
+	gcc libstdc++6 libncurses5 ncurses5-devel \
+	libXext6 libX11-6 libX11-devel libXt-devel openmotif-devel \
+	xterm espeak
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
