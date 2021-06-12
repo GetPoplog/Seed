@@ -56,8 +56,8 @@ controlled fashion.
 
 The first thing you will need to do is install the packages that Poplog depends
 on. You only need to do this once. There are shortcuts for doing this on Debian,
-Ubuntu and Fedora. You can list these 'jumpstarts' with `make help-jumpstart`. 
-They are all named in a straighforward way.
+Ubuntu, Fedora and OpenSUSE. You can list these 'jumpstarts' with 
+`make help-jumpstart`. They are all named in an obvious way.
 
 ```sh
 make jumpstart-ubuntu     # fetch all dependencies for Ubuntu
