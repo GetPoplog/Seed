@@ -132,6 +132,7 @@ help-jumpstart:
 	# build process and they are provided as a convenience to admins.
 	#
 	# Valid targets are:
+	#   jumpstart-debian - installs the packages a Debian system needs
 	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
 	#   jumpstart-fedora - installs the packages a Fedora system needs.
 	#
@@ -215,14 +216,18 @@ clean:
 #   are properly supported by Poplog.
 #       tcsh xterm
 #
-.PHONY: jumpstart-ubuntu
-jumpstart-ubuntu:
+.PHONY: jumpstart-debian
+jumpstart-debian:
 	sudo apt-get update \
     && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
     make curl \
     gcc build-essential libc6 libncurses5 libncurses5-dev \
     libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
     espeak
+
+.PHONY: jumpstart-ubuntu
+jumpstart-ubuntu:
+	$(MAKE) jumpstart-debian
 
 .PHONY: jumpstart-fedora
 jumpstart-fedora:
