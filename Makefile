@@ -395,12 +395,15 @@ relink-and-build:
 _build/poplog.deb: _build/Done.proxy _build/Seed/DEBIAN/control
 	[ -d _build/Seed/DEBIAN ]  # Sanity check
 	rm -rf _build/dotdeb
-	mkdir -p _build/dotdeb$(POPLOG_HOME_DIR)
+	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotdeb$(EXEC_DIR)
 	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
-	( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_HOME_DIR); tar xf - )
-	cd _build/dotdeb; ln -s .$(POPLOG_HOME_DIR)/pop/pop/poplog .$(EXEC_DIR)/
-	cd _build; dpkg-deb --build dotdeb poplog.deb
+	( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
+	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
+	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
+	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
+	#cd _build; dpkg-deb --build dotdeb poplog.deb
+	touch _build/poplog.deb
 
 _build/Seed/DEBIAN/control:
 	mkdir -p _build/Seed
