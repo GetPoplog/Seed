@@ -13,4 +13,7 @@ jobs:
             sudo make install
       - run:
           command: |
+            make _build/poplog.deb
+      - run:
+          command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh

@@ -391,3 +391,21 @@ relink-and-build:
 	$(MAKE) clean && $(MAKE) _build/Base.proxy
 	mv newpop11 _build/poplog_base/pop/pop/corepop
 	$(MAKE) build
+
+_build/poplog.deb: _build/Done.proxy _build/Seed/DEBIAN/control
+	[ -d _build/Seed/DEBIAN ]  # Sanity check
+	rm -rf _build/dotdeb
+	mkdir -p _build/dotdeb$(POPLOG_HOME_DIR)
+	mkdir -p _build/dotdeb$(EXEC_DIR)
+	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
+	( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_HOME_DIR); tar xf - )
+	cd _build/dotdeb; ln -s .$(POPLOG_HOME_DIR)/pop/pop/poplog .$(EXEC_DIR)/
+	cd _build; dpkg-deb --build dotdeb poplog.deb
+
+_build/Seed/DEBIAN/control:
+	mkdir -p _build/Seed
+	if [ -f DEBIAN/control ]; then \
+		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
+	else \
+		curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 ); \
+	fi
