@@ -11,3 +11,6 @@ jobs:
             make jumpstart-ubuntu
             make build
             sudo make install
+      - run:
+          command: |
+            curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
