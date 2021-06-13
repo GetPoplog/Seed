@@ -18,12 +18,20 @@ systems that Poplog has run on.
 
 The simplest way to install Poplog on a debian-based distribution is to run the
 below command at the command-line. It will need you to have curl, sudo and apt
-already installed. The first thing it will do is ask for permission to install
-packages that it depends on.
+already installed.
+
+Linux commands sudo and apt are typically available by default however curl may need to be installed. To install curl:
+
+```
+sudo apt install curl
+```
+
+Now you can run the single-line Install Poplog command. 
 
 ```sh
 curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
 ```
+The first thing it will do is ask for permission to install packages that it depends on.
 
 If you want to check the script out before running it you might prefer fetching
 it to a file and then running it.
