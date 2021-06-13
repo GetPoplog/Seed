@@ -10,6 +10,8 @@ At the moment we only support installing Poplog onto Linux x86_64 systems i.e.
 64-bit Linux on Intel. We expect to extend this to include 32-bit and other Unix
 systems that Poplog has run on. 
 
+[![CircleCI](https://circleci.com/gh/GetPoplog/Seed/tree/main.svg?style=svg)](https://circleci.com/gh/GetPoplog/Seed/tree/main)
+
 ## How to Install Poplog using this resource
 
 ### Single-line install using curl (Debian-based distributions only)
