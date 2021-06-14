@@ -221,7 +221,7 @@ clean:
 jumpstart-debian:
 	sudo apt-get update \
 	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-	make curl \
+	make curl alien \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	espeak
@@ -391,3 +391,26 @@ relink-and-build:
 	$(MAKE) clean && $(MAKE) _build/Base.proxy
 	mv newpop11 _build/poplog_base/pop/pop/corepop
 	$(MAKE) build
+
+_build/poplog_0.1-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
+	[ -d _build/Seed/DEBIAN ]  # Sanity check
+	rm -rf _build/dotdeb
+	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
+	mkdir -p _build/dotdeb$(EXEC_DIR)
+	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
+	( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
+	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
+	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
+	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
+	cd _build; dpkg-deb --build dotdeb poplog_0.1-1_amd64.deb
+
+_build/poplog-0.1-2.x86_64.rpm: _build/poplog_0.1-1_amd64.deb
+	cd _build; sudo alien --to-rpm poplog_0.1-1_amd64.deb
+
+_build/Seed/DEBIAN/control:
+	mkdir -p _build/Seed
+	if [ -f DEBIAN/control ]; then \
+		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
+	else \
+		curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 ); \
+	fi
