@@ -14,6 +14,7 @@ jobs:
       - run:
           command: |
             make _build/poplog_0.1-1_amd64.deb
+            cd _build && alien --to-rpm poplog_0.1-1_amd64.deb
       - run:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
