@@ -2,7 +2,7 @@ Package: poplog
 Version: 0.1
 Section: development
 Priority: optional
-Architecture: all
+Architecture: amd64
 Depends: gcc, build-essential, libc6, libncurses5, libncurses5-dev, libstdc++6, libxext6, libxext-dev, libx11-6, libx11-dev, libxt-dev, libmotif-dev
 Recommends: espeak
 Suggests: xterm, tcsh

@@ -13,10 +13,10 @@ jobs:
             sudo make install
       - run:
           command: |
-            make _build/poplog.deb
+            make _build/poplog_0.1-1_amd64.deb
       - run:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
       - store_artifacts:
-          path: _build/poplog.deb
-          destination: poplog.deb
+          path: _build/poplog_0.1-1_amd64.deb
+          destination: poplog_0.1-1_amd64.deb
