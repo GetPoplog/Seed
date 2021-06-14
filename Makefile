@@ -404,7 +404,7 @@ _build/poplog_0.1-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_0.1-1_amd64.deb
 
-_build/poplog_0.1-1_amd64.rpm: _build/poplog_0.1-1_amd64.deb
+_build/poplog-0.1-2.x86_64.rpm: _build/poplog_0.1-1_amd64.deb
 	cd build; sudo alien --to-rpm poplog_0.1-1_amd64.deb
 
 _build/Seed/DEBIAN/control:
