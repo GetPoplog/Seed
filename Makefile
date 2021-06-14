@@ -407,6 +407,9 @@ _build/poplog_0.1-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
 _build/poplog-0.1-2.x86_64.rpm: _build/poplog_0.1-1_amd64.deb
 	cd build; sudo alien --to-rpm poplog_0.1-1_amd64.deb
 
+_build/poplog-0.1.slp: _build/poplog_0.1-1_amd64.deb
+	cd build; sudo alien --to-slp poplog_0.1-1_amd64.deb
+
 _build/Seed/DEBIAN/control:
 	mkdir -p _build/Seed
 	if [ -f DEBIAN/control ]; then \
