@@ -258,6 +258,7 @@ _build/Packages.proxy: _build/packages-V16.tar.bz2
 
 _build/Docs.proxy: _build/Base.proxy
 	curl -LsS $(DOCS_TARBALL_URL) | ( cd _build/poplog_base; tar zxf - --exclude LICENSE --strip-components=1 )
+	rm -f _build/poplog_base/README.md # Remove repo documentation file
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
@@ -340,6 +341,7 @@ _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.
 	touch $@
 
 _build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy
+	find _build/poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
 	touch $@
 
 # The transplant target is useful to get the _build folder fully
