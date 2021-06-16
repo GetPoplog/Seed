@@ -394,6 +394,9 @@ relink-and-build:
 	mv newpop11 _build/poplog_base/pop/pop/corepop
 	$(MAKE) build
 
+_build/poplog.tar.gz: _build/Done.proxy
+	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
+
 _build/poplog_0.1-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
 	[ -d _build/Seed/DEBIAN ]  # Sanity check
 	rm -rf _build/dotdeb
