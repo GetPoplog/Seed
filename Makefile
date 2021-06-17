@@ -427,7 +427,8 @@ _build/poplog-$(FULL_VERSION)-x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbu
 	    sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y alien; \
 	fi
 	[ -d _build/Seed/rpmbuild ] # Sanity check
-	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES
+	cd _build/Seed/rpmbuild; mkdir BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
 	#mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1-x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
