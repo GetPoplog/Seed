@@ -434,11 +434,13 @@ _build/poplog-$(FULL_VERSION).x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbu
 
 _build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1.spec:
 	mkdir -p _build/Seed
+	ls -R rpmbuild # Why is this test failing???
 	if [ -f rpmbuild/SPECS/poplog-$(FULL_VERSION)-1.spec ]; then \
 		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
 	else \
 		$(MAKE) FetchSeed; \
 	fi
+	[ -f $@ ] # Sanity check
 
 _build/Seed/DEBIAN/control:
 	mkdir -p _build/Seed
