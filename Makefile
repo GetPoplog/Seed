@@ -72,7 +72,10 @@
 # somewhere different, such as /opt/poplog either edit this line or try:
 #     make install POPLOG_HOME_DIR=/opt/poplog
 POPLOG_HOME_DIR:=/usr/local/poplog
-VERSION_DIR:=V16
+MAJOR_VERSION:=16
+MINOR_VERSION:=1
+FULL_VERSION:=$(MAJOR_VERSION).$(MINOR_VERSION)
+VERSION_DIR:=V$(MAJOR_VERSION)
 POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
 SYMLINK:=current_usepop
 POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
@@ -221,7 +224,7 @@ clean:
 jumpstart-debian:
 	sudo apt-get update \
 	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-	make curl alien \
+	make curl \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	espeak
@@ -394,10 +397,20 @@ relink-and-build:
 	mv newpop11 _build/poplog_base/pop/pop/corepop
 	$(MAKE) build
 
+.PHONY: full
+full:
+	echo $(FULL_VERSION)
+
+.PHONEY: dotdeb
+dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
+
+.PHONEY: dotrpm
+dotrpm: _build/poplog-$(FULL_VERSION)-x86_64.rpm
+
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 
-_build/poplog_0.1-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
+_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
 	[ -d _build/Seed/DEBIAN ]  # Sanity check
 	rm -rf _build/dotdeb
 	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
@@ -407,15 +420,31 @@ _build/poplog_0.1-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
 	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
-	cd _build; dpkg-deb --build dotdeb poplog_0.1-1_amd64.deb
+	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/poplog-0.1-2.x86_64.rpm: _build/poplog_0.1-1_amd64.deb
-	cd _build; sudo alien --to-rpm poplog_0.1-1_amd64.deb
+_build/poplog-$(FULL_VERSION)-x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
+	[ -d _build/Seed/rpmbuild ] # Sanity check
+	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES
+	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
+	#mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1-x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
+
+_build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec:
+	mkdir -p _build/Seed
+	if [ -f rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec ]; then \
+		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
 
 _build/Seed/DEBIAN/control:
 	mkdir -p _build/Seed
 	if [ -f DEBIAN/control ]; then \
 		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
 	else \
-		curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 ); \
+		$(MAKE) FetchSeed; \
 	fi
+
+.PHONY: FetchSeed
+FetchSeed:
+	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
+
