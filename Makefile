@@ -405,7 +405,7 @@ full:
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
 .PHONEY: dotrpm
-dotrpm: _build/poplog-$(FULL_VERSION)-x86_64.rpm
+dotrpm: _build/poplog-$(FULL_VERSION).x86_64.rpm
 
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
@@ -422,19 +422,19 @@ _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/poplog-$(FULL_VERSION)-x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
+_build/poplog-$(FULL_VERSION).x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1.spec
 	if ! type rpmbuild; then \
 	    sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y alien; \
 	fi
 	[ -d _build/Seed/rpmbuild ] # Sanity check
 	cd _build/Seed/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/
-	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
-	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1-x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
+	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog-$(FULL_VERSION)-1.spec
+	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
-_build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec:
+_build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1.spec:
 	mkdir -p _build/Seed
-	if [ -f rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec ]; then \
+	if [ -f rpmbuild/SPECS/poplog-$(FULL_VERSION)-1.spec ]; then \
 		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
 	else \
 		$(MAKE) FetchSeed; \
