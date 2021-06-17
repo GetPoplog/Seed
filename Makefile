@@ -224,7 +224,7 @@ clean:
 jumpstart-debian:
 	sudo apt-get update \
 	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-	make curl \
+	make curl rpm-build \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	espeak
