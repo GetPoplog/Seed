@@ -450,5 +450,6 @@ _build/Seed/DEBIAN/control:
 
 .PHONY: FetchSeed
 FetchSeed:
+	mkdir -p _build/Seed
 	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
 
