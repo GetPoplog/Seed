@@ -209,7 +209,7 @@ clean:
 	# Target "clean" completed
 
 # Installs the dependencies
-#   Needed to fetch resources: 
+#   Needed to fetch resources:
 #       make curl
 #   Needed for building Poplog:  
 #       build-essential libc6 libncurses5 libncurses5-dev 
@@ -224,7 +224,7 @@ clean:
 jumpstart-debian:
 	sudo apt-get update \
 	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-	make curl rpm-build \
+	make curl \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	espeak
@@ -423,6 +423,9 @@ _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
 _build/poplog-$(FULL_VERSION)-x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
+	if ! type rpmbuild; then \
+	    sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y alien; \
+	fi
 	[ -d _build/Seed/rpmbuild ] # Sanity check
 	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog-$(FULL_VERSION)-1-x86_64.spec
