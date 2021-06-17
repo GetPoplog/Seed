@@ -26,5 +26,5 @@ jobs:
           path: _build/poplog_16.1-1_amd64.deb
           destination: poplog_16.1-1_amd64.deb
       - store_artifacts:
-          path: _build/poplog-16.1-1-x86_64.rpm
-          destination: poplog-16.1-1-x86_64.rpm
+          path: _build/poplog-16.1-1.x86_64.rpm
+          destination: poplog-16.1-1.x86_64.rpm
