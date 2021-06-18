@@ -425,7 +425,7 @@ builddeb: _build/Seed/DEBIAN/control
 	mkdir -p _build/dotdeb$(EXEC_DIR)
 	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
 	#( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
-	cat _build/poplog.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
+	cat _build/poplog.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
