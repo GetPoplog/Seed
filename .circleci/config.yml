@@ -42,7 +42,7 @@ jobs:
           destination: poplog_16.1-1_amd64.deb
   build_rpm:
     docker:
-      - image: cimg/base:2021.04
+      - image: fedora
     steps:
       - checkout
       - attach_workspace:
