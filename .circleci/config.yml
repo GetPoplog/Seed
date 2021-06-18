@@ -63,4 +63,4 @@ workflows:
             - build_tree
       - build_rpm:
           requires:
-            - build_rpm
+            - build_tree
