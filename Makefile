@@ -432,6 +432,13 @@ builddeb: _build/Seed/DEBIAN/control
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
 _build/poplog-$(FULL_VERSION).x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
+	$(MAKE) buildrpm
+	[ -f $@ ] # Sanity check that we built the target
+
+# We need a target that the CircleCI script can use for a process that assumes
+# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+.PHONY: buildrpm
+buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	if ! type rpmbuild; then \
 	    sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y alien; \
 	fi

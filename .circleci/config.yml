@@ -41,15 +41,15 @@ jobs:
           path: _build/poplog_16.1-1_amd64.deb
           destination: poplog_16.1-1_amd64.deb
   build_rpm:
-    machine:
-      image: ubuntu-2004:202104-01
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - attach_workspace:
           at: _build
       - run:
           command: |
-            make dotrpm
+            make buildrpm
       - store_artifacts:
           path: _build/poplog-16.1-1.x86_64.rpm
           destination: poplog-16.1-1.x86_64.rpm
