@@ -6,8 +6,8 @@ jobs:
       image: ubuntu-2004:202104-01
     steps:
       - run:
-        command: |
-          curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
+          command: |
+            curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
   build_tree:
     machine:
       image: ubuntu-2004:202104-01
@@ -27,7 +27,7 @@ jobs:
           paths:
             - poplog.tar.gz
   build_deb:
-     machine:
+    machine:
       image: ubuntu-2004:202104-01   
     steps:
       - checkout
@@ -61,6 +61,6 @@ workflows:
       - build_deb:
           requires:
             - build_tree
-      - build_rpm
+      - build_rpm:
           requires:
             - build_rpm
