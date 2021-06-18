@@ -27,8 +27,8 @@ jobs:
           paths:
             - poplog.tar.gz
   build_deb:
-    machine:
-      image: ubuntu-2004:202104-01   
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - attach_workspace:
