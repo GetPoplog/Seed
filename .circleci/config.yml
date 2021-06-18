@@ -14,8 +14,8 @@ jobs:
       - run:
           command: |
             make _build/poplog.tar.gz
-            make _build/poplog_0.1-1_amd64.deb
-            make _build/poplog-0.1-2.x86_64.rpm
+            make dotdeb
+            make dotrpm
       - run:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
@@ -23,8 +23,8 @@ jobs:
           path: _build/poplog.tar.gz
           destination: poplog.tar.gz
       - store_artifacts:
-          path: _build/poplog_0.1-1_amd64.deb
-          destination: poplog_0.1-1_amd64.deb
+          path: _build/poplog_16.1-1_amd64.deb
+          destination: poplog_16.1-1_amd64.deb
       - store_artifacts:
-          path: _build/poplog-0.1-2.x86_64.rpm
-          destination: poplog-0.1-2.x86_64.rpm
+          path: _build/poplog-16.1-1.x86_64.rpm
+          destination: poplog-16.1-1.x86_64.rpm
