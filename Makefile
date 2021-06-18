@@ -409,6 +409,7 @@ dotrpm: _build/poplog-$(FULL_VERSION).x86_64.rpm
 
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
+	[ -f $@ ]
 
 _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBIAN/control
 	[ -d _build/Seed/DEBIAN ]  # Sanity check
