@@ -35,6 +35,7 @@ jobs:
           at: _build
       - run:
           command: |
+            ls -R
             make dotdeb
       - store_artifacts:
           path: _build/poplog_16.1-1_amd64.deb
