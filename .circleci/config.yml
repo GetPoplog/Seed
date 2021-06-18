@@ -1,7 +1,14 @@
 # Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 jobs:
-  build:
+  one_line_install:
+    machine:
+      image: ubuntu-2004:202104-01
+    steps:
+      - run:
+        command: |
+          curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
+  build_tree:
     machine:
       image: ubuntu-2004:202104-01
     steps:
@@ -11,20 +18,49 @@ jobs:
             make jumpstart-ubuntu
             make build
             sudo make install
-      - run:
-          command: |
             make _build/poplog.tar.gz
-            make dotdeb
-            make dotrpm
-      - run:
-          command: |
-            curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
       - store_artifacts:
           path: _build/poplog.tar.gz
           destination: poplog.tar.gz
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - poplog.tar.gz
+  build_deb:
+     machine:
+      image: ubuntu-2004:202104-01   
+    steps:
+      - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          command: |
+            make dotdeb
       - store_artifacts:
           path: _build/poplog_16.1-1_amd64.deb
           destination: poplog_16.1-1_amd64.deb
+  build_rpm:
+    machine:
+      image: ubuntu-2004:202104-01
+    steps:
+      - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          command: |
+            make dotrpm
       - store_artifacts:
           path: _build/poplog-16.1-1.x86_64.rpm
           destination: poplog-16.1-1.x86_64.rpm
+workflows:
+  version: 2
+  mainflow:
+    jobs:
+      - one_line_install
+      - build_tree
+      - build_deb:
+          requires:
+            - build_tree
+      - build_rpm
+          requires:
+            - build_rpm
