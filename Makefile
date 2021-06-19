@@ -405,27 +405,42 @@ full:
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
 .PHONEY: dotrpm
-dotrpm: _build/poplog-$(FULL_VERSION).x86_64.rpm
+dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
 
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
+	[ -f $@ ] # Sanity check that we built the target
 
-_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/Done.proxy _build/Seed/DEBIAN/control
-	[ -d _build/Seed/DEBIAN ]  # Sanity check
+_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBIAN/control
+	$(MAKE) builddeb
+	[ -f $@ ] # Sanity check that we built the target
+
+# We need a target that the CircleCI script can use for a process that assumes
+# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+.PHONY: builddeb
+builddeb: _build/Seed/DEBIAN/control
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -d _build/Seed/DEBIAN ]   # Sanity check
 	rm -rf _build/dotdeb
 	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotdeb$(EXEC_DIR)
 	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
-	( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
+	#( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
+	cat _build/poplog.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/poplog-$(FULL_VERSION).x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
-	if ! type rpmbuild; then \
-	    sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y alien; \
-	fi
+_build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
+	$(MAKE) buildrpm
+	[ -f $@ ] # Sanity check that we built the target
+
+# We need a target that the CircleCI script can use for a process that assumes
+# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+.PHONY: buildrpm
+buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	[ -d _build/Seed/rpmbuild ] # Sanity check
 	cd _build/Seed/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/

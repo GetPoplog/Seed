@@ -23,14 +23,15 @@ POP-11, Common Lisp, Prolog, and Standard ML.
 
 %prep
 # Create the RPM from the tar file
-%setup -c -n %{name}-%{version}-%{release}
+%setup -q -c -n %{name}-%{version}-%{release}
 
 %install
 # Create the new test-package directory
 mkdir -p $RPM_BUILD_ROOT/opt/poplog/%{name}-%{version}-%{release}
 
 # Copy the contents of the RPM into our new directory
-cp -Rp $RPM_BUILD_DIR/%{name}-%{version}-%{release}/* $RPM_BUILD_ROOT/opt/poplog/%{name}-%{version}-%{release}
+# cp -Rp $RPM_BUILD_DIR/%{name}-%{version}-%{release}/* $RPM_BUILD_ROOT/opt/poplog/%{name}-%{version}-%{release}
+tar cf - -C $RPM_BUILD_DIR/%{name}-%{version}-%{release} . | tar xf - -C $RPM_BUILD_ROOT/opt/poplog/%{name}-%{version}-%{release}
 
 %post
 ln -sf /opt/poplog/%{name}-%{version}-%{release}/pop/pop/poplog $RPM_BUILD_ROOT/%{_bindir}/poplog
