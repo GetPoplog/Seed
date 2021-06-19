@@ -419,7 +419,8 @@ _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBI
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: builddeb
 builddeb: _build/Seed/DEBIAN/control
-	[ -d _build/Seed/DEBIAN ]  # Sanity check
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -d _build/Seed/DEBIAN ]   # Sanity check
 	rm -rf _build/dotdeb
 	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotdeb$(EXEC_DIR)
@@ -439,10 +440,11 @@ _build/poplog-$(FULL_VERSION).x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbu
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: buildrpm
 buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	[ -d _build/Seed/rpmbuild ] # Sanity check
 	cd _build/Seed/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/
-	cd _build/Seed/rpmbuild; rpmbuild --quiet --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
+	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
 _build/Seed/rpmbuild/SPECS/poplog.spec:
