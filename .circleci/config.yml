@@ -50,6 +50,8 @@ jobs:
       - run:
           command: |
             dnf -y install make rpmdevtools
+      - run:
+          command: |
             make buildrpm
       - store_artifacts:
           path: _build/poplog-16.1-1.x86_64.rpm
