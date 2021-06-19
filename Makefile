@@ -405,7 +405,7 @@ full:
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
 .PHONEY: dotrpm
-dotrpm: _build/poplog-$(FULL_VERSION).x86_64.rpm
+dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
 
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
@@ -432,7 +432,7 @@ builddeb: _build/Seed/DEBIAN/control
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/poplog-$(FULL_VERSION).x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
+_build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
 	$(MAKE) buildrpm
 	[ -f $@ ] # Sanity check that we built the target
 
