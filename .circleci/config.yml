@@ -42,14 +42,14 @@ jobs:
           destination: poplog_16.1-1_amd64.deb
   build_rpm:
     docker:
-      - image: fedora
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - attach_workspace:
           at: _build
       - run:
           command: |
-            dnf -y install make rpmdevtools
+            apt install -y make alien curl
       - run:
           command: |
             make buildrpm
