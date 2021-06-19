@@ -32,6 +32,10 @@ jobs:
       - image: cimg/base:2021.04
     steps:
       - checkout
+      - run:
+          command: |
+            sudo apt update
+            sudo apt install -y make
       - attach_workspace:
           at: _build
       - run:
@@ -49,7 +53,8 @@ jobs:
           at: _build
       - run:
           command: |
-            apt install -y make alien curl
+            sudo apt update
+            sudo apt install -y make alien curl
       - run:
           command: |
             make buildrpm
