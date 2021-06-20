@@ -401,11 +401,14 @@ relink-and-build:
 full:
 	echo $(FULL_VERSION)
 
-.PHONEY: dotdeb
+.PHONY: dotdeb
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
-.PHONEY: dotrpm
+.PHONY: dotrpm
 dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
+
+.PHONY: dottgz
+dottgz: _build/poplog.tar.gz
 
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
