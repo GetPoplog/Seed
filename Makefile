@@ -463,7 +463,7 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	mkdir -p _build/AppDir
 	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
 	tar zxf _build/poplog.tar.gz -C _build/AppDir/opt/poplog
-	cd _build && ./appimagetool AppDir
+	cd _build && ARCH=x86_64 ./appimagetool AppDir
 
 _build/appimagetool:
 	curl -LSs https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage > _build/appimagetool
