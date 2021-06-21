@@ -62,8 +62,8 @@ jobs:
           path: _build/poplog-16.1-1.x86_64.rpm
           destination: poplog-16.1-1.x86_64.rpm
   build_appimage:
-    docker:
-      - image: cimg/base:2021.04
+    machine:
+      image: ubuntu-2004:202104-01
     steps:
       - checkout
       - attach_workspace:
