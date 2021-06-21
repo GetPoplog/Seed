@@ -35,7 +35,7 @@ jobs:
       - run:
           command: |
             sudo apt update
-            sudo apt install -y make
+            sudo apt install -y make curl
       - attach_workspace:
           at: _build
       - run:
@@ -61,6 +61,21 @@ jobs:
       - store_artifacts:
           path: _build/poplog-16.1-1.x86_64.rpm
           destination: poplog-16.1-1.x86_64.rpm
+  build_appimage:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          command: |
+            sudo apt update
+            sudo apt install -y make curl
+      - run:
+          command:
+            make buildappimage
+      - store_artifacts:
+          path: _build/Poplog-x86_64.AppImage
+          destination: Poplog-x86_64.AppImage
 workflows:
   version: 2
   mainflow:
@@ -71,5 +86,8 @@ workflows:
           requires:
             - build_tree
       - build_rpm:
+          requires:
+            - build_tree
+      - build_appimage:
           requires:
             - build_tree

@@ -464,7 +464,10 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
 	tar zxf _build/poplog.tar.gz -C _build/AppDir/opt/poplog
 	mkdir -p _build/AppDir/usr/lib
-	cp -pR `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '` _build/AppDir/usr/lib
+	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
+		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
+	done
+	chmod a-w _build/AppDir/usr/lib/*
 	cd _build && ARCH=x86_64 ./appimagetool AppDir
 
 _build/appimagetool:
