@@ -418,6 +418,10 @@ _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBI
 	$(MAKE) builddeb
 	[ -f $@ ] # Sanity check that we built the target
 
+_build/Poplog-x86_64.AppImage.zip: _build/Seed/AppDir/AppRun
+	$(MAKE) buildappimage
+	[ -f $@ ] # Sanity check that we built the target
+
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: builddeb
@@ -450,9 +454,24 @@ buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
+# We need a target that the CircleCI script can use for a process that assumes
+# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+.PHONY: buildappimage
+buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -d _build/Seed/AppDir ] # Sanity check
+	mkdir -p _build/AppDir
+	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
+	tar zxf _build/poplog.tar.gz -C _build/AppDir/opt/poplog
+	cd _build && ./appimagetool AppDir
+
+_build/appimagetool:
+	curl -LSs https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage > _build/appimagetool
+	chmod a+x _build/appimagetool
+	[ -x $@ ] # Sanity check
+
 _build/Seed/rpmbuild/SPECS/poplog.spec:
 	mkdir -p _build/Seed
-	ls -R rpmbuild # Why is this test failing???
 	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
 		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
 	else \
@@ -464,6 +483,14 @@ _build/Seed/DEBIAN/control:
 	mkdir -p _build/Seed
 	if [ -f DEBIAN/control ]; then \
 		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+
+_build/Seed/AppDir/AppRun:
+	mkdir -p _build/Seed
+	if [ -f AppDir/AppRun ]; then \
+		tar cf - AppDir | ( cd _build/Seed; tar cxf - ); \
 	else \
 		$(MAKE) FetchSeed; \
 	fi

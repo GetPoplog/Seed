@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Poplog
+Exec=opt/poplog/pop/pop/poplog
+Icon=poplog
+Type=Application
+Terminal=true
+Categories=Development;
