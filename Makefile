@@ -490,10 +490,11 @@ _build/Seed/DEBIAN/control:
 _build/Seed/AppDir/AppRun:
 	mkdir -p _build/Seed
 	if [ -f AppDir/AppRun ]; then \
-		tar cf - AppDir | ( cd _build/Seed; tar cxf - ); \
+		tar cf - AppDir | ( cd _build/Seed; tar xf - ); \
 	else \
 		$(MAKE) FetchSeed; \
 	fi
+	[ -f $@ ] # Sanity check
 
 .PHONY: FetchSeed
 FetchSeed:
