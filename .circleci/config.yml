@@ -3,14 +3,14 @@ version: 2.1
 jobs:
   one_line_install:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:202104-01
     steps:
       - run:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
   build_tree:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:202104-01
     steps:
       - checkout
       - run:
@@ -63,7 +63,7 @@ jobs:
           destination: poplog-16.1-1.x86_64.rpm
   build_appimage:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:202104-01
     steps:
       - checkout
       - attach_workspace:
