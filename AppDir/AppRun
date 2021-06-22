@@ -1,3 +1,2 @@
 #!/bin/sh
-LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH}"
-exec ${APPDIR}/opt/poplog/pop/pop/poplog $*
+LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH}" exec ${APPDIR}/opt/poplog/pop/pop/poplog $*
