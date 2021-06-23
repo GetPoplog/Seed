@@ -224,7 +224,7 @@ clean:
 jumpstart-debian:
 	sudo apt-get update \
 	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-	make curl \
+	make curl rename \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	espeak
@@ -236,7 +236,7 @@ jumpstart-ubuntu:
 .PHONY: jumpstart-fedora
 jumpstart-fedora:
 	sudo dnf install \
-	curl make bzip2 \
+	curl make bzip2 rename \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak
 
@@ -454,7 +454,7 @@ buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
 # We need a target that the CircleCI script can use for a process that assumes
-# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+# _build/poplog.tar.gz exists and doesn't try to rebuild anything. 
 .PHONY: buildappimage
 buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
@@ -466,6 +466,8 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
+	# Now to create systematically re-named symlinks. Uses the rename command.
+	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $i $i.xxx; done; rename 's/\.so\..*\.xxx$/.so' *.xxx
 	chmod a-w _build/AppDir/usr/lib/*
 	cd _build && ARCH=x86_64 ./appimagetool AppDir
 
