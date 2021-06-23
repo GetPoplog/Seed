@@ -466,6 +466,8 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
+	# But we want to exclude libc and libdl.
+	cd _build/AppDir/usr/lib/; rm -f libc* libdl.*
 	# Now to create systematically re-named symlinks.
 	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`; done
 	chmod a-w _build/AppDir/usr/lib/*
