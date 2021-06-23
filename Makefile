@@ -467,7 +467,7 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
 	# Now to create systematically re-named symlinks. Uses the rename command.
-	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $i $i.xxx; done; rename 's/\.so\..*\.xxx$/.so' *.xxx
+	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i $$i.xxx; done; rename 's/\.so\..*\.xxx$$/.so' *.xxx
 	chmod a-w _build/AppDir/usr/lib/*
 	cd _build && ARCH=x86_64 ./appimagetool AppDir
 
