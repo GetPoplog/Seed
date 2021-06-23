@@ -224,7 +224,7 @@ clean:
 jumpstart-debian:
 	sudo apt-get update \
 	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-	make curl rename \
+	make curl \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	espeak
@@ -236,7 +236,7 @@ jumpstart-ubuntu:
 .PHONY: jumpstart-fedora
 jumpstart-fedora:
 	sudo dnf install \
-	curl make bzip2 rename \
+	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak
 
@@ -466,8 +466,8 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
-	# Now to create systematically re-named symlinks. Uses the rename command.
-	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i $$i.xxx; done; rename 's/\.so\..*\.xxx$$/.so' *.xxx
+	# Now to create systematically re-named symlinks.
+	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`
 	chmod a-w _build/AppDir/usr/lib/*
 	cd _build && ARCH=x86_64 ./appimagetool AppDir
 
