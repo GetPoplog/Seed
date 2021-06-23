@@ -401,11 +401,14 @@ relink-and-build:
 full:
 	echo $(FULL_VERSION)
 
-.PHONEY: dotdeb
+.PHONY: dotdeb
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
-.PHONEY: dotrpm
+.PHONY: dotrpm
 dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
+
+.PHONY: dottgz
+dottgz: _build/poplog.tar.gz
 
 _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
@@ -413,6 +416,10 @@ _build/poplog.tar.gz: _build/Done.proxy
 
 _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBIAN/control
 	$(MAKE) builddeb
+	[ -f $@ ] # Sanity check that we built the target
+
+_build/Poplog-x86_64.AppImage.zip: _build/Seed/AppDir/AppRun
+	$(MAKE) buildappimage
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
@@ -425,7 +432,6 @@ builddeb: _build/Seed/DEBIAN/control
 	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotdeb$(EXEC_DIR)
 	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
-	#( cd _build/poplog_base; tar cf - . ) | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar xf - )
 	cat _build/poplog.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
@@ -447,9 +453,33 @@ buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
+# We need a target that the CircleCI script can use for a process that assumes
+# _build/poplog.tar.gz exists and doesn't try to rebuild anything. 
+.PHONY: buildappimage
+buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -d _build/Seed/AppDir ] # Sanity check
+	mkdir -p _build/AppDir
+	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
+	tar zxf _build/poplog.tar.gz -C _build/AppDir/opt/poplog
+	mkdir -p _build/AppDir/usr/lib
+	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
+		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
+	done
+	# But we want to exclude libc and libdl.
+	cd _build/AppDir/usr/lib/; rm -f libc* libdl.*
+	# Now to create systematically re-named symlinks.
+	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`; done
+	chmod a-w _build/AppDir/usr/lib/*
+	cd _build && ARCH=x86_64 ./appimagetool AppDir
+
+_build/appimagetool:
+	curl -LSs https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage > _build/appimagetool
+	chmod a+x _build/appimagetool
+	[ -x $@ ] # Sanity check
+
 _build/Seed/rpmbuild/SPECS/poplog.spec:
 	mkdir -p _build/Seed
-	ls -R rpmbuild # Why is this test failing???
 	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
 		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
 	else \
@@ -464,6 +494,15 @@ _build/Seed/DEBIAN/control:
 	else \
 		$(MAKE) FetchSeed; \
 	fi
+
+_build/Seed/AppDir/AppRun:
+	mkdir -p _build/Seed
+	if [ -f AppDir/AppRun ]; then \
+		tar cf - AppDir | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+	[ -f $@ ] # Sanity check
 
 .PHONY: FetchSeed
 FetchSeed:
