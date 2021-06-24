@@ -1,5 +1,5 @@
 name: poplog
-version: 16.0
+version: 16.0.1
 summary: Poplog Development Environment
 description: |
   Poplog is an Open Source, reflective, incrementally compiled software 
@@ -16,21 +16,20 @@ parts:
   poplog:
     plugin: dump
     source: poplog_snap_files.tgz
-
-stage-snaps:
-  - gcc 
-  - build-essential 
-  - libc6 
-  - libncurses5 
-  - libncurses5-dev
-	- libstdc++6 
-  - libxext6 
-  - libxext-dev 
-  - libx11-6 
-  - libx11-dev 
-  - libxt-dev 
-  - libmotif-dev
-	- espeak
+    stage-packages:
+      - gcc 
+      - build-essential 
+      - libc6 
+      - libncurses5 
+      - libncurses5-dev
+      - libstdc++6 
+      - libxext6 
+      - libxext-dev 
+      - libx11-6 
+      - libx11-dev 
+      - libxt-dev 
+      - libmotif-dev
+      - espeak
 
 apps:
   poplog:
