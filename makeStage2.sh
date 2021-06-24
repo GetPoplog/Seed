@@ -3,9 +3,7 @@ set -e
 
 usepop=`pwd`/_build/poplog_base
 export usepop
-. $usepop/pop/com/popenv.sh
-PATH=$popsys:$PATH
-export PATH
+. $usepop/pop/com/popinit.sh
 
 # echo "mklibpop"
 cd $popexternlib
