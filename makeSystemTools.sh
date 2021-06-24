@@ -6,7 +6,7 @@ SEED_DIR=`pwd`
 # variables.
 usepop=`pwd`/_build/poplog_base
 export usepop
-. $usepop/pop/com/popenv.sh
+. $usepop/pop/com/popinit.sh
 
 POP__as=/usr/bin/as
 export POP__as

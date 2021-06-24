@@ -298,7 +298,7 @@ _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 # on Stage1.
 _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
-        && . ./_build/poplog_base/pop/com/popenv.sh \
+        && . ./_build/poplog_base/pop/com/popinit.sh \
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
@@ -339,8 +339,8 @@ _build/PoplogCommander.proxy: _build/Stage2.proxy makePoplogCommander.sh
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
-        && . ./_build/poplog_base/pop/com/popenv.sh \
-	&& env PATH="$$popsys:$$PATH" $$usepop/pop/com/makeindexes > _build/makeindexes.log
+        && . ./_build/poplog_base/pop/com/popinit.sh \
+        && $$usepop/pop/com/makeindexes > _build/makeindexes.log
 	touch $@
 
 _build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy
@@ -388,9 +388,9 @@ _build/transplant-getpoplog.tgz: _build/Done.proxy
 relink-and-build: 
 	[ -f _build/Done.proxy ] # Sanity check that we are starting from a pre-built tree.
 	export usepop=$(abspath ./_build/poplog_base) \
-	&& . ./_build/poplog_base/pop/com/popenv.sh \
-	&& cd $$popsys \
-	&& env PATH="$$popsys:$$PATH" $$usepop/pop/pop/poplink_cmnd
+        && . ./_build/poplog_base/pop/com/popinit.sh \
+        && cd $$popsys \
+        && $$usepop/pop/pop/poplink_cmnd
 	output=`./_build/poplog_base/pop/pop/newpop11 ":sysexit()" 2>&1` && [ -z "$$output" ] # Check the rebuilt newpop11 works
 	mv _build/poplog_base/pop/pop/newpop11 .
 	$(MAKE) clean && $(MAKE) _build/Base.proxy

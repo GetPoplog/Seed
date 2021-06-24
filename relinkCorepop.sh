@@ -9,9 +9,7 @@ export POP__as
 # variables.
 usepop=`pwd`/_build/poplog_base
 export usepop
-. $usepop/pop/com/popenv.sh
-PATH=$popsys:$PATH
-export PATH
+. $usepop/pop/com/popinit.sh
 
 cd $popexternlib
     ./mklibpop
