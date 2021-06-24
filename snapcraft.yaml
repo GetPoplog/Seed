@@ -15,7 +15,8 @@ base: core18
 parts:
   poplog:
     plugin: dump
-    source: poplog_snap_files.tgz
+    source: tmp/
+    source-type: local
     stage-packages:
       - gcc 
       - build-essential 

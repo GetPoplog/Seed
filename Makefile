@@ -431,12 +431,11 @@ _build/Poplog-x86_64.AppImage.zip: _build/Seed/AppDir/AppRun
 .PHONY: buildsnap
 buildsnap:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	mkdir -p _build/snap/opt/poplog
-	mkdir -p _build/snap/usr/bin
-	cat _build/poplog.tar.gz | ( cd _build/snap/opt/poplog; tar zxf - )
-	cd _build/snap/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
-	( cd _build/snap; tar cf - . ) | gzip > _build/poplog_snap_files.tgz
-	
+	mkdir -p _build/snapcraft-folder/tmp/opt/poplog
+	mkdir -p _build/snapcraft-folder/tmp/usr/bin
+	cat _build/poplog.tar.gz | ( cd _build/snapcraft-folder/tmp/opt/poplog; tar zxf - )
+	cd _build/snapcraft-folder/tmp/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
+
 
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
