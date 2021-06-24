@@ -17,12 +17,12 @@ parts:
     plugin: dump
     source: tmp/
     source-type: local
+    build-attributes: [keep-execstack]
     stage-packages:
       - gcc 
       - build-essential 
-      - libc6 
-      - libncurses5 
-      - libncurses5-dev
+      - libncurses
+      - libncurses-dev
       - libstdc++6 
       - libxext6 
       - libxext-dev 
