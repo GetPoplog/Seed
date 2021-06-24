@@ -83,11 +83,17 @@ POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 # This is the folder where the link to the poplog-shell executable will be installed.
 EXEC_DIR:=/usr/local/bin
 
-MAIN_BRANCH:=main
-SEED_TARBALL_URL:=https://github.com/GetPoplog/Seed/archive/$(MAIN_BRANCH).tar.gz
-BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(MAIN_BRANCH).tar.gz
-DOCS_TARBALL_URL:=https://github.com/GetPoplog/Docs/archive/$(MAIN_BRANCH).tar.gz
-COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(MAIN_BRANCH).tar.gz
+# Allow overriding of the branches used for the different repositories.
+DEFAULT_BRANCH:=main
+SEED_BRANCH:=$(DEFAULT_BRANCH)
+BASE_BRANCH:=$(DEFAULT_BRANCH)
+DOCS_BRANCH:=$(DEFAULT_BRANCH)
+COREPOPS_BRANCH:=$(DEFAULT_BRANCH)
+
+SEED_TARBALL_URL:=https://github.com/GetPoplog/Seed/archive/$(SEED_BRANCH).tar.gz
+BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.gz
+DOCS_TARBALL_URL:=https://github.com/GetPoplog/Docs/archive/$(DOCS_BRANCH).tar.gz
+COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
 
 # We need some support scripts. These might be checked out of git or downloaded
 # by curl. If the latter then we must clean them up on "make clean", which
