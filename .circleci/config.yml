@@ -89,6 +89,7 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y make curl snapcraft
+            sudo snap install multipass
       - run:
           command:
             make buildsnap
