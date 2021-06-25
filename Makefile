@@ -549,12 +549,12 @@ _build/dotsnap/poplog_16.0.1_amd64.snap: _build/poplog.tar.gz
 	[ -f $@ ] # Sanity check that we built the target
 
 .PHONY: buildsnap
-buildsnap: _build/Seed/snapcraft.yaml
+buildsnap:
 	$(MAKE) buildsnapcraftready
 	cd _build/dotsnap; snapcraft
 
 .PHONY: buildsnapcraftready
-buildsnapcraftready:
+buildsnapcraftready: _build/Seed/snapcraft.yaml
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	mkdir -p _build/dotsnap/tmp/opt/poplog
 	mkdir -p _build/dotsnap/tmp/usr/bin
