@@ -71,13 +71,27 @@ jobs:
       - run:
           command: |
             sudo apt update
-            sudo apt install -y make curl rename
+            sudo apt install -y make curl
       - run:
           command:
             make buildappimage
       - store_artifacts:
           path: _build/Poplog-x86_64.AppImage
           destination: Poplog-x86_64.AppImage
+  build_snap:
+    machine:
+      image: ubuntu-2004:202104-01
+    steps:
+      - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          command: |
+            sudo apt update
+            sudo apt install -y make curl snapcraft
+      - run:
+          command:
+            make buildsnap
 workflows:
   version: 2
   mainflow:
@@ -91,5 +105,8 @@ workflows:
           requires:
             - build_tree
       - build_appimage:
+          requires:
+            - build_tree
+      - build_snap:
           requires:
             - build_tree
