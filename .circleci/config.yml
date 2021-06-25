@@ -82,8 +82,8 @@ jobs:
           path: _build/Poplog-x86_64.AppImage
           destination: Poplog-x86_64.AppImage
   build_snap:
-    machine:
-      image: ubuntu-2004:202104-01
+    docker:
+      - image: cibuilds/snapcraft
     steps:
       - checkout
       - run:
@@ -94,8 +94,7 @@ jobs:
       - run:
           command: |
             sudo apt update
-            sudo apt install -y make curl snapd
-            sudo snap install snapcraft --edge --classic
+            sudo apt install -y make curl
       - run:
           command:
             make buildsnap
