@@ -104,7 +104,7 @@ jobs:
       - run:
           command: |
             make buildsnapcraftready
-            cd _build/dotsnap; snapcraft --destructive
+            cd _build/dotsnap; snapcraft --destructive-mode
       - store_artifacts:
           path: _build/dotsnap/poplog_16.0.1_amd64.snap
           destination: poplog_16.0.1_amd64.snap
