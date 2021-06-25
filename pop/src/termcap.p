@@ -56,8 +56,12 @@ exload termcap
     ;;; problem
     ['-B static -lcurses -B dynamic']
 #_ELSE
-;;; ['-ltermcap']
-        ['-lncurses']
+    ;;; ['-ltermcap']
+    ;;; ['-lncurses']
+    ;;; At this time, Poplog needs libncurses5 and must be explicit to avoid
+    ;;; clashes with systems where ncurses6 is also available and will take 
+    ;;; precedence on linking.
+    [ '-l:libncurses.so.5' '-l:libtinfo.so.5' ]
 #_ENDIF
     lconstant exload_dummy;     ;;; anything will do
 endexload;
