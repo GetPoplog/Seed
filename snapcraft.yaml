@@ -20,7 +20,6 @@ parts:
     build-attributes: [keep-execstack]
     stage-packages:
       - gcc 
-      - libc6
       - build-essential 
       - libncurses5 
       - libncurses5-dev
