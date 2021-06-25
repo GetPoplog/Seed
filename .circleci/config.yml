@@ -86,6 +86,10 @@ jobs:
       - attach_workspace:
           at: _build
       - run:
+          command: |
+            sudo apt update
+            sudo apt install -y make curl
+      - run:
           command:
             make buildsnap
 workflows:
