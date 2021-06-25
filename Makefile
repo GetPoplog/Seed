@@ -553,7 +553,7 @@ buildsnap: _build/Seed/snapcraft.yaml
 	$(MAKE) buildsnapcraftready
 	cd _build/dotsnap; snapcraft
 
-.PHONY: buildsnapcraftready:
+.PHONY: buildsnapcraftready
 buildsnapcraftready:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	mkdir -p _build/dotsnap/tmp/opt/poplog
