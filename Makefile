@@ -479,7 +479,6 @@ _build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpm
 buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	[ -d _build/Seed/rpmbuild ] # Sanity check
-	type -P rpmbuild || sudo apt install -y alien # We require alien to install rpmbuild on Ubuntu
 	cd _build/Seed/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
@@ -548,7 +547,6 @@ dotsnap: _build/poplog.tar.gz
 .PHONY: buildsnap
 buildsnap: _build/Seed/snapcraft.yaml
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	type -P snapcraft || sudo apt install -y snapcraft # We require snapcraft to continue.
 	mkdir -p _build/dotsnap/tmp/opt/poplog
 	mkdir -p _build/dotsnap/tmp/usr/bin
 	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp/opt/poplog; tar zxf - )
