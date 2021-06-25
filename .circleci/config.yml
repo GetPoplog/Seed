@@ -92,6 +92,9 @@ jobs:
       - run:
           command:
             make buildsnap
+      - store_artifacts:
+          path: _build/poplog_16.0.1_amd64.snap
+          destination: poplog_16.0.1_amd64.snap
 workflows:
   version: 2
   mainflow:
