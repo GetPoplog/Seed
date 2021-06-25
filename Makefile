@@ -542,17 +542,25 @@ _build/Seed/AppDir/AppRun:
 # See https://circleci.com/blog/circleci-and-snapcraft/
 
 .PHONY: dotsnap
-dotsnap: _build/poplog.tar.gz 
+dotsnap: _build/dotsnap/poplog_16.0.1_amd64.snap
+
+_build/dotsnap/poplog_16.0.1_amd64.snap: _build/poplog.tar.gz 
+	$(MAKE) buildsnap
+	[ -f $@ ] # Sanity check that we built the target
 
 .PHONY: buildsnap
 buildsnap: _build/Seed/snapcraft.yaml
+	$(MAKE) buildsnapcraftready
+	cd _build/dotsnap; snapcraft
+
+.PHONY: buildsnapcraftready:
+buildsnapcraftready:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	mkdir -p _build/dotsnap/tmp/opt/poplog
 	mkdir -p _build/dotsnap/tmp/usr/bin
 	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp/opt/poplog; tar zxf - )
 	cd _build/dotsnap/tmp/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
-	cp _build/Seed/snapcraft.yaml _build/dotsnap
-	cd _build/dotsnap; snapcraft
+	cp _build/Seed/snapcraft.yaml _build/dotsnap	
 
 _build/Seed/snapcraft.yaml:
 	mkdir -p _build/Seed

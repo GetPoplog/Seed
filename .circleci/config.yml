@@ -94,12 +94,11 @@ jobs:
       - run:
           command: |
             sudo apt update
-            sudo apt install -y make curl snapd
-            sudo snap install multipass
-            sudo snap install snapcraft --classic
+            sudo apt install snapcraft
       - run:
           command:
-            make buildsnap
+            make buildsnapcraftready
+            cd _build/dotsnap; snapcraft --destructive
       - store_artifacts:
           path: _build/dotsnap/poplog_16.0.1_amd64.snap
           destination: poplog_16.0.1_amd64.snap
