@@ -80,7 +80,7 @@ jobs:
           destination: Poplog-x86_64.AppImage
   build_snap:
     machine:
-      image: ubuntu-2004:202104-01
+      image: cibuilds/snapcraft
     steps:
       - checkout
       - attach_workspace:

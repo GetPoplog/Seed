@@ -540,6 +540,7 @@ _build/Seed/AppDir/AppRun:
 
 
 #-- Snap (Ubuntu) *.snap packaging ---------------------------------------------
+# See https://circleci.com/blog/circleci-and-snapcraft/
 
 .PHONY: dotsnap
 dotsnap: _build/poplog.tar.gz 
