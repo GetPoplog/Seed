@@ -17,11 +17,17 @@ jobs:
           name: Get system info
           command: uname -a
       - run:
-          command: |
-            make jumpstart-ubuntu
-            make build
-            sudo make install
-            make _build/poplog.tar.gz
+          name: Install dependencies
+          command: make jumpstart-ubuntu
+      - run:
+          name: Build poplog_base file-tree
+          command: make build
+      - run:
+          name: Install Poplog from its file-tree
+          command: make install
+      - run:
+          name: Export file-tree as tarball
+          command: make _build/poplog.tar.gz
       - store_artifacts:
           path: _build/poplog.tar.gz
           destination: poplog.tar.gz
