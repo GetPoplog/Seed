@@ -79,7 +79,7 @@ jobs:
           path: _build/Poplog-x86_64.AppImage
           destination: Poplog-x86_64.AppImage
   build_snap:
-    machine:
+    docker:
       image: cibuilds/snapcraft
     steps:
       - checkout
