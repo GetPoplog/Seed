@@ -558,7 +558,7 @@ buildsnap: _build/Seed/snapcraft.yaml
 _build/Seed/snapcraft.yaml:
 	mkdir -p _build/Seed
 	if [ -f snapcraft.yaml ]; then \
-		cp snapcraft.yaml _build/Seed/;
+		cp snapcraft.yaml _build/Seed/; \
 	else \
 		$(MAKE) FetchSeed; \
 	fi
