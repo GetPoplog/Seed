@@ -24,7 +24,7 @@ jobs:
           command: make build
       - run:
           name: Install Poplog from its file-tree
-          command: make install
+          command: sudo make install
       - run:
           name: Export file-tree as tarball
           command: make _build/poplog.tar.gz
