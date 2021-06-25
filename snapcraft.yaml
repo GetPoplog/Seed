@@ -21,8 +21,8 @@ parts:
     stage-packages:
       - gcc 
       - build-essential 
-      - libncurses
-      - libncurses-dev
+      - libncurses5 
+      - libncurses5-dev
       - libstdc++6 
       - libxext6 
       - libxext-dev 
