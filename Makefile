@@ -407,11 +407,11 @@ relink-and-build:
 full:
 	echo $(FULL_VERSION)
 
-.PHONY: dotdeb
-dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
+################################################################################
+# Packaging formats
+################################################################################
 
-.PHONY: dotrpm
-dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
+#-- Pop-tree, the fundamental basis of packaging -------------------------------
 
 .PHONY: dottgz
 dottgz: _build/poplog.tar.gz
@@ -420,22 +420,23 @@ _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
+# We use this target to support the use case when we are working from a
+# single origin Makefile and not a clone of the repo. N.B. Private PHONY targets 
+# are captialised.
+.PHONY: FetchSeed
+FetchSeed:
+	mkdir -p _build/Seed
+	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
+
+
+#-- Debian *.deb packaging -----------------------------------------------------
+
+.PHONY: dotdeb
+dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
+
 _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBIAN/control
 	$(MAKE) builddeb
 	[ -f $@ ] # Sanity check that we built the target
-
-_build/Poplog-x86_64.AppImage.zip: _build/Seed/AppDir/AppRun
-	$(MAKE) buildappimage
-	[ -f $@ ] # Sanity check that we built the target
-
-.PHONY: buildsnap
-buildsnap:
-	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	mkdir -p _build/snapcraft-folder/tmp/opt/poplog
-	mkdir -p _build/snapcraft-folder/tmp/usr/bin
-	cat _build/poplog.tar.gz | ( cd _build/snapcraft-folder/tmp/opt/poplog; tar zxf - )
-	cd _build/snapcraft-folder/tmp/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
-
 
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
@@ -453,6 +454,21 @@ builddeb: _build/Seed/DEBIAN/control
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
+_build/Seed/DEBIAN/control:
+	mkdir -p _build/Seed
+	if [ -f DEBIAN/control ]; then \
+		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+
+
+#-- Redhat *.rpm packaging -----------------------------------------------------
+
+.PHONY: dotrpm
+dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
+
+# Use this target when working standalone.
 _build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
 	$(MAKE) buildrpm
 	[ -f $@ ] # Sanity check that we built the target
@@ -463,10 +479,30 @@ _build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpm
 buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	[ -d _build/Seed/rpmbuild ] # Sanity check
+	type -P rpmbuild || sudo apt install -y alien # We require alien to install rpmbuild on Ubuntu
 	cd _build/Seed/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
+
+_build/Seed/rpmbuild/SPECS/poplog.spec:
+	mkdir -p _build/Seed
+	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
+		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+	[ -f $@ ] # Sanity check
+
+
+#-- AppImage *.AppImage packaging ----------------------------------------------
+
+.PHONY: dotappimage
+dotappimage: _build/Poplog-x86_64.AppImage
+
+_build/Poplog-x86_64.AppImage: _build/poplog.tar.gz _build/Seed/AppDir/AppRun
+	$(MAKE) buildappimage
+	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything. 
@@ -493,23 +529,6 @@ _build/appimagetool:
 	chmod a+x _build/appimagetool
 	[ -x $@ ] # Sanity check
 
-_build/Seed/rpmbuild/SPECS/poplog.spec:
-	mkdir -p _build/Seed
-	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
-		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
-	[ -f $@ ] # Sanity check
-
-_build/Seed/DEBIAN/control:
-	mkdir -p _build/Seed
-	if [ -f DEBIAN/control ]; then \
-		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
-
 _build/Seed/AppDir/AppRun:
 	mkdir -p _build/Seed
 	if [ -f AppDir/AppRun ]; then \
@@ -519,8 +538,28 @@ _build/Seed/AppDir/AppRun:
 	fi
 	[ -f $@ ] # Sanity check
 
-.PHONY: FetchSeed
-FetchSeed:
-	mkdir -p _build/Seed
-	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
 
+#-- Snap (Ubuntu) *.snap packaging ---------------------------------------------
+
+.PHONY: dotsnap
+dotsnap: _build/poplog.tar.gz 
+
+.PHONY: buildsnap
+buildsnap: _build/Seed/snapcraft.yaml
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	type -P snapcraft || sudo apt install -y snapcraft # We require snapcraft to continue.
+	mkdir -p _build/dotsnap/tmp/opt/poplog
+	mkdir -p _build/dotsnap/tmp/usr/bin
+	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp/opt/poplog; tar zxf - )
+	cd _build/dotsnap/tmp/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
+	cp _build/Seed/snapcraft.yaml _build/dotsnap
+	cd _build/dotsnap; snapcraft
+
+_build/Seed/snapcraft.yaml:
+	mkdir -p _build/Seed
+	if [ -f snapcraft.yaml ]; then \
+		cp snapcraft.yaml _build/Seed/
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+	[ -f $@ ] # Sanity check
