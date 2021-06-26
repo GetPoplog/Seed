@@ -15,7 +15,9 @@ jobs:
       - checkout
       - run:
           name: Get system info
-          command: uname -a
+          command: |
+            uname -a
+            ldd --version
       - run:
           name: Install dependencies
           command: make jumpstart-ubuntu
@@ -42,6 +44,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
+      - run:
           command: |
             sudo apt update
             sudo apt install -y make curl
@@ -58,6 +65,11 @@ jobs:
       - image: cimg/base:2021.04
     steps:
       - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
       - attach_workspace:
           at: _build
       - run:
@@ -75,6 +87,11 @@ jobs:
       image: ubuntu-2004:202104-01
     steps:
       - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
       - attach_workspace:
           at: _build
       - run:
@@ -92,6 +109,11 @@ jobs:
       image: ubuntu-2004:202104-01
     steps:
       - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
       - run:
           name: Get system info
           command: uname -a
