@@ -10,6 +10,7 @@ description: |
   as for teaching and research. It was one of the initiatives supported for 
   a while by the UK government-funded Alvey Programme.
 confinement: devmode
+grade: devel
 base: core20
 
 parts:
@@ -34,4 +35,4 @@ parts:
 
 apps:
   poplog:
-    command: poplog
+    command: opt/poplog/pop/pop/poplog
