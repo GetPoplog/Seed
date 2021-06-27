@@ -172,6 +172,9 @@ workflows:
       - build_appimage:
           requires:
             - build_tree
-      - build_snap:
+      - build_snap-machine:
+          requires:
+            - build_tree
+      - build_snap-docker:
           requires:
             - build_tree
