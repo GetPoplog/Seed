@@ -220,6 +220,8 @@ clean:
 #   Needed for building Poplog:  
 #       build-essential libc6 libncurses5 libncurses5-dev 
 #       libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
+#   Needed for building popvision
+#       csh
 #   Needed at run-time by some tutorials
 #       espeak
 #   Optional - not included as these are not part of the essential package but
@@ -233,6 +235,7 @@ jumpstart-debian:
 	make curl \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
+	csh \
 	espeak
 
 .PHONY: jumpstart-ubuntu
@@ -244,7 +247,7 @@ jumpstart-fedora:
 	sudo dnf install \
 	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
-	libXt-devel openmotif-devel xterm espeak
+	libXt-devel openmotif-devel xterm espeak csh
 
 .PHONY: jumpstart-opensuse-leap
 jumpstart-opensuse-leap:
@@ -252,7 +255,7 @@ jumpstart-opensuse-leap:
 	curl make bzip2 \
 	gcc libstdc++6 libncurses5 ncurses5-devel \
 	libXext6 libX11-6 libX11-devel libXt-devel openmotif-devel \
-	xterm espeak
+	xterm espeak csh
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
@@ -263,6 +266,7 @@ _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog
 _build/Packages.proxy: _build/packages-V16.tar.bz2
 	mkdir -p _build
 	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
+	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; ../com/compile_popvision_linux
 	touch $@
 
 _build/Docs.proxy: _build/Base.proxy
