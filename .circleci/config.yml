@@ -104,7 +104,7 @@ jobs:
       - store_artifacts:
           path: _build/Poplog-x86_64.AppImage
           destination: Poplog-x86_64.AppImage
-  build_snap:
+  build_snap-machine:
     machine:
       image: ubuntu-2004:202104-01
     steps:
@@ -130,6 +130,33 @@ jobs:
       - store_artifacts:
           path: _build/dotsnap/poplog_16.0.1_amd64.snap
           destination: poplog_16.0.1_amd64.snap
+  build_snap-docker:
+    docker:
+      - image: cibuilds/snapcraft:core20
+    steps:
+      - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
+      - run:
+          name: Get system info
+          command: uname -a
+      - attach_workspace:
+          at: _build
+      - run:
+          command: |
+            sudo apt update
+            sudo apt install make 
+      - run:
+          command: |
+            make buildsnapcraftready
+            cd _build/dotsnap; snapcraft
+      - store_artifacts:
+          path: _build/dotsnap/poplog_16.0.1_amd64.snap
+          destination: poplog_16.0.1_amd64.snap
+
 workflows:
   version: 2
   mainflow:
