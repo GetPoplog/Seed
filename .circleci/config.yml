@@ -97,7 +97,7 @@ jobs:
       - run:
           command: |
             sudo apt update
-            sudo apt install -y make curl
+            sudo apt install -y make curl libncurses5 libncurses5-dev
       - run:
           command:
             make buildappimage
