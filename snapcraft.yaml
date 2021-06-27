@@ -10,7 +10,7 @@ description: |
   as for teaching and research. It was one of the initiatives supported for 
   a while by the UK government-funded Alvey Programme.
 confinement: devmode
-base: core18
+base: core20
 
 parts:
   poplog:
