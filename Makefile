@@ -515,7 +515,7 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	mkdir -p _build/AppDir/usr/lib
 	# list the libraries needed (for debugging)
 	ldd _build/AppDir/opt/poplog/pop/pop/basepop11
-	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
+	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep -v 'not found' | grep ' => ' | cut -f 3 -d ' '`; do \
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
 	# But we want to exclude libc and libdl.
