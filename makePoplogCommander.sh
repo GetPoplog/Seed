@@ -411,22 +411,36 @@ cat << \****
             char ** pop11_args = calloc( argc + 1, sizeof( char *const ) );
             pop11_args[ 0 ] = "pop11";
             for ( int i = 1; i < argc; i++ ) {
-               pop11_args[ i ] = argv[ i ];
+                pop11_args[ i ] = argv[ i ];
             }
             pop11_args[ argc ] = NULL; 
             execvp( "pop11", pop11_args );
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
-       } else if ( strcmp( "exec", argv[1] ) == 0 ) {
+        } else if ( strcmp( "exec", argv[1] ) == 0 ) {
             if ( argc >= 3 ) {
                 execvp( argv[2], &argv[2] );
             } else {
                 fprintf( stderr, "Too few arguments for exec action\n" );
                 return EXIT_FAILURE;
             }
+        } else if ( strcmp( "shell", argv[1] ) == 0 ) {
+            char * shellpath = getenv( "SHELL" );
+            if ( shellpath == NULL ) {
+                fprintf( stderr, "$SHELL not defined\n" );
+                return EXIT_FAILURE;
+            } else {
+                char ** shell_args = calloc( argc + 1, sizeof( char *const ) );
+                shell_args[ 0 ] = shellpath;
+                for ( int i = 1; i < argc; i++ ) {
+                    shell_args[ i ] = argv[ i ];
+                }
+                shell_args[ argc ] = NULL; 
+                execvp( shellpath, shell_args );
+            }
         } else {
-	    fprintf( stderr, "Unexpected arguments:" );
+            fprintf( stderr, "Unexpected arguments:" );
             for ( int i = 1; i < argc; i++ ) {
                 fprintf( stderr, " %s", argv[ i ] );
             }
