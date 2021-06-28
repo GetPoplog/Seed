@@ -1,0 +1,38 @@
+name: poplog
+version: 16.0.1
+summary: Poplog Development Environment
+description: |
+  Poplog is an Open Source, reflective, incrementally compiled software 
+  development environment for the programming languages POP-11, Common Lisp, 
+  Prolog, and Standard ML, originally created in the UK for teaching and 
+  research in Artificial Intelligence at the University of Sussex, and 
+  later marketed as a commercial package for software development as well 
+  as for teaching and research. It was one of the initiatives supported for 
+  a while by the UK government-funded Alvey Programme.
+confinement: devmode
+grade: devel
+base: core20
+
+parts:
+  poplog:
+    plugin: dump
+    source: tmp/
+    source-type: local
+    build-attributes: [keep-execstack]
+    stage-packages:
+      - gcc 
+      - build-essential 
+      - libncurses5 
+      - libncurses5-dev
+      - libstdc++6 
+      - libxext6 
+      - libxext-dev 
+      - libx11-6 
+      - libx11-dev 
+      - libxt-dev 
+      - libmotif-dev
+      - espeak
+
+apps:
+  poplog:
+    command: opt/poplog/pop/pop/poplog

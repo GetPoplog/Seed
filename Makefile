@@ -71,6 +71,10 @@
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
 #     make install POPLOG_HOME_DIR=/opt/poplog
+# Resulting values would be:
+#	POPLOG_HOME_DIR 			/opt/poplog
+#	POPLOG_VERSION_DIR			/opt/poplog/V16
+#	POPLOG_VERSION_SYMLINK		/opt/poplog/current_usepop -> /opt/poplog/V16
 POPLOG_HOME_DIR:=/usr/local/poplog
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
@@ -220,6 +224,8 @@ clean:
 #   Needed for building Poplog:  
 #       build-essential libc6 libncurses5 libncurses5-dev 
 #       libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev
+#   Needed for building popvision
+#       csh
 #   Needed at run-time by some tutorials
 #       espeak
 #   Optional - not included as these are not part of the essential package but
@@ -233,6 +239,7 @@ jumpstart-debian:
 	make curl \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
+	csh \
 	espeak
 
 .PHONY: jumpstart-ubuntu
@@ -244,7 +251,7 @@ jumpstart-fedora:
 	sudo dnf install \
 	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
-	libXt-devel openmotif-devel xterm espeak
+	libXt-devel openmotif-devel xterm espeak csh
 
 .PHONY: jumpstart-opensuse-leap
 jumpstart-opensuse-leap:
@@ -252,7 +259,7 @@ jumpstart-opensuse-leap:
 	curl make bzip2 \
 	gcc libstdc++6 libncurses5 ncurses5-devel \
 	libXext6 libX11-6 libX11-devel libXt-devel openmotif-devel \
-	xterm espeak
+	xterm espeak csh
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
@@ -263,6 +270,7 @@ _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog
 _build/Packages.proxy: _build/packages-V16.tar.bz2
 	mkdir -p _build
 	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
+	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; ../com/compile_popvision_linux
 	touch $@
 
 _build/Docs.proxy: _build/Base.proxy
@@ -407,11 +415,11 @@ relink-and-build:
 full:
 	echo $(FULL_VERSION)
 
-.PHONY: dotdeb
-dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
+################################################################################
+# Packaging formats
+################################################################################
 
-.PHONY: dotrpm
-dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
+#-- Pop-tree, the fundamental basis of packaging -------------------------------
 
 .PHONY: dottgz
 dottgz: _build/poplog.tar.gz
@@ -420,12 +428,22 @@ _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
+# We use this target to support the use case when we are working from a
+# single origin Makefile and not a clone of the repo. N.B. Private PHONY targets 
+# are captialised.
+.PHONY: FetchSeed
+FetchSeed:
+	mkdir -p _build/Seed
+	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
+
+
+#-- Debian *.deb packaging -----------------------------------------------------
+
+.PHONY: dotdeb
+dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
+
 _build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBIAN/control
 	$(MAKE) builddeb
-	[ -f $@ ] # Sanity check that we built the target
-
-_build/Poplog-x86_64.AppImage.zip: _build/Seed/AppDir/AppRun
-	$(MAKE) buildappimage
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
@@ -444,6 +462,21 @@ builddeb: _build/Seed/DEBIAN/control
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
+_build/Seed/DEBIAN/control:
+	mkdir -p _build/Seed
+	if [ -f DEBIAN/control ]; then \
+		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+
+
+#-- Redhat *.rpm packaging -----------------------------------------------------
+
+.PHONY: dotrpm
+dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
+
+# Use this target when working standalone.
 _build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
 	$(MAKE) buildrpm
 	[ -f $@ ] # Sanity check that we built the target
@@ -459,6 +492,25 @@ buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
+_build/Seed/rpmbuild/SPECS/poplog.spec:
+	mkdir -p _build/Seed
+	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
+		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+	[ -f $@ ] # Sanity check
+
+
+#-- AppImage *.AppImage packaging ----------------------------------------------
+
+.PHONY: dotappimage
+dotappimage: _build/Poplog-x86_64.AppImage
+
+_build/Poplog-x86_64.AppImage: _build/poplog.tar.gz _build/Seed/AppDir/AppRun
+	$(MAKE) buildappimage
+	[ -f $@ ] # Sanity check that we built the target
+
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything. 
 .PHONY: buildappimage
@@ -469,7 +521,9 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
 	tar zxf _build/poplog.tar.gz -C _build/AppDir/opt/poplog
 	mkdir -p _build/AppDir/usr/lib
-	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep ' => ' | cut -f 3 -d ' '`; do \
+	# list the libraries needed (for debugging)
+	ldd _build/AppDir/opt/poplog/pop/pop/basepop11
+	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep -v 'not found' | grep ' => ' | cut -f 3 -d ' '`; do \
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
 	# But we want to exclude libc and libdl.
@@ -484,23 +538,6 @@ _build/appimagetool:
 	chmod a+x _build/appimagetool
 	[ -x $@ ] # Sanity check
 
-_build/Seed/rpmbuild/SPECS/poplog.spec:
-	mkdir -p _build/Seed
-	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
-		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
-	[ -f $@ ] # Sanity check
-
-_build/Seed/DEBIAN/control:
-	mkdir -p _build/Seed
-	if [ -f DEBIAN/control ]; then \
-		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
-
 _build/Seed/AppDir/AppRun:
 	mkdir -p _build/Seed
 	if [ -f AppDir/AppRun ]; then \
@@ -510,8 +547,36 @@ _build/Seed/AppDir/AppRun:
 	fi
 	[ -f $@ ] # Sanity check
 
-.PHONY: FetchSeed
-FetchSeed:
-	mkdir -p _build/Seed
-	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
 
+#-- Snap (Ubuntu) *.snap packaging ---------------------------------------------
+# See https://circleci.com/blog/circleci-and-snapcraft/
+
+.PHONY: dotsnap
+dotsnap: _build/dotsnap/poplog_16.0.1_amd64.snap
+
+_build/dotsnap/poplog_16.0.1_amd64.snap: _build/poplog.tar.gz 
+	$(MAKE) buildsnap
+	[ -f $@ ] # Sanity check that we built the target
+
+.PHONY: buildsnap
+buildsnap:
+	$(MAKE) buildsnapcraftready
+	cd _build/dotsnap; snapcraft
+
+.PHONY: buildsnapcraftready
+buildsnapcraftready: _build/Seed/snapcraft.yaml
+	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	mkdir -p _build/dotsnap/tmp/opt/poplog
+	mkdir -p _build/dotsnap/tmp/usr/bin
+	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp/opt/poplog; tar zxf - )
+	cd _build/dotsnap/tmp/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
+	cp _build/Seed/snapcraft.yaml _build/dotsnap	
+
+_build/Seed/snapcraft.yaml:
+	mkdir -p _build/Seed
+	if [ -f snapcraft.yaml ]; then \
+		cp snapcraft.yaml _build/Seed/; \
+	else \
+		$(MAKE) FetchSeed; \
+	fi
+	[ -f $@ ] # Sanity check
