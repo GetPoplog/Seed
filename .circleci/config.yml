@@ -56,7 +56,7 @@ jobs:
           at: _build
       - run:
           command: |
-            make builddeb
+            make builddeb POPLOG_HOME_DIR=/opt/poplog
       - store_artifacts:
           path: _build/poplog_16.1-1_amd64.deb
           destination: poplog_16.1-1_amd64.deb
@@ -100,7 +100,7 @@ jobs:
             sudo apt install -y make curl libncurses5 libncurses5-dev
       - run:
           command:
-            make buildappimage
+            make buildappimage POPLOG_HOME_DIR=/opt/poplog
       - store_artifacts:
           path: _build/Poplog-x86_64.AppImage
           destination: Poplog-x86_64.AppImage
@@ -125,7 +125,7 @@ jobs:
             sudo apt install make 
       - run:
           command: |
-            make buildsnapcraftready
+            make buildsnapcraftready POPLOG_HOME_DIR=/opt/poplog
             cd _build/dotsnap; snapcraft
       - store_artifacts:
           path: _build/dotsnap/poplog_16.0.1_amd64.snap

@@ -519,11 +519,12 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	[ -d _build/Seed/AppDir ] # Sanity check
 	mkdir -p _build/AppDir
 	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
-	tar zxf _build/poplog.tar.gz -C _build/AppDir/opt/poplog
+	tar zxf _build/poplog.tar.gz -C _build/AppDir$(POPLOG_VERSION_DIR)
 	mkdir -p _build/AppDir/usr/lib
-	# list the libraries needed (for debugging)
-	ldd _build/AppDir/opt/poplog/pop/pop/basepop11
-	for i in `ldd _build/AppDir/opt/poplog/pop/pop/basepop11 | grep -v 'not found' | grep ' => ' | cut -f 3 -d ' '`; do \
+	# List the libraries needed (for debugging)
+	ldd _build/AppDir$(POPLOG_VERSION_DIR)/pop/pop/basepop11
+	# Now create the local copies of the libraries
+	for i in `ldd _build/AppDir$(POPLOG_VERSION_DIR)/pop/pop/basepop11 | grep -v 'not found' | grep ' => ' | cut -f 3 -d ' '`; do \
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
 	# But we want to exclude libc and libdl.
@@ -566,10 +567,10 @@ buildsnap:
 .PHONY: buildsnapcraftready
 buildsnapcraftready: _build/Seed/snapcraft.yaml
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	mkdir -p _build/dotsnap/tmp/opt/poplog
+	mkdir -p _build/dotsnap/tmp$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotsnap/tmp/usr/bin
-	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp/opt/poplog; tar zxf - )
-	cd _build/dotsnap/tmp/usr/bin; ln -s ../../opt/poplog/pop/pop/poplog .
+	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp$(POPLOG_VERSION_DIR); tar zxf - )
+	cd _build/dotsnap/tmp/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp _build/Seed/snapcraft.yaml _build/dotsnap	
 
 _build/Seed/snapcraft.yaml:
