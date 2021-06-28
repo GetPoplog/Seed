@@ -10,6 +10,7 @@ Buildarch: x86_64
 Requires: gcc 
 Requires: glibc-devel 
 Requires: ncurses-devel 
+Requires: ncurses-compat-libs
 Requires: libXext-devel 
 Requires: libX11-devel
 Requires: libXt-devel

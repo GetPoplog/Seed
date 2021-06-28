@@ -71,6 +71,10 @@
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
 #     make install POPLOG_HOME_DIR=/opt/poplog
+# Resulting values would be:
+#	POPLOG_HOME_DIR 			/opt/poplog
+#	POPLOG_VERSION_DIR			/opt/poplog/V16
+#	POPLOG_VERSION_SYMLINK		/opt/poplog/current_usepop -> /opt/poplog/V16
 POPLOG_HOME_DIR:=/usr/local/poplog
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
