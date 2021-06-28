@@ -35,4 +35,4 @@ parts:
 
 apps:
   poplog:
-    command: opt/poplog/pop/pop/poplog
+    command: opt/poplog/V16/pop/pop/poplog

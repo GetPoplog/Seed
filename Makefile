@@ -519,6 +519,7 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	[ -d _build/Seed/AppDir ] # Sanity check
 	mkdir -p _build/AppDir
 	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
+	mkdir -p _build/AppDir$(POPLOG_VERSION_DIR)
 	tar zxf _build/poplog.tar.gz -C _build/AppDir$(POPLOG_VERSION_DIR)
 	mkdir -p _build/AppDir/usr/lib
 	# List the libraries needed (for debugging)
