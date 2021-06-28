@@ -65,7 +65,8 @@ jobs:
       - image: cimg/base:2021.04
     steps:
       - when:
-          condition: false
+          condition: 
+            true
           steps:
             - checkout
             - run:
