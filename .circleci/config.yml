@@ -64,14 +64,10 @@ jobs:
     docker:
       - image: cimg/base:2021.04
     steps:
-      - run:
-          name: There must be 1 step
-          command: |
-            uname -a
+      - checkout
       - when:
           condition: false
         steps:
-          - checkout
           - run:
               name: Get system info
               command: |
