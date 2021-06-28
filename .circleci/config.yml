@@ -63,7 +63,9 @@ jobs:
   build_rpm:
     docker:
       - image: cimg/base:2021.04
-    steps:
+    when:
+      condition: false
+      steps:
       - checkout
       - run:
           name: Get system info
