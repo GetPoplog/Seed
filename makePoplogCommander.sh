@@ -426,18 +426,21 @@ cat << \****
                 return EXIT_FAILURE;
             }
         } else if ( strcmp( "shell", argv[1] ) == 0 ) {
-            char * shellpath = getenv( "SHELL" );
-            if ( shellpath == NULL ) {
+            char * shell_path = getenv( "SHELL" );
+            if ( shell_path == NULL ) {
                 fprintf( stderr, "$SHELL not defined\n" );
                 return EXIT_FAILURE;
             } else {
                 char ** shell_args = calloc( argc, sizeof( char *const ) );
-                shell_args[ 0 ] = shellpath;
+                shell_args[ 0 ] = shell_path;
                 for ( int i = 2; i < argc; i++ ) {
                     shell_args[ i -  1 ] = argv[ i ];
                 }
                 shell_args[ argc - 1 ] = NULL; 
-                execvp( shellpath, shell_args );
+                for ( int j = 0; j < argc -  1; j++ ) {
+                    fprintf( "%d) %s\n", j, shell_args[ j ] );
+                }
+                execvp( shell_path, shell_args );
             }
         } else {
             fprintf( stderr, "Unexpected arguments:" );
