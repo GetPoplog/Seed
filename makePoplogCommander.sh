@@ -431,12 +431,12 @@ cat << \****
                 fprintf( stderr, "$SHELL not defined\n" );
                 return EXIT_FAILURE;
             } else {
-                char ** shell_args = calloc( argc + 1, sizeof( char *const ) );
+                char ** shell_args = calloc( argc, sizeof( char *const ) );
                 shell_args[ 0 ] = shellpath;
-                for ( int i = 1; i < argc; i++ ) {
-                    shell_args[ i ] = argv[ i ];
+                for ( int i = 2; i < argc; i++ ) {
+                    shell_args[ i -  1 ] = argv[ i ];
                 }
-                shell_args[ argc ] = NULL; 
+                shell_args[ argc - 1 ] = NULL; 
                 execvp( shellpath, shell_args );
             }
         } else {
