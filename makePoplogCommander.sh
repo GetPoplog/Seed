@@ -127,6 +127,10 @@ poplog exec [PROGRAM] [ARG]...
         > which mkflavours
         /usr/local/poplog/current_usepop/pop/com/mkflavours
 
+poplog shell [OPTIONS] [FILE]
+    Starts a shell in the Poplog environment. The $SHELL environment 
+    variable is used to select the shell to be launched. Arguments are
+    passed to the shell in the normal way.
 
 COMPILING AND LINKING WITH POPC
 
