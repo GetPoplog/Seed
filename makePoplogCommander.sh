@@ -437,9 +437,6 @@ cat << \****
                     shell_args[ i -  1 ] = argv[ i ];
                 }
                 shell_args[ argc - 1 ] = NULL; 
-                for ( int j = 0; j < argc -  1; j++ ) {
-                    fprintf( "%d) %s\n", j, shell_args[ j ] );
-                }
                 execvp( shell_path, shell_args );
             }
         } else {
