@@ -270,7 +270,7 @@ _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog
 _build/Packages.proxy: _build/packages-V16.tar.bz2
 	mkdir -p _build
 	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
-	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; ../com/compile_popvision_linux
+	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
 _build/Docs.proxy: _build/Base.proxy
