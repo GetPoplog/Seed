@@ -9,14 +9,14 @@ description: |
   later marketed as a commercial package for software development as well 
   as for teaching and research. It was one of the initiatives supported for 
   a while by the UK government-funded Alvey Programme.
-confinement: devmode
+confinement: classic
 grade: devel
 base: core20
 
 parts:
   poplog:
     plugin: dump
-    source: tmp/
+    source: prebuilt/
     source-type: local
     build-attributes: [keep-execstack]
     stage-packages:
@@ -35,4 +35,4 @@ parts:
 
 apps:
   poplog:
-    command: opt/poplog/V16/pop/pop/poplog
+    command: usr/bin/poplog
