@@ -16,7 +16,7 @@ base: core20
 parts:
   poplog:
     plugin: dump
-    source: tmp/
+    source: prebuilt/
     source-type: local
     build-attributes: [keep-execstack]
     stage-packages:

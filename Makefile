@@ -565,13 +565,15 @@ buildsnap:
 	$(MAKE) buildsnapcraftready
 	cd _build/dotsnap; snapcraft
 
+PREBUILT_DIR:=/prebuilt
+
 .PHONY: buildsnapcraftready
 buildsnapcraftready: _build/Seed/snapcraft.yaml
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	mkdir -p _build/dotsnap/tmp$(POPLOG_VERSION_DIR)
-	mkdir -p _build/dotsnap/tmp/usr/bin
-	cat _build/poplog.tar.gz | ( cd _build/dotsnap/tmp$(POPLOG_VERSION_DIR); tar zxf - )
-	cd _build/dotsnap/tmp/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
+	mkdir -p _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR)
+	mkdir -p _build/dotsnap$(PREBUILT_DIR)/usr/bin
+	cat _build/poplog.tar.gz | ( cd _build/dotsnap/$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
+	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp _build/Seed/snapcraft.yaml _build/dotsnap	
 
 _build/Seed/snapcraft.yaml:
