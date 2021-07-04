@@ -126,6 +126,7 @@ help:
 	#
 	# Valid targets are:
 	#   all - installs dependencies and produces a build-tree
+	#   download - downloads all the archives required by the build process
 	#   build - creates a complete build-tree in _build/poplog_base
 	#   install - installs Poplog into $(POPLOG_HOME) folder as V16
 	#   uninstall - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz
@@ -261,6 +262,9 @@ jumpstart-opensuse-leap:
 	libXext6 libX11-6 libX11-devel libXt-devel openmotif-devel \
 	xterm espeak csh
 
+.PHONY: download
+download: _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Seed.Downloaded.proxy _build/Packages.Downloaded.proxy
+
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
 # will be omitted.
@@ -273,9 +277,16 @@ _build/Packages.proxy: _build/packages-V16.tar.bz2
 	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
-_build/Docs.proxy: _build/Base.proxy
-	curl -LsS $(DOCS_TARBALL_URL) | ( cd _build/poplog_base; tar zxf - --exclude LICENSE --strip-components=1 )
-	rm -f _build/poplog_base/README.md # Remove repo documentation file
+_build/Packages.Downloaded.proxy: _build/packages-V16.tar.bz2
+	touch $@
+
+_build/Docs.proxy: _build/Base.proxy _build/Docs.Downloaded.proxy
+	( cd _build/Docs; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	touch $@
+
+_build/Docs.Downloaded.proxy:
+	mkdir -p _build/Docs
+	curl -LsS $(DOCS_TARBALL_URL) | ( cd _build/Docs; tar zxf - --exclude LICENSE --strip-components=1 )
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
@@ -316,21 +327,27 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
-_build/Corepops.proxy: _build/Base.proxy
-	mkdir -p _build/Corepops
-	curl -LsS $(COREPOPS_TARBALL_URL) | ( cd _build/Corepops; tar zxf - --strip-components=1 )
+_build/Corepops.proxy: _build/Base.proxy _build/Corepops.Downloaded.proxy
 	cp _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
 	$(MAKE) -C _build/Corepops corepop
 	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
 	touch $@
 
-_build/Base.proxy:
-	mkdir -p _build/Base
-	curl -LsS $(BASE_TARBALL_URL) | ( cd _build/Base; tar zxf - --strip-components=1)
+_build/Corepops.Downloaded.proxy:
+	mkdir -p _build/Corepops
+	curl -LsS $(COREPOPS_TARBALL_URL) | ( cd _build/Corepops; tar zxf - --strip-components=1 )
+	touch $@
+
+_build/Base.proxy: _build/Base.Downloaded.proxy
 	$(MAKE) -C _build/Base build
 	mkdir -p _build/poplog_base
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
 	touch $@ # Create the proxy file to signal that we are done.
+
+_build/Base.Downloaded.proxy:
+	mkdir -p _build/Base
+	curl -LsS $(BASE_TARBALL_URL) | ( cd _build/Base; tar zxf - --strip-components=1)
+	touch $@
 
 _build/poplog_base/pop/com/poplogout.%: _build/poplogout.%
 	(cd _build; cp poplogout.*sh poplog_base/pop/com/)
@@ -436,6 +453,13 @@ FetchSeed:
 	mkdir -p _build/Seed
 	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
 
+_build/Seed.Downloaded.proxy:
+	mkdir -p _build/Seed
+	if [ -d .git ]; then \
+		tar cf - --exclude=.git --exclude=_build . | tar xf - -C _build/Seed; \
+	else \
+		curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 ); \
+	fi
 
 #-- Debian *.deb packaging -----------------------------------------------------
 
@@ -462,14 +486,8 @@ builddeb: _build/Seed/DEBIAN/control
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/Seed/DEBIAN/control:
-	mkdir -p _build/Seed
-	if [ -f DEBIAN/control ]; then \
-		tar cf - DEBIAN | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
-
+_build/Seed/DEBIAN/control: _build/Seed.Downloaded.proxy
+	[ -f $@ ] # Sanity check
 
 #-- Redhat *.rpm packaging -----------------------------------------------------
 
@@ -492,13 +510,7 @@ buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
 	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
-_build/Seed/rpmbuild/SPECS/poplog.spec:
-	mkdir -p _build/Seed
-	if [ -f rpmbuild/SPECS/poplog.spec ]; then \
-		tar cf - rpmbuild | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
+_build/Seed/rpmbuild/SPECS/poplog.spec: _build/Seed.Downloaded.proxy
 	[ -f $@ ] # Sanity check
 
 
@@ -540,15 +552,8 @@ _build/appimagetool:
 	chmod a+x _build/appimagetool
 	[ -x $@ ] # Sanity check
 
-_build/Seed/AppDir/AppRun:
-	mkdir -p _build/Seed
-	if [ -f AppDir/AppRun ]; then \
-		tar cf - AppDir | ( cd _build/Seed; tar xf - ); \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
+_build/Seed/AppDir/AppRun: _build/Seed.Downloaded.proxy
 	[ -f $@ ] # Sanity check
-
 
 #-- Snap (Ubuntu) *.snap packaging ---------------------------------------------
 # See https://circleci.com/blog/circleci-and-snapcraft/
@@ -576,11 +581,5 @@ buildsnapcraftready: _build/Seed/snapcraft.yaml
 	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp _build/Seed/snapcraft.yaml _build/dotsnap	
 
-_build/Seed/snapcraft.yaml:
-	mkdir -p _build/Seed
-	if [ -f snapcraft.yaml ]; then \
-		cp snapcraft.yaml _build/Seed/; \
-	else \
-		$(MAKE) FetchSeed; \
-	fi
+_build/Seed/snapcraft.yaml: _build/Seed.Downloaded.proxy
 	[ -f $@ ] # Sanity check
