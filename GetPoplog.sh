@@ -1,4 +1,6 @@
 #!/bin/sh
+# This script is used as a way of doing a 1-line install using curl o.n.o.
+# Limited to working on the main branch.
 set -e
 
 # Get minimum dependencies.
@@ -11,7 +13,7 @@ cd $TMPDIR
 echo "Using temporary directory $TMP_DIR as a build folder"
 curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/Makefile > Makefile
 
-make jumpstart-ubuntu    # fetch dependencies (Debian based systems only)
+sudo make jumpstart-ubuntu    # fetch dependencies (Debian based systems only)
 make build
 sudo make install 
 
