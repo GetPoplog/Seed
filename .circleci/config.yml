@@ -20,7 +20,7 @@ jobs:
             ldd --version
       - run:
           name: Install dependencies
-          command: make jumpstart-ubuntu
+          command: sudo make jumpstart-ubuntu
       - run:
           name: Build poplog_base file-tree
           command: make build
