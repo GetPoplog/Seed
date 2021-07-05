@@ -124,18 +124,21 @@ help:
 	# "make install" step. (And during all the steps if you keep the Makefile
 	# in the home-dir.)
 	#
+	# Note that targets marked with a [^] normally require root privileges and 
+	# should be run using sudo (or as root).
+	#
 	# Valid targets are:
-	#   all - installs dependencies and produces a build-tree
-	#   download - downloads all the archives required by the build process
-	#   build - creates a complete build-tree in _build/poplog_base
-	#   install - installs Poplog into $(POPLOG_HOME) folder as V16
-	#   uninstall - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz
-	#   really-uninstall-poplog - removes Poplog and does not create a backup.
+	#   all [^] - installs dependencies and produces a build-tree.
+	#   download - downloads all the archives required by the build process.
+	#   build - creates a complete build-tree in _build/poplog_base.
+	#   install [^] - installs Poplog into $(POPLOG_HOME) folder as V16.
+	#   uninstall [^] - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz.
+	#   really-uninstall-poplog [^] - removes Poplog and does not create a backup.
 	#   relink-and-build - a more complex build process that can relink the 
 	#       corepop executable and is useful for O/S upgrades.
-	#   jumpstart-ubuntu - installs the packages a Ubuntu system needs
-	#   jumpstart-fedora - installs the packages a Fedora system needs.
-	#   jumpstart-* - and more, try `make help-jumpstart`
+	#   jumpstart-ubuntu [^] - installs the packages a Ubuntu system needs.
+	#   jumpstart-fedora [^] - installs the packages a Fedora system needs.
+	#   jumpstart-* [^] - and more, try `make help-jumpstart`.
 	#   clean - removes all the build artifacts.
 	#   help - this explanation, for more info read the Makefile comments.
 
@@ -144,6 +147,8 @@ help-jumpstart:
 	# Jumpstarts are targets that install the dependencies for a particular
 	# Linux distribution. Installing dependencies are not part of a normal
 	# build process and they are provided as a convenience to admins.
+	# These will need to be run with sudo e.g.
+	#	sudo make jumpstart-debian
 	#
 	# Valid targets are:
 	#   jumpstart-debian - installs the packages a Debian system needs
@@ -235,8 +240,8 @@ clean:
 #
 .PHONY: jumpstart-debian
 jumpstart-debian:
-	sudo apt-get update \
-	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+	apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y \
 	make curl \
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
@@ -249,14 +254,14 @@ jumpstart-ubuntu:
 
 .PHONY: jumpstart-fedora
 jumpstart-fedora:
-	sudo dnf install \
+	dnf install \
 	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak csh
 
 .PHONY: jumpstart-opensuse-leap
 jumpstart-opensuse-leap:
-	sudo zypper --non-interactive install \
+	zypper --non-interactive install \
 	curl make bzip2 \
 	gcc libstdc++6 libncurses5 ncurses5-devel \
 	libXext6 libX11-6 libX11-devel libXt-devel openmotif-devel \
