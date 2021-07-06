@@ -1,4 +1,4 @@
 #!/bin/sh
 LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH}" 
 export LD_LIBRARY_PATH
-exec ${APPDIR}/opt/poplog/V16/pop/pop/poplog $*
+exec ${APPDIR}/usr/bin/poplog $*

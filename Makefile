@@ -550,6 +550,8 @@ buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
 	# Now to create systematically re-named symlinks.
 	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`; done
 	chmod a-w _build/AppDir/usr/lib/*
+	mkdir -p _build/AppDir/usr/bin
+	cd _build/AppDir/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cd _build && ARCH=x86_64 ./appimagetool AppDir
 
 _build/appimagetool:
