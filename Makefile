@@ -71,8 +71,8 @@
 # The PREFIX variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
 # nowhere else, please). It is provided in order to fit in with the conventions 
 # of Makefiles. 
-DESTDIR?=/
-PREFIX?=$(DESTDIR)usr/local
+DESTDIR?=
+PREFIX?=$(DESTDIR)/usr/local
 
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
