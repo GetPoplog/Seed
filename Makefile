@@ -68,6 +68,9 @@
 #         place.
 #
 
+# CONVENTION: If we  want to allow the user of the Makefile to set via the CLI 
+# then we use ?= to bind it. If it's an internal variables then we use :=
+
 # The PREFIX variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
 # nowhere else, please). It is provided in order to fit in with the conventions 
 # of Makefiles. 
