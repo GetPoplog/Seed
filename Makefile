@@ -68,9 +68,10 @@
 #         place.
 #
 
-# The PREFIX variable is used to set up POPLOG_HOME_DIR (and nowhere else, 
-# please). It is provided in order to fit in with the conventions of Makefiles. 
-PREFIX:=/usr/local/poplog
+# The PREFIX variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
+# nowhere else, please). It is provided in order to fit in with the conventions 
+# of Makefiles. 
+PREFIX:=/usr/local
 
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
@@ -82,7 +83,7 @@ PREFIX:=/usr/local/poplog
 #   POPLOCAL_HOME_DIR           /opt/poplog				$poplocal = $usepop/..
 #   POPLOCAL_VERSION_DIR        /opt/poplog/L16			
 #   POPLOCAL_VERSION_SYMLINK    /opt/poplog/local -> /opt/poplog/L16
-POPLOG_HOME_DIR:=$(PREFIX)
+POPLOG_HOME_DIR:=$(PREFIX)/poplog
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
 FULL_VERSION:=$(MAJOR_VERSION).$(MINOR_VERSION)
@@ -96,7 +97,7 @@ POPLOCAL_VERSION_DIR:=$(POPLOCAL_HOME_DIR)/$(VERSION_DIR)
 POPLOCAL_VERSION_SYMLINK:=$(POPLOCAL_HOME_DIR)/$(SYMLINK)
 
 # This is the folder where the link to the poplog-shell executable will be installed.
-EXEC_DIR:=/usr/local/bin
+EXEC_DIR:=$(PREFIX)/bin
 
 # Allow overriding of the branches used for the different repositories.
 DEFAULT_BRANCH:=main
