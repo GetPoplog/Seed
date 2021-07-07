@@ -68,14 +68,21 @@
 #         place.
 #
 
+# The PREFIX variable is used to set up POPLOG_HOME_DIR (and nowhere else, 
+# please). It is provided in order to fit in with the conventions of Makefiles. 
+PREFIX:=/usr/local/poplog
+
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
 #     make install POPLOG_HOME_DIR=/opt/poplog
 # Resulting values would be:
-#	POPLOG_HOME_DIR 			/opt/poplog
-#	POPLOG_VERSION_DIR			/opt/poplog/V16
+#	POPLOG_HOME_DIR 			/opt/poplog        		$usepop/..
+#	POPLOG_VERSION_DIR			/opt/poplog/V16			$usepop
 #	POPLOG_VERSION_SYMLINK		/opt/poplog/current_usepop -> /opt/poplog/V16
-POPLOG_HOME_DIR:=/usr/local/poplog
+#   POPLOCAL_HOME_DIR           /opt/poplog				$poplocal = $usepop/..
+#   POPLOCAL_VERSION_DIR        /opt/poplog/L16			
+#   POPLOCAL_VERSION_SYMLINK    /opt/poplog/local -> /opt/poplog/L16
+POPLOG_HOME_DIR:=$(PREFIX)
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
 FULL_VERSION:=$(MAJOR_VERSION).$(MINOR_VERSION)
@@ -83,6 +90,10 @@ VERSION_DIR:=V$(MAJOR_VERSION)
 POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
 SYMLINK:=current_usepop
 POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
+
+POPLOCAL_HOME_DIR:=$(POPLOG_HOME_DIR)
+POPLOCAL_VERSION_DIR:=$(POPLOCAL_HOME_DIR)/$(VERSION_DIR)
+POPLOCAL_VERSION_SYMLINK:=$(POPLOCAL_HOME_DIR)/$(SYMLINK)
 
 # This is the folder where the link to the poplog-shell executable will be installed.
 EXEC_DIR:=/usr/local/bin
