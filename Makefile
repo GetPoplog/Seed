@@ -147,6 +147,8 @@ help:
 	#   install [^] - installs Poplog into $(POPLOG_HOME) folder as V16.
 	#   uninstall [^] - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz.
 	#   really-uninstall-poplog [^] - removes Poplog and does not create a backup.
+	#   use-repos - tells the build script to assume that the sister repos have
+	#       been cloned/downloaded and that there is no need to download them.
 	#   relink-and-build - a more complex build process that can relink the 
 	#       corepop executable and is useful for O/S upgrades.
 	#   jumpstart-ubuntu [^] - installs the packages a Ubuntu system needs.
@@ -282,6 +284,20 @@ jumpstart-opensuse-leap:
 
 .PHONY: download
 download: _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Seed.Downloaded.proxy _build/Packages.Downloaded.proxy
+
+# Instructs the build process to assume that the sister github repos have been
+# cloned and/or downloaded and reside in ../Base, ../Docs etc. This does not
+# include Aaron Sloman's packages at this time. Also the normal procedure
+# for getting the Seed file neatly copes with it being a git repo already.
+.PHONY: use-repos
+use-repos: _build/Seed.Downloaded.proxy _build/Packages.Downloaded.proxy
+	mkdir -p _build/Corepops
+	( cd ../Corepops; tar cf - . ) | ( cd _build/Corepops; tar xf - )
+	mkdir -p _build/Base
+	( cd ../Base; tar cf - . ) | ( cd _build/Base; tar xf - )
+	mkdir -p _build/Docs
+	( cd ../Docs; tar cf - . ) | ( cd _build/Docs; tar xf - )
+	touch _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy 
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
