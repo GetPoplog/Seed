@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-SEED_DIR=`pwd`/_build/Seed
+SEED_DIR=`pwd`
 
 # Run the initialisation files to set up additional environment
 # variables.
