@@ -85,7 +85,7 @@ sudo make install  # installs into /usr/local/poplog
 ```
 
 If you want to override the installation location, you can override the
-POPLOG_HOME variable during the install phase like this:
+POPLOG_HOME_DIR variable during the install phase like this:
 
 ```sh
 sudo make install POPLOG_HOME_DIR=/opt/poplog
