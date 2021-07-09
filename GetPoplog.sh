@@ -9,7 +9,7 @@ sudo apt update && sudo apt install -y make curl
 # Retrieve our Makefile in a temporary directory
 TMP_DIR=`mktemp -d -t ci-XXXXXXXXXX`
 mkdir -p $TMP_DIR
-cd $TMPDIR
+cd $TMP_DIR
 echo "Using temporary directory $TMP_DIR as a build folder"
 curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/Makefile > Makefile
 
