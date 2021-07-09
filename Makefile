@@ -105,21 +105,13 @@ EXEC_DIR:=$(PREFIX)/bin
 
 # Allow overriding of the branches used for the different repositories.
 DEFAULT_BRANCH:=main
-SEED_BRANCH:=$(DEFAULT_BRANCH)
 BASE_BRANCH:=$(DEFAULT_BRANCH)
 DOCS_BRANCH:=$(DEFAULT_BRANCH)
 COREPOPS_BRANCH:=$(DEFAULT_BRANCH)
 
-SEED_TARBALL_URL:=https://github.com/GetPoplog/Seed/archive/$(SEED_BRANCH).tar.gz
 BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.gz
 DOCS_TARBALL_URL:=https://github.com/GetPoplog/Docs/archive/$(DOCS_BRANCH).tar.gz
 COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
-
-# We need some support scripts. These might be checked out of git or downloaded
-# by curl. If the latter then we must clean them up on "make clean", which
-# is signalled by the file _build/CleanSupportScripts.flag.
-SUPPORT_SCRIPTS=makeStage2.sh makeSystemTools.sh mk_cross relinkCorepop.sh makePoplogCommander.sh
-CLEAN_SUPPORT_SCRIPTS_FLAG=_build/CleanSupportScripts.flag
 
 .PHONY: all
 all:
@@ -130,7 +122,7 @@ all:
 help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
 	# Poplog will be installed in $$(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
-	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), checked out 
+	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), cloned  
 	# from the git repo at https://github.com/GetPoplog/Seed.git and pulling updates to the
 	# script with git pull :). 
 	#
@@ -236,9 +228,6 @@ really-uninstall-poplog:
 
 .PHONY: clean
 clean:
-	# The flag file should live in _build, so we must do this first.
-	if [ -e $(CLEAN_SUPPORT_SCRIPTS_FLAG) ]; then rm -f $(SUPPORT_SCRIPTS); fi
-	# Now we clean up the main bulk of the artifacts.
 	rm -rf ./_build
 	# Target "clean" completed
 
@@ -286,14 +275,13 @@ jumpstart-opensuse-leap:
 	xterm espeak csh
 
 .PHONY: download
-download: _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Seed.Downloaded.proxy _build/Packages.Downloaded.proxy
+download: _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Packages.Downloaded.proxy
 
 # Instructs the build process to assume that the sister github repos have been
 # cloned and/or downloaded and reside in ../Base, ../Docs etc. This does not
-# include Aaron Sloman's packages at this time. Also the normal procedure
-# for getting the Seed file neatly copes with it being a git repo already.
+# include Aaron Sloman's packages at this time. 
 .PHONY: use-repos
-use-repos: _build/Seed.Downloaded.proxy _build/Packages.Downloaded.proxy
+use-repos: _build/Packages.Downloaded.proxy
 	mkdir -p _build/Corepops
 	( cd ../Corepops; tar cf - . ) | ( cd _build/Corepops; tar xf - )
 	mkdir -p _build/Base
@@ -328,31 +316,19 @@ _build/Docs.Downloaded.proxy:
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
 # It is effectively Waldek's build_pop2 script.
-_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy makeStage2.sh makeSystemTools.sh mk_cross
+_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy
 	sh makeSystemTools.sh
 	sh makeStage2.sh
 	touch $@
 	
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop 
 # in newpop11. It is the equivalent of Waldek's build_pop0 script.
-_build/Stage1.proxy: _build/Corepops.proxy makeSystemTools.sh relinkCorepop.sh mk_cross
+_build/Stage1.proxy: _build/Corepops.proxy
 	sh makeSystemTools.sh
 	sh relinkCorepop.sh
 	cp _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
 	touch $@
 
-# If this Makefile is checked out as part of a git-repo these files will aleady exist. (In
-# fact this script assumes they all exist or are all missing.) But if this Makefile is 
-# distributed standalone then it needs to fetch from the repo as independent files.
-$(SUPPORT_SCRIPTS):
-	mkdir -p _build
-	# If we fetch by curl, we need to mark them for cleaning. 
-	touch $(CLEAN_SUPPORT_SCRIPTS_FLAG)
-	# Fetch all at the same time for efficiency. Do not use $@ or you can get 4 fetches.
-	mkdir -p _build/Seed
-	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
-	(cd _build/Seed; cp $(SUPPORT_SCRIPTS) ../..)
-	
 _build/Newpop.proxy: _build/poplog_base/pop/pop/newpop.psv
 	touch $@
 
@@ -397,7 +373,7 @@ _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	curl -LsS http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2 > $@
 
-_build/PoplogCommander.proxy: _build/Stage2.proxy makePoplogCommander.sh
+_build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
 	sh makePoplogCommander.sh > _build/cmdr/poplog.c
 	( cd _build/cmdr && gcc -Wall -o poplog poplog.c )
@@ -482,49 +458,29 @@ _build/poplog.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
-# We use this target to support the use case when we are working from a
-# single origin Makefile and not a clone of the repo. N.B. Private PHONY targets 
-# are captialised.
-.PHONY: FetchSeed
-FetchSeed:
-	mkdir -p _build/Seed
-	curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 )
-
-_build/Seed.Downloaded.proxy:
-	mkdir -p _build/Seed
-	if [ -d .git ]; then \
-		tar cf - --exclude=.git --exclude=_build . | tar xf - -C _build/Seed; \
-	else \
-		curl -LsS $(SEED_TARBALL_URL) | ( cd _build/Seed; tar zxf - --strip-components=1 ); \
-	fi
-
 #-- Debian *.deb packaging -----------------------------------------------------
 
 .PHONY: dotdeb
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz _build/Seed/DEBIAN/control
+_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz
 	$(MAKE) builddeb
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: builddeb
-builddeb: _build/Seed/DEBIAN/control
+builddeb:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	[ -d _build/Seed/DEBIAN ]   # Sanity check
 	rm -rf _build/dotdeb
 	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotdeb$(EXEC_DIR)
-	( cd _build/Seed; tar cf - DEBIAN ) | ( cd _build/dotdeb; tar xf - )
+	tar cf - DEBIAN | ( cd _build/dotdeb; tar xf - )
 	cat _build/poplog.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
 	cd _build; dpkg-deb --build dotdeb poplog_$(FULL_VERSION)-1_amd64.deb
-
-_build/Seed/DEBIAN/control: _build/Seed.Downloaded.proxy
-	[ -f $@ ] # Sanity check
 
 #-- Redhat *.rpm packaging -----------------------------------------------------
 
@@ -532,42 +488,40 @@ _build/Seed/DEBIAN/control: _build/Seed.Downloaded.proxy
 dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
 
 # Use this target when working standalone.
-_build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz _build/Seed/rpmbuild/SPECS/poplog.spec
+_build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz
 	$(MAKE) buildrpm
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: buildrpm
-buildrpm: _build/Seed/rpmbuild/SPECS/poplog.spec
+buildrpm:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	[ -d _build/Seed/rpmbuild ] # Sanity check
-	cd _build/Seed/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
-	cp _build/poplog.tar.gz _build/Seed/rpmbuild/SOURCES/
-	cd _build/Seed/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
-	mv _build/Seed/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
-
-_build/Seed/rpmbuild/SPECS/poplog.spec: _build/Seed.Downloaded.proxy
-	[ -f $@ ] # Sanity check
-
+	rm -rf _build/rpmbuild
+	mkdir -p _build/rpmbuild
+	( cd rpmbuild; tar cf - . ) | ( cd _build/rpmbuild; tar xf - )
+	cd _build/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+	cp _build/poplog.tar.gz _build/rpmbuild/SOURCES/
+	cd _build/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
+	mv _build/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
 #-- AppImage *.AppImage packaging ----------------------------------------------
 
 .PHONY: dotappimage
 dotappimage: _build/Poplog-x86_64.AppImage
 
-_build/Poplog-x86_64.AppImage: _build/poplog.tar.gz _build/Seed/AppDir/AppRun
+_build/Poplog-x86_64.AppImage: _build/poplog.tar.gz
 	$(MAKE) buildappimage
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
 # _build/poplog.tar.gz exists and doesn't try to rebuild anything. 
 .PHONY: buildappimage
-buildappimage: _build/Seed/AppDir/AppRun _build/appimagetool
+buildappimage: _build/appimagetool
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
-	[ -d _build/Seed/AppDir ] # Sanity check
+	rm -rf _build/AppDir
 	mkdir -p _build/AppDir
-	( cd _build/Seed/AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
+	( cd AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
 	mkdir -p _build/AppDir$(POPLOG_VERSION_DIR)
 	tar zxf _build/poplog.tar.gz -C _build/AppDir$(POPLOG_VERSION_DIR)
 	mkdir -p _build/AppDir/usr/lib
@@ -591,9 +545,6 @@ _build/appimagetool:
 	chmod a+x _build/appimagetool
 	[ -x $@ ] # Sanity check
 
-_build/Seed/AppDir/AppRun: _build/Seed.Downloaded.proxy
-	[ -f $@ ] # Sanity check
-
 #-- Snap (Ubuntu) *.snap packaging ---------------------------------------------
 # See https://circleci.com/blog/circleci-and-snapcraft/
 
@@ -612,13 +563,11 @@ buildsnap:
 PREBUILT_DIR:=/prebuilt
 
 .PHONY: buildsnapcraftready
-buildsnapcraftready: _build/Seed/snapcraft.yaml
+buildsnapcraftready:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)/usr/bin
 	cat _build/poplog.tar.gz | ( cd _build/dotsnap/$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
-	cp _build/Seed/snapcraft.yaml _build/dotsnap	
+	cp snapcraft.yaml _build/dotsnap	
 
-_build/Seed/snapcraft.yaml: _build/Seed.Downloaded.proxy
-	[ -f $@ ] # Sanity check
