@@ -1,7 +1,7 @@
 # Seed
 
 This is a repository of scripts for installing Poplog onto your local machine. 
-When it is run it will download the other files it needs from several other 
+When it runs, it will download all the other files it needs from several other 
 repositories in this organisation plus contributory packages from the 
 [FreePoplog](https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html) 
 site.
