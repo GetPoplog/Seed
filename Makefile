@@ -387,7 +387,19 @@ _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.
         && $$usepop/pop/com/makeindexes > _build/makeindexes.log
 	touch $@
 
-_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy
+_build/NoInit.proxy: _build/Base.proxy
+	# Add the noinit files for poplog --run.
+	mkdir -p _build/poplog_base/pop/com/noinit
+	cd _build/poplog_base/pop/com/noinit; \
+	  touch init.p; \
+	  ln -s init.p vedinit.p; \
+	  ln -s init.p init.pl; \
+	  ln -s init.p init.lsp; \
+	  ln -s init.p init.ml
+	chmod a-w _build/poplog_base/pop/com/noinit/*.*
+	touch $@
+
+_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy _build/NoInit.proxy
 	find _build/poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
 	touch $@
 
@@ -567,7 +579,7 @@ buildsnapcraftready:
 	[ -f _build/poplog.tar.gz ] # Enforce required tarball
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)/usr/bin
-	cat _build/poplog.tar.gz | ( cd _build/dotsnap/$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
+	cat _build/poplog.tar.gz | ( cd _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp snapcraft.yaml _build/dotsnap	
 
