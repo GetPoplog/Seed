@@ -330,8 +330,8 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 }
 
 void setUpEnvironment( char * base, int flags ) {
-    int inherit_env = ( flags && INHERIT_ENV ) != 0;
-    int run_init_p = ( flags && RUN_INIT_P ) != 0;
+    bool inherit_env = ( flags && INHERIT_ENV ) != 0;
+    bool run_init_p = ( flags && RUN_INIT_P ) != 0;
 
     setenv( "usepop", base, !inherit_env );
 ****
