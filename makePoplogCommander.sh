@@ -15,10 +15,14 @@ cat << \****
 #include <unistd.h>
 #include <stdlib.h>
 #include <regex.h>
+#include <stdbool.h>
 
-//  Bit-flags
-#define RUN_INIT_P      1
-#define INHERIT_ENV     2
+//  Bit-flags.
+#define RUN_INIT_P          1
+#define INHERIT_ENV         2
+//  Bit-flag sets.
+#define PREFER_SECURITY     0
+#define PREFER_FLEXIBILITY  (RUN_INIT_P|INHERIT_ENV)
 
 
 ****
@@ -278,7 +282,7 @@ int howManyTimes( const char * haystack, const char * needle ) {
     return count;
 }
 
-void setEnvReplacingUSEPOP( char * name, char * value, char * base, int flags ) {
+void setEnvReplacingUSEPOP( char * name, char * value, char * base, bool inherit_env ) {
     int count = howManyTimes( value, USEPOP );
     size_t len_needed = strlen( value ) + strlen( base ) * count + 1;
     char * rhs = malloc( len_needed );
@@ -299,7 +303,7 @@ void setEnvReplacingUSEPOP( char * name, char * value, char * base, int flags ) 
     }
     strcpy( end_of_rhs, haystack );
 
-    setenv( name, rhs, ( flags && INHERIT_ENV ) == 0 );
+    setenv( name, rhs, !inherit_env );
     free( rhs );
 }
 
@@ -326,10 +330,10 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 }
 
 void setUpEnvironment( char * base, int flags ) {
-    int overwrite = ( flags && INHERIT_ENV ) == 0;
+    int inherit_env = ( flags && INHERIT_ENV ) != 0;
     int run_init_p = ( flags && RUN_INIT_P ) != 0;
 
-    setenv( "usepop", base, overwrite );
+    setenv( "usepop", base, !inherit_env );
 ****
 echo
 
@@ -352,13 +356,13 @@ CODE1=`env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh
 | grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, overwrite );/'`
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
 
 CODE2=`env -i sh -c '(usepop="_build/poplog_base/pop/.." && . $usepop/pop/com/popenv.sh && env)' | sort \
 | grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base/pop/..![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, overwrite );/'`
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
 
 if [ "$CODE1" != "$CODE2" ]; then
     exit 1
@@ -382,7 +386,7 @@ cat << \****
             char * p = stpcpy( path, home );
             p = stpcpy( p, "/" );
             p = stpcpy( p, folder );
-            setenv( "poplib", path, overwrite );
+            setenv( "poplib", path, !inherit_env );
         }
     } else {
         // Point to a specially constructed 'empty init files' folder.
@@ -390,7 +394,7 @@ cat << \****
         char * path = malloc( strlen( base ) + strlen( subpath ) + 1 );
         char * p = stpcpy( path, base );
         p = stpcpy( p, subpath );
-        setenv( "poplib", path, overwrite );
+        setenv( "poplib", path, !inherit_env );
     }
 ****
 echo 
@@ -460,11 +464,10 @@ cat << \****
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
         } else if ( strcmp( "--run", argv[1] ) == 0 ) {
-            //  We want to force overwrites.
-            return processOptions( argc - 1, &argv[1], base, 0 );
+            return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY );
         } else if ( strcmp( "--dev", argv[1] ) == 0 ) {
             //  We want to force overwrites.
-            return processOptions( argc - 1, &argv[1], base, RUN_INIT_P | INHERIT_ENV );
+            return processOptions( argc - 1, &argv[1], base, PREFER_FLEXIBILITY );
         } else if ( strcmp( "exec", argv[1] ) == 0 ) {
             if ( argc >= 3 ) {
                 setUpEnvironment( base, flags );
@@ -508,6 +511,6 @@ int main( int argc, char *const argv[] ) {
         exit( EXIT_FAILURE );
     }
     truncatePopCom( base );
-    return processOptions( argc, argv, base, RUN_INIT_P | INHERIT_ENV );
+    return processOptions( argc, argv, base, PREFER_FLEXIBILITY );
 }
 ****
