@@ -15,6 +15,15 @@ cat << \****
 #include <unistd.h>
 #include <stdlib.h>
 #include <regex.h>
+#include <stdbool.h>
+
+//  Bit-flags.
+#define RUN_INIT_P          1
+#define INHERIT_ENV         2
+//  Bit-flag sets.
+#define PREFER_SECURITY     0
+#define PREFER_FLEXIBILITY  (RUN_INIT_P|INHERIT_ENV)
+
 
 ****
 
@@ -105,6 +114,22 @@ poplog [OPTION]... im [FILE]
 poplog [OPTION]... (help|teach|doc|ref) [TOPIC]
     Searches for the named TOPIC using the relevant documentation sections.
     If found opens a buffer in the editor and otherwise drops into a REPL.
+
+
+RESTRICTED AND UNRESTRICTED MODE
+
+poplog --run [OPTION]...
+    This option forces the Poplog to use the pre-set defaults for all 
+    environment variables and also to ignore $poplib. This makes it suitable
+    for use in scripts, where the environment is standardised and per
+    user customisation is not enabled. The remaining arguments are processed
+    as usual.
+
+poplog --dev [OPTION]...
+    This option allows Poplog to inherit all existing special environment
+    variables and runs the $poplib/init.p and $poplib/vedinit.p. This is the
+    normal mode for programming in Poplog. It is not normally necessary to
+    supply this option.
 
 
 UTILITY ACTIONS
@@ -257,7 +282,7 @@ int howManyTimes( const char * haystack, const char * needle ) {
     return count;
 }
 
-void setEnvReplacingUSEPOP( char * name, char * value, char * base ) {
+void setEnvReplacingUSEPOP( char * name, char * value, char * base, bool inherit_env ) {
     int count = howManyTimes( value, USEPOP );
     size_t len_needed = strlen( value ) + strlen( base ) * count + 1;
     char * rhs = malloc( len_needed );
@@ -278,7 +303,7 @@ void setEnvReplacingUSEPOP( char * name, char * value, char * base ) {
     }
     strcpy( end_of_rhs, haystack );
 
-    setenv( name, rhs, 1 );
+    setenv( name, rhs, !inherit_env );
     free( rhs );
 }
 
@@ -304,15 +329,11 @@ void extendPath( char * prefix, char * path, char * suffix ) {
     free( buff );
 }
 
-int main( int argc, char *const argv[] ) {
-    char * base = selfHome();
-    if ( base == NULL ) {
-        fprintf( stderr, "Cannot locate the Poplog home directory" );
-        exit( EXIT_FAILURE );
-    }
-    truncatePopCom( base );
+void setUpEnvironment( char * base, int flags ) {
+    bool inherit_env = ( flags && INHERIT_ENV ) != 0;
+    bool run_init_p = ( flags && RUN_INIT_P ) != 0;
 
-    setenv( "usepop", base, 1 );
+    setenv( "usepop", base, !inherit_env );
 ****
 echo
 
@@ -335,13 +356,13 @@ CODE1=`env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh
 | grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base );/'`
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
 
 CODE2=`env -i sh -c '(usepop="_build/poplog_base/pop/.." && . $usepop/pop/com/popenv.sh && env)' | sort \
 | grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
 | sed -e 's!_build/poplog_base/pop/..![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base );/'`
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
 
 if [ "$CODE1" != "$CODE2" ]; then
     exit 1
@@ -357,7 +378,7 @@ echo
 ################################################################################
 
 cat << \****
-    {
+    if ( run_init_p ) {
         char * home = getenv( "HOME" );
         if ( home != NULL ) {
             const char * const folder = ".poplog";
@@ -365,8 +386,15 @@ cat << \****
             char * p = stpcpy( path, home );
             p = stpcpy( p, "/" );
             p = stpcpy( p, folder );
-            setenv( "poplib", path, 0 );
+            setenv( "poplib", path, !inherit_env );
         }
+    } else {
+        // Point to a specially constructed 'empty init files' folder.
+        const char * const subpath = "/pop/com/noinit" ;
+        char * path = malloc( strlen( base ) + strlen( subpath ) + 1 );
+        char * p = stpcpy( path, base );
+        p = stpcpy( p, subpath );
+        setenv( "poplib", path, !inherit_env );
     }
 ****
 echo 
@@ -377,7 +405,17 @@ echo
 
 cat << \****
     extendPath( getenv( "popsys" ), getenv( "PATH" ), getenv( "popcom" ) );
+}
 
+****
+
+################################################################################
+# Here we handle the options that it was invoked with. The overwrite parameter
+# is passed to setUpEnvironment.
+################################################################################
+
+cat << \****
+int processOptions( int argc, char *const argv[], char *base, int flags ) {
     if ( 0 ) {
         printf( "argc = %d\n", argc );
         for ( int i = 0; i < argc; i++ ) {
@@ -385,6 +423,7 @@ cat << \****
         }
     } else {
         if ( argc <= 1 ) {
+            setUpEnvironment( base, flags );
             char *const pop11_args[] = { "pop11", NULL };
             execvp( "pop11", pop11_args );
         } else if ( 
@@ -399,6 +438,7 @@ done
 
 cat << \****
         ) {
+            setUpEnvironment( base, flags );
             execvp( argv[1], &argv[1] );
         } else if (
             0
@@ -412,6 +452,7 @@ done
 
 cat << \****
         ) {
+            setUpEnvironment( base, flags );
             char ** pop11_args = calloc( argc + 1, sizeof( char *const ) );
             pop11_args[ 0 ] = "pop11";
             for ( int i = 1; i < argc; i++ ) {
@@ -422,8 +463,14 @@ cat << \****
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
+        } else if ( strcmp( "--run", argv[1] ) == 0 ) {
+            return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY );
+        } else if ( strcmp( "--dev", argv[1] ) == 0 ) {
+            //  We want to force overwrites.
+            return processOptions( argc - 1, &argv[1], base, PREFER_FLEXIBILITY );
         } else if ( strcmp( "exec", argv[1] ) == 0 ) {
             if ( argc >= 3 ) {
+                setUpEnvironment( base, flags );
                 execvp( argv[2], &argv[2] );
             } else {
                 fprintf( stderr, "Too few arguments for exec action\n" );
@@ -435,6 +482,7 @@ cat << \****
                 fprintf( stderr, "$SHELL not defined\n" );
                 return EXIT_FAILURE;
             } else {
+                setUpEnvironment( base, flags );
                 char ** shell_args = calloc( argc, sizeof( char *const ) );
                 shell_args[ 0 ] = shell_path;
                 for ( int i = 2; i < argc; i++ ) {
@@ -454,5 +502,15 @@ cat << \****
     }
     perror( NULL );
     return EXIT_FAILURE;
+}
+
+int main( int argc, char *const argv[] ) {
+    char * base = selfHome();
+    if ( base == NULL ) {
+        fprintf( stderr, "Cannot locate the Poplog home directory" );
+        exit( EXIT_FAILURE );
+    }
+    truncatePopCom( base );
+    return processOptions( argc, argv, base, PREFER_FLEXIBILITY );
 }
 ****
