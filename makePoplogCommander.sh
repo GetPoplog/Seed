@@ -16,6 +16,7 @@ cat << \****
 #include <stdlib.h>
 #include <regex.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 //  Bit-flags.
 #define RUN_INIT_P          1
@@ -144,6 +145,12 @@ poplog env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]
 
         % poplog exec env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]
 
+poplog [NAME=VALUE]... [COMMAND [ARG]...]
+    Adds/modifies environment variables in the Poplog environment and
+    then processes the remainder of the arguments normally. This avoids
+    the necessity of invoking an 'env' process. It may be useful in
+    combination with the '--run' option.
+
 poplog exec [PROGRAM] [ARG]...
     Runs an arbitrary program in the Poplog environment i.e. with the special
     environment variables and $PATH set up. A typical use of this is
@@ -156,6 +163,7 @@ poplog shell [OPTIONS] [FILE]
     Starts a shell in the Poplog environment. The $SHELL environment 
     variable is used to select the shell to be launched. Arguments are
     passed to the shell in the normal way.
+
 
 COMPILING AND LINKING WITH POPC
 
@@ -491,6 +499,10 @@ cat << \****
                 shell_args[ argc - 1 ] = NULL; 
                 execvp( shell_path, shell_args );
             }
+        } else if ( strchr( argv[1], '=' ) != NULL ) {
+            //  If there is an '=' sign in the argument it is an environment variable.
+            putenv( argv[1] );
+            return processOptions( argc - 1, &argv[1], base, flags );
         } else {
             fprintf( stderr, "Unexpected arguments:" );
             for ( int i = 1; i < argc; i++ ) {
