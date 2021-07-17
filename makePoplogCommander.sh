@@ -17,6 +17,7 @@ cat << \****
 #include <regex.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdarg.h>
 
 //  Bit-flags.
 #define RUN_INIT_P          1
@@ -24,6 +25,92 @@ cat << \****
 //  Bit-flag sets.
 #define PREFER_SECURITY     0
 #define PREFER_FLEXIBILITY  (RUN_INIT_P|INHERIT_ENV)
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Library routines: 
+//      Mishap, an error reporting function
+//      Chain, a 1D vector
+///////////////////////////////////////////////////////////////////////////////
+
+
+//  Mishap - Error reporting using printf-like functionality.
+
+void mishap( const char *msg, ... ) {
+    va_list args;
+    va_start( args, msg );
+    fprintf( stderr, "Mishap: " );
+    vfprintf( stderr, msg, args );
+    fprintf( stderr, "\n" );
+    va_end( args );
+    exit( EXIT_FAILURE );
+}
+
+//  Chains - 1D vectors.
+
+typedef struct Chain *Chain;
+typedef char * Ref;
+
+enum {
+    BUMP = 16
+};
+
+struct Chain {
+    int     size;
+    int     used;
+    Ref     *data;
+};
+
+// Ensure there is room for at least n more bytes
+// in the chain's buffer.
+//
+static Chain bump( Chain r, int n ) {
+    int size = r->size;
+    int used = r->used;
+    int newused = used + n;
+    if ( newused > size ) {
+        int newsize = newused + BUMP;
+        r->data = (Ref *)realloc( r->data, newsize * sizeof( Ref ) );
+        r->size = newsize;
+    }
+    return r;
+}
+
+Chain chain_push( Chain r, Ref ch ) {
+    bump( r, 1 );
+    r->data[ r->used ] = ch;
+    r->used += 1;
+    return r;
+}
+
+Chain chain_new() {
+    Chain r;
+    r = (Chain)malloc( sizeof( struct Chain ) );
+    r->size = 0;
+    r->used = 0;
+    r->data = NULL;
+    return r;
+}
+
+void chain_free( Chain r ) {
+    free( r->data );
+    free( r );
+}
+
+int chain_length( Chain r ) {
+    return r->used;
+}
+
+Ref chain_index( Chain r, int n ) {
+    if (!( 0 <= n && n < r->used )) {
+        mishap( "Chain index (%d) out of range (0-%d)", n, r->used );
+    }
+    return r->data[ n ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  End of library routines
+///////////////////////////////////////////////////////////////////////////////
 
 
 ****
@@ -337,7 +424,7 @@ void extendPath( char * prefix, char * path, char * suffix ) {
     free( buff );
 }
 
-void setUpEnvironment( char * base, int flags ) {
+void setUpEnvironment( char * base, int flags, Chain envv ) {
     bool inherit_env = ( flags && INHERIT_ENV ) != 0;
     bool run_init_p = ( flags && RUN_INIT_P ) != 0;
 
@@ -413,6 +500,11 @@ echo
 
 cat << \****
     extendPath( getenv( "popsys" ), getenv( "PATH" ), getenv( "popcom" ) );
+
+    int n = chain_length( envv );
+    for ( int i = 0; i < n; i++ ) {
+        putenv( chain_index( envv, i ) );
+    }
 }
 
 ****
@@ -423,7 +515,7 @@ cat << \****
 ################################################################################
 
 cat << \****
-int processOptions( int argc, char *const argv[], char *base, int flags ) {
+int processOptions( int argc, char *const argv[], char *base, int flags, Chain envv ) {
     if ( 0 ) {
         printf( "argc = %d\n", argc );
         for ( int i = 0; i < argc; i++ ) {
@@ -431,7 +523,7 @@ int processOptions( int argc, char *const argv[], char *base, int flags ) {
         }
     } else {
         if ( argc <= 1 ) {
-            setUpEnvironment( base, flags );
+            setUpEnvironment( base, flags, envv );
             char *const pop11_args[] = { "pop11", NULL };
             execvp( "pop11", pop11_args );
         } else if ( 
@@ -446,7 +538,7 @@ done
 
 cat << \****
         ) {
-            setUpEnvironment( base, flags );
+            setUpEnvironment( base, flags, envv );
             execvp( argv[1], &argv[1] );
         } else if (
             0
@@ -460,7 +552,7 @@ done
 
 cat << \****
         ) {
-            setUpEnvironment( base, flags );
+            setUpEnvironment( base, flags, envv );
             char ** pop11_args = calloc( argc + 1, sizeof( char *const ) );
             pop11_args[ 0 ] = "pop11";
             for ( int i = 1; i < argc; i++ ) {
@@ -472,13 +564,13 @@ cat << \****
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
         } else if ( strcmp( "--run", argv[1] ) == 0 ) {
-            return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY );
+            return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY, envv );
         } else if ( strcmp( "--dev", argv[1] ) == 0 ) {
             //  We want to force overwrites.
-            return processOptions( argc - 1, &argv[1], base, PREFER_FLEXIBILITY );
+            return processOptions( argc - 1, &argv[1], base, PREFER_FLEXIBILITY, envv );
         } else if ( strcmp( "exec", argv[1] ) == 0 ) {
             if ( argc >= 3 ) {
-                setUpEnvironment( base, flags );
+                setUpEnvironment( base, flags, envv );
                 execvp( argv[2], &argv[2] );
             } else {
                 fprintf( stderr, "Too few arguments for exec action\n" );
@@ -490,7 +582,7 @@ cat << \****
                 fprintf( stderr, "$SHELL not defined\n" );
                 return EXIT_FAILURE;
             } else {
-                setUpEnvironment( base, flags );
+                setUpEnvironment( base, flags, envv );
                 char ** shell_args = calloc( argc, sizeof( char *const ) );
                 shell_args[ 0 ] = shell_path;
                 for ( int i = 2; i < argc; i++ ) {
@@ -501,8 +593,8 @@ cat << \****
             }
         } else if ( strchr( argv[1], '=' ) != NULL ) {
             //  If there is an '=' sign in the argument it is an environment variable.
-            putenv( argv[1] );
-            return processOptions( argc - 1, &argv[1], base, flags );
+            chain_push( envv, argv[1] );
+            return processOptions( argc - 1, &argv[1], base, flags, envv );
         } else {
             fprintf( stderr, "Unexpected arguments:" );
             for ( int i = 1; i < argc; i++ ) {
@@ -522,7 +614,10 @@ int main( int argc, char *const argv[] ) {
         fprintf( stderr, "Cannot locate the Poplog home directory" );
         exit( EXIT_FAILURE );
     }
+
+    Chain envv = chain_new();
+
     truncatePopCom( base );
-    return processOptions( argc, argv, base, PREFER_FLEXIBILITY );
+    return processOptions( argc, argv, base, PREFER_FLEXIBILITY, envv );
 }
 ****
