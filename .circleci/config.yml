@@ -79,11 +79,12 @@ jobs:
             sudo apt install -y python3 python3-pip
             pip3 install nose2
       - attach_workspace:
-          at: _build
+          at: _workspace
       - run:
           name: Install Poplog from *.deb file
           command: |
-            sudo dpkg -i _build/poplog_16.1-1_amd64.deb
+            ls -R
+            sudo dpkg -i _workspace/poplog_16.1-1_amd64.deb
       - run:
           name: Run systests
           command: |
