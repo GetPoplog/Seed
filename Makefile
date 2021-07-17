@@ -231,6 +231,14 @@ clean:
 	rm -rf ./_build
 	# Target "clean" completed
 
+.PHONY: systests
+systests:
+	cd systests; \
+	if [ -e venv ]; then \
+	    . venv/bin/activate; \
+	fi; \
+	nose2
+
 # Installs the dependencies
 #   Needed to fetch resources:
 #       make curl
