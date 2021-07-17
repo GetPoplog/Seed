@@ -63,6 +63,10 @@ jobs:
       - store_artifacts:
           path: _build/poplog_16.1-1_amd64.deb
           destination: poplog_16.1-1_amd64.deb
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - poplog_16.1-1_amd64.deb
   test_deb:
     machine:
       image: ubuntu-2004:202104-01
