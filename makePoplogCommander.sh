@@ -84,12 +84,8 @@ Chain chain_push( Chain r, Ref ch ) {
 }
 
 Chain chain_new() {
-    Chain r;
-    r = (Chain)malloc( sizeof( struct Chain ) );
-    r->size = 0;
-    r->used = 0;
-    r->data = NULL;
-    return r;
+    // calloc implicitly zeros size & used & sets data to NULL.
+    return (Chain)calloc( sizeof( struct Chain ), 1 );
 }
 
 void chain_free( Chain r ) {
@@ -102,7 +98,7 @@ int chain_length( Chain r ) {
 }
 
 Ref chain_index( Chain r, int n ) {
-    if (!( 0 <= n && n < r->used )) {
+    if ( !( 0 <= n && n < r->used ) ) {
         mishap( "Chain index (%d) out of range (0-%d)", n, r->used );
     }
     return r->data[ n ];
