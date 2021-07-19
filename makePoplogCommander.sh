@@ -359,7 +359,10 @@ static_assert( false, "Not defined for operating systems other than Darwin nor L
 
 cat << \****
 
-const char * const USEPOP = "[//USEPOP//]";
+#define USEPOP_LITERAL "[//USEPOP//]"
+#define POPLOCAL_LITERAL USEPOP_LITERAL "/../../poplocal"
+
+const char * const USEPOP = USEPOP_LITERAL;
 
 void truncatePopCom( char * base ) {
     const char * const required_suffix = "/pop/pop";
@@ -455,13 +458,13 @@ echo
 ################################################################################
 
 CODE1=`env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh && env)' | sort \
-| grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
+| grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' \
 | sed -e 's!_build/poplog_base![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
 | sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
 
 CODE2=`env -i sh -c '(usepop="_build/poplog_base/pop/.." && . $usepop/pop/com/popenv.sh && env)' | sort \
-| grep -v '^\(_\|SHLVL\|PWD\|poplib\)=' \
+| grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' \
 | sed -e 's!_build/poplog_base/pop/..![//USEPOP//]!g' \
 | sed -e 's/"/\\"/g' \
 | sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
@@ -472,6 +475,16 @@ fi
 
 echo "$CODE1"
 echo 
+
+################################################################################
+# Note that poplocal needs special handling. 
+################################################################################
+
+cat << \****
+    setEnvReplacingUSEPOP( "poplocal", POPLOCAL_LITERAL, base, inherit_env );
+    setEnvReplacingUSEPOP( "poplocalauto", POPLOCAL_LITERAL "/auto", base, inherit_env );
+    setEnvReplacingUSEPOP( "poplocalbin", POPLOCAL_LITERAL "/psv", base, inherit_env );
+****
 
 ################################################################################
 # Note that poplib needs special handling. The algorithm used in $popcom/popenv.sh
