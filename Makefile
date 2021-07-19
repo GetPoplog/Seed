@@ -85,8 +85,6 @@ PREFIX?=$(DESTDIR)/usr/local
 #	POPLOG_VERSION_DIR			/opt/poplog/V16			$usepop
 #	POPLOG_VERSION_SYMLINK		/opt/poplog/current_usepop -> /opt/poplog/V16
 #   POPLOCAL_HOME_DIR           /opt/poplog				$poplocal = $usepop/..
-#   POPLOCAL_VERSION_DIR        /opt/poplog/L16			
-#   POPLOCAL_VERSION_SYMLINK    /opt/poplog/local -> /opt/poplog/L16
 POPLOG_HOME_DIR:=$(PREFIX)/poplog
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
@@ -96,7 +94,7 @@ POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
 SYMLINK:=current_usepop
 POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 
-POPLOCAL_HOME_DIR:=$(PREFIX)/poplocal
+POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
 # This is the folder where the link to the poplog-shell executable will be installed.
 EXEC_DIR:=$(PREFIX)/bin
