@@ -48,8 +48,8 @@ void mishap( const char *msg, ... ) {
 
 //  Chains - 1D vectors.
 
-typedef struct Chain *Chain;
-typedef char * Ref;
+typedef struct Chain * Chain;
+typedef void * Ref;
 
 enum {
     BUMP = 16
