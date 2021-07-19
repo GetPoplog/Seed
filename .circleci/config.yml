@@ -28,8 +28,14 @@ jobs:
           name: TEST - Install Poplog
           command: sudo make install
       - run:
-          name: TEST - uninstall Poplog
+          name: TEST - Verify installation
+          command: make verify-install
+      - run:
+          name: TEST - Uninstall Poplog
           command: sudo make uninstall
+      - run:
+          name: TEST - Verify uninstallation
+          command: make verify-uninstall
       - run:
           name: Export file-tree as tarball
           command: make _build/poplog.tar.gz

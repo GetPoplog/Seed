@@ -202,8 +202,8 @@ install:
 	mkdir -p $(POPLOG_VERSION_DIR)
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(POPLOG_VERSION_DIR); tar xf - )
 	cd $(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
+	mkdir -p $(EXEC_DIR)
 	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
-	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/poplog$(VERSION_DIR)
 	# Target "install" completed
 
 # No messing around - this is not a version change (we don't have a target for that)
@@ -224,7 +224,18 @@ really-uninstall-poplog:
 	# OK, let's take out the home-directory.
 	rm -rf $(POPLOG_HOME_DIR)
 	rm -f $(EXEC_DIR)/poplog
-	rm -f $(EXEC_DIR)/poplogV??
+
+.PHONY: verify-uninstall
+verify-uninstall:
+	# A sanity check that the Poplog installation has actually been removed.
+	test ! -e $(POPLOG_VERSION_DIR)
+	test ! -e $(EXEC_DIR)/poplog
+
+.PHONY: verify-install
+verify-install:
+	# A sanity check that the Poplog installation has actually been installed.
+	test -d $(POPLOG_VERSION_DIR)
+	test -f $(EXEC_DIR)/poplog	
 
 .PHONY: clean
 clean:
