@@ -14,4 +14,4 @@ poplocal-tree only extends a couple of search-paths, out of the box.
   * $poplocalbin (default $poplocal/psv) - a folder that is searched for
     saved images.
 
-To learn more about search paths, see HELP SEARCH_LISTS.
+To learn more about search paths, see HELP SEARCH_LISTS..
