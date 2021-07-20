@@ -141,6 +141,7 @@ help:
 	#   build - creates a complete build-tree in _build/poplog_base.
 	#   install [^] - installs Poplog into $(POPLOG_HOME) folder as V16.
 	#   uninstall [^] - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz.
+	#   systests - runs self-checks on an installed Poplog system
 	#   really-uninstall-poplog [^] - removes Poplog and does not create a backup.
 	#   use-repos - tells the build script to assume that the sister repos have
 	#       been cloned/downloaded and that there is no need to download them.
@@ -242,6 +243,9 @@ clean:
 	rm -rf ./_build
 	# Target "clean" completed
 
+# We used nose2 to drive a simple test-discovery process. It turns out that we
+# could have used pytest if we made use of the @pytest.mark.parameterize
+# decorator.
 .PHONY: systests
 systests:
 	cd systests; \
