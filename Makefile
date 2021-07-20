@@ -85,8 +85,6 @@ PREFIX?=$(DESTDIR)/usr/local
 #	POPLOG_VERSION_DIR			/opt/poplog/V16			$usepop
 #	POPLOG_VERSION_SYMLINK		/opt/poplog/current_usepop -> /opt/poplog/V16
 #   POPLOCAL_HOME_DIR           /opt/poplog				$poplocal = $usepop/..
-#   POPLOCAL_VERSION_DIR        /opt/poplog/L16			
-#   POPLOCAL_VERSION_SYMLINK    /opt/poplog/local -> /opt/poplog/L16
 POPLOG_HOME_DIR:=$(PREFIX)/poplog
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
@@ -96,9 +94,7 @@ POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
 SYMLINK:=current_usepop
 POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 
-POPLOCAL_HOME_DIR:=$(POPLOG_HOME_DIR)
-POPLOCAL_VERSION_DIR:=$(POPLOCAL_HOME_DIR)/$(VERSION_DIR)
-POPLOCAL_VERSION_SYMLINK:=$(POPLOCAL_HOME_DIR)/$(SYMLINK)
+POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
 # This is the folder where the link to the poplog-shell executable will be installed.
 EXEC_DIR:=$(PREFIX)/bin
@@ -140,6 +136,7 @@ help:
 	#   download - downloads all the archives required by the build process.
 	#   build - creates a complete build-tree in _build/poplog_base.
 	#   install [^] - installs Poplog into $(POPLOG_HOME) folder as V16.
+	#   install-poplocal - installs a 'skeleton' folder for $$poplocal. Optional.
 	#   uninstall [^] - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz.
 	#   systests - runs self-checks on an installed Poplog system
 	#   really-uninstall-poplog [^] - removes Poplog and does not create a backup.
@@ -206,6 +203,14 @@ install:
 	mkdir -p $(EXEC_DIR)
 	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
 	# Target "install" completed
+
+.PHONY: install-poplocal
+install-poplocal:
+	mkdir -p $(POPLOCAL_HOME_DIR)
+	( cd poplocal; tar cf - --exclude=.gitkeep . ) | ( cd $(POPLOCAL_HOME_DIR); tar xf - . )
+	# Target "install-poplocal" completed.
+
+
 
 # No messing around - this is not a version change (we don't have a target for that)
 # but a complete removal of all installed Poplogs. This is potentially disasterous, 
