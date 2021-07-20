@@ -477,7 +477,11 @@ echo "$CODE1"
 echo 
 
 ################################################################################
-# Note that poplocal needs special handling. 
+# Note that $poplocal needs special handling. The pre-existing defaults are
+# problematic because they can leave $poplocal pointing to a read-only area.
+# However, changing $poplocal's default also requires handling the dependent 
+# variables $poplocalauto and $poplocalbin. See discussion here:
+# https://github.com/GetPoplog/Seed/wiki/A-new-default-for-$poplocal
 ################################################################################
 
 cat << \****
