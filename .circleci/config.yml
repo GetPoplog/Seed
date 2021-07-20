@@ -25,8 +25,17 @@ jobs:
           name: Build poplog_base file-tree
           command: make build
       - run:
-          name: Install Poplog from its file-tree
+          name: TEST - Install Poplog
           command: sudo make install
+      - run:
+          name: TEST - Verify installation
+          command: make verify-install
+      - run:
+          name: TEST - Uninstall Poplog
+          command: sudo make uninstall
+      - run:
+          name: TEST - Verify uninstallation
+          command: make verify-uninstall
       - run:
           name: Export file-tree as tarball
           command: make _build/poplog.tar.gz
@@ -60,6 +69,39 @@ jobs:
       - store_artifacts:
           path: _build/poplog_16.1-1_amd64.deb
           destination: poplog_16.1-1_amd64.deb
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - poplog_16.1-1_amd64.deb
+  test_deb:
+    machine:
+      image: ubuntu-2004:202104-01
+    steps:
+      - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt update
+            sudo apt install -y python3 python3-pip
+            pip3 install nose2
+      - attach_workspace:
+          at: _workspace
+      - run:
+          name: Install Poplog from *.deb file
+          command: |
+            sudo apt install ./_workspace/poplog_16.1-1_amd64.deb
+      - run:
+          name: Run systests
+          command: |
+            cd systests
+            nose2 -X
+      - store_test_results:
+          path: systests
   build_rpm:
     docker:
       - image: cimg/base:2021.04
@@ -152,3 +194,6 @@ workflows:
       - build_snap_using_container:
           requires:
             - build_tree
+      - test_deb:
+          requires:
+            - build_deb
