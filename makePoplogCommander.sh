@@ -68,7 +68,7 @@ static Chain bump( Chain r, int n ) {
     int size = r->size;
     int used = r->used;
     int newused = used + n;
-    
+
     if ( newused > size ) {
         //  We must realloc - and We need the new size to be at least this.
         int newsize = newused;
@@ -238,19 +238,12 @@ UTILITY ACTIONS
 poplog --help
     A special case that shows this usage information.
 
-poplog env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]
-    Runs the 'env' command in the Poplog environment, allowing you to 
-    override any environment variables. N.B. the same effect can be
-    achieved by 
-
-        % poplog exec env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]
-
 poplog [NAME=VALUE]... [COMMAND [ARG]...]
-    Adds/modifies environment variables in the Poplog environment and
-    then processes the remainder of the arguments normally. This avoids
-    the necessity of invoking an 'env' process. Note: these bindings 
-    override the default bindings established by `--run` (because they
-    run after the normal bindings are set up.)
+    Adds/modifies environment variables in the Poplog environment for the
+    duration of COMMAND and processes the remainder of the arguments normally. 
+    Note: these bindings will correctly override the default bindings 
+    established by the `--run` option. This is achieved by running them after
+    the default bindings are set up.
 
 poplog exec [PROGRAM] [ARG]...
     Runs an arbitrary program in the Poplog environment i.e. with the special
@@ -545,7 +538,7 @@ int processOptions( int argc, char *const argv[], char *base, int flags, Chain e
 ****
 
 # Interpreter and tools that simply need to be run as-is.
-for i in basepop11 pop11 prolog clisp pml popc poplibr poplink env ved xved
+for i in basepop11 pop11 prolog clisp pml popc poplibr poplink ved xved
 do
 echo '            || strcmp( "'$i'", argv[1] ) == 0'
 done
