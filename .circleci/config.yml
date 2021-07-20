@@ -201,48 +201,39 @@ jobs:
           command: |
             ghr -t "${GITHUB_TOKEN}" -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" -c "${CIRCLE_SHA1}" -delete "${CIRCLE_TAG}" ./_build/artifacts/
 
+default_filters: &default_filters
+  # required to run on tagged releases.
+  tags:
+    only: /.*/
+
 workflows:
   version: 2
   mainflow:
     jobs:
       - one_line_install:
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - build_tree:
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - build_deb:
           requires:
             - build_tree
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - build_rpm:
           requires:
             - build_tree
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - build_appimage:
           requires:
             - build_tree
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - build_snap:
           requires:
             - build_tree
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - test_deb:
           requires:
             - build_deb
-          filters:  # required since `publish-github-release` has tag filters AND depends on this
-            tags:
-              only: /.*/
+          filters:  *default_filters
       - publish_github_release:
           requires:
             - test_deb
