@@ -68,8 +68,25 @@ static Chain bump( Chain r, int n ) {
     int size = r->size;
     int used = r->used;
     int newused = used + n;
+    
     if ( newused > size ) {
-        int newsize = newused + BUMP;
+        //  We must realloc - and We need the new size to be at least this.
+        int newsize = newused;
+
+        //  But we want to grow by a factor to stop repeated linear
+        //  extensions becoming O(N^2). We use a factor of 1.5.
+        int delta = ( r-> size ) >> 2;
+        //  And we want to skip the initial slow growth when we are
+        //  just repeatedly extending the chain by 1 extra item. The value
+        //  is arbitrary but 8 or 16 are commonly used.
+        if ( delta < BUMP ) {
+            delta = BUMP;
+        } 
+
+        //  This ensures we have delta extra capacity before the next realloc.
+        //  This delta is at least BUMP and at least half the previous capacity.
+        newsize += delta; 
+        
         r->data = (Ref *)realloc( r->data, newsize * sizeof( Ref ) );
         r->size = newsize;
     }
