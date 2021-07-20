@@ -360,6 +360,8 @@ static_assert( false, "Not defined for operating systems other than Darwin nor L
 cat << \****
 
 #define USEPOP_LITERAL "[//USEPOP//]"
+
+// Compile-time string concatenation using literals saves tedious string coding.
 #define POPLOCAL_LITERAL USEPOP_LITERAL "/../../poplocal"
 
 const char * const USEPOP = USEPOP_LITERAL;
