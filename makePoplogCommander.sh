@@ -589,11 +589,11 @@ cat << \****
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
-        } else if ( strcmp( "--help", argv[1] ) == 0 ) {
+        } else if ( strcmp( "--version", argv[1] ) == 0 ) {
 ****
 
-echo '            printf( "Poplog command tool: version '${GET_POPLOG_VERSION:-Undefined}'" );'
-echo '            printf( "Compiled against base Poplog system: version '${POPLOG_VERSION:-Undefined}'" );'
+echo '            printf( "Poplog command tool v'${GET_POPLOG_VERSION:-Undefined}'\\n" );'
+echo '            printf( "Compiled against base Poplog '${POPLOG_VERSION:-Undefined}'\\n" );'
 
 cat << \****
             return EXIT_SUCCESS;
