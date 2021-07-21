@@ -614,3 +614,13 @@ buildsnapcraftready:
 	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp snapcraft.yaml _build/dotsnap	
 
+
+################################################################################
+# Perform a GitHub release via CircleCI (you need to be authorised to use this)
+################################################################################
+
+.PHONY: github-release
+github-release: 
+	GETPOPLOG_VERSION=v`cat VERSION`; \
+	git tag $$GETPOPLOG_VERSION -a -m "GetPoplog $$GETPOPLOG_VERSION"
+	git push origin $$GETPOPLOG_VERSION
