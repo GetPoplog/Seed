@@ -238,6 +238,10 @@ UTILITY ACTIONS
 poplog --help
     A special case that shows this usage information.
 
+poplog --version
+    A special case that displays the version information for GetPoplog and
+    the base Poplog system that it accompanies.
+
 poplog [NAME=VALUE]... [COMMAND [ARG]...]
     Adds/modifies environment variables in the Poplog environment for the
     duration of COMMAND and processes the remainder of the arguments normally. 
