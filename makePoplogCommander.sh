@@ -589,6 +589,14 @@ cat << \****
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
+        } else if ( strcmp( "--help", argv[1] ) == 0 ) {
+****
+
+echo '            printf( "Poplog command tool: version '${GET_POPLOG_VERSION:-Undefined}'" );'
+echo '            printf( "Compiled against base Poplog system: version '${POPLOG_VERSION:-Undefined}'" );'
+
+cat << \****
+            return EXIT_SUCCESS;
         } else if ( strcmp( "--run", argv[1] ) == 0 ) {
             return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY, envv );
         } else if ( strcmp( "--dev", argv[1] ) == 0 ) {
