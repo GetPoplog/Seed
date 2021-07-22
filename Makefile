@@ -616,11 +616,12 @@ buildsnapcraftready:
 
 
 ################################################################################
-# Perform a GitHub release via CircleCI (you need to be authorised to use this)
+# Perform a GitHub release via CircleCI. You must be authorized to push tags to 
+# the upstream repository on GitHub to perform this action.
 ################################################################################
 
 .PHONY: github-release
 github-release: 
-	GETPOPLOG_VERSION=v`cat VERSION`; \
-	git tag $$GETPOPLOG_VERSION -a -m "GetPoplog $$GETPOPLOG_VERSION"
+	GETPOPLOG_VERSION=v`cat VERSION` ; \
+	git tag $$GETPOPLOG_VERSION -a -m "GetPoplog $$GETPOPLOG_VERSION" ; \
 	git push origin $$GETPOPLOG_VERSION
