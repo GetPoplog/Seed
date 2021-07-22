@@ -68,7 +68,7 @@
 #         place.
 #
 
-# CONVENTION: If we  want to allow the user of the Makefile to set via the CLI 
+# CONVENTION: If we want to allow the user of the Makefile to set via the CLI 
 # then we use ?= to bind it. If it's an internal variables then we use :=
 
 # The PREFIX variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
@@ -385,6 +385,9 @@ _build/Base.proxy: _build/Base.Downloaded.proxy
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
 	touch $@ # Create the proxy file to signal that we are done.
 
+_build/POPLOG_VERSION: _build/Base.proxy
+	_build/poplog_base/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
+
 _build/Base.Downloaded.proxy:
 	mkdir -p _build/Base
 	curl -LsS $(BASE_TARBALL_URL) | ( cd _build/Base; tar zxf - --strip-components=1)
@@ -403,7 +406,7 @@ _build/packages-V16.tar.bz2:
 
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
-	sh makePoplogCommander.sh > _build/cmdr/poplog.c
+	GET_POPLOG_VERSION=`cat VERSION` sh makePoplogCommander.sh > _build/cmdr/poplog.c
 	( cd _build/cmdr && gcc -Wall -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
 	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
@@ -611,3 +614,14 @@ buildsnapcraftready:
 	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp snapcraft.yaml _build/dotsnap	
 
+
+################################################################################
+# Perform a GitHub release via CircleCI. You must be authorized to push tags to 
+# the upstream repository on GitHub to perform this action.
+################################################################################
+
+.PHONY: github-release
+github-release: 
+	GETPOPLOG_VERSION=v`cat VERSION` ; \
+	git tag $$GETPOPLOG_VERSION -a -m "GetPoplog $$GETPOPLOG_VERSION" ; \
+	git push origin $$GETPOPLOG_VERSION

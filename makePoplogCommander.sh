@@ -238,6 +238,10 @@ UTILITY ACTIONS
 poplog --help
     A special case that shows this usage information.
 
+poplog --version
+    Show version information for GetPoplog and the base Poplog system on 
+    standard output and exits successfully.
+
 poplog [NAME=VALUE]... [COMMAND [ARG]...]
     Adds/modifies environment variables in the Poplog environment for the
     duration of COMMAND and processes the remainder of the arguments normally. 
@@ -589,6 +593,16 @@ cat << \****
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
             printUsage( argc - 2, &argv[2] );
             return EXIT_SUCCESS;
+        } else if ( strcmp( "--version", argv[1] ) == 0 ) {
+            setUpEnvironment( base, flags, envv );
+****
+
+echo '            printf( "Poplog command tool v'${GET_POPLOG_VERSION:-Undefined}'\\n" );'
+
+cat << \****
+
+            execlp( "corepop", "corepop", "%nort", ":printf( pop_internal_version // 10000, 'Running base Poplog system %p.%p\\n' );", NULL );
+            return EXIT_FAILURE; // Just in case the execlp fails.
         } else if ( strcmp( "--run", argv[1] ) == 0 ) {
             return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY, envv );
         } else if ( strcmp( "--dev", argv[1] ) == 0 ) {
