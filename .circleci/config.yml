@@ -97,6 +97,13 @@ jobs:
           name: Install Poplog from *.deb file
           command: |
             sudo apt install ./_build/artifacts/poplog_16.1-1_amd64.deb
+      - run:
+          name: Run systests
+          command: |
+            cd systests
+            nose2 -X
+      - store_test_results:
+          path: systests
 
   test_deb_2004:
     machine:
