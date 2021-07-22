@@ -404,9 +404,9 @@ _build/packages-V16.tar.bz2:
 	mkdir -p _build
 	curl -LsS http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2 > $@
 
-_build/PoplogCommander.proxy: _build/Stage2.proxy _build/POPLOG_VERSION
+_build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
-	POPLOG_VERSION=`cat _build/POPLOG_VERSION` GET_POPLOG_VERSION=`cat VERSION` sh makePoplogCommander.sh > _build/cmdr/poplog.c
+	GET_POPLOG_VERSION=`cat VERSION` sh makePoplogCommander.sh > _build/cmdr/poplog.c
 	( cd _build/cmdr && gcc -Wall -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
 	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
