@@ -102,7 +102,7 @@ jobs:
     machine:
       image: ubuntu-2004:202104-01
     steps: *systests_steps
-    
+
   build_rpm:
     docker:
       - image: cimg/base:2021.04
@@ -238,7 +238,8 @@ workflows:
           filters:  *default_filters
       - publish_github_release:
           requires:
-            - test_deb
+            - test_deb_1604
+            - test_deb_2004
             - build_appimage
             - build_snap
           filters:
