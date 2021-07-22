@@ -3,14 +3,14 @@ version: 2.1
 jobs:
   one_line_install:
     machine:
-      image: ubuntu-2004:202104-01
+      image: ubuntu-1604:202104-01
     steps:
       - run:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
   build_tree:
     machine:
-      image: ubuntu-2004:202104-01
+      image: ubuntu-1604:202104-01
     steps:
       - checkout
       - run:
@@ -75,10 +75,10 @@ jobs:
           root: _build
           paths:
             - artifacts/poplog_16.1-1_amd64.deb
-  test_deb:
+  test_deb_1604:
     machine:
-      image: ubuntu-2004:202104-01
-    steps:
+      image: ubuntu-1604:202104-01
+    steps: &systests_steps
       - checkout
       - run:
           name: Get system info
@@ -97,7 +97,6 @@ jobs:
           name: Install Poplog from *.deb file
           command: |
             sudo apt install ./_build/artifacts/poplog_16.1-1_amd64.deb
-
       - run:
           name: Run systests
           command: |
@@ -105,6 +104,12 @@ jobs:
             nose2 -X
       - store_test_results:
           path: systests
+
+  test_deb_2004:
+    machine:
+      image: ubuntu-2004:202104-01
+    steps: *systests_steps
+
   build_rpm:
     docker:
       - image: cimg/base:2021.04
@@ -132,7 +137,7 @@ jobs:
                 destination: poplog-16.1-1.x86_64.rpm
   build_appimage:
     machine:
-      image: ubuntu-2004:202104-01
+      image: ubuntu-1604:202104-01
     steps:
       - checkout
       - run:
@@ -230,13 +235,18 @@ workflows:
           requires:
             - build_tree
           filters:  *default_filters
-      - test_deb:
+      - test_deb_1604:
+          requires:
+            - build_deb
+          filters:  *default_filters
+      - test_deb_2004:
           requires:
             - build_deb
           filters:  *default_filters
       - publish_github_release:
           requires:
-            - test_deb
+            - test_deb_1604
+            - test_deb_2004
             - build_appimage
             - build_snap
           filters:
