@@ -1,0 +1,80 @@
+TEACH INDEX
+
+
+-----------------------------------------------------------------------
+1  Files
+-----------------------------------------------------------------------
+
+MOVED_FILES             advent_objectclass      apostrophe
+arith                   arrow                   boxes
+brackets                buffers                 chat0
+chat1                   chat2                   chatfurther
+chatstuff               continuations           database
+database                datastructures          datasumm
+decimals                define                  directory
+essentialkeys           faces                   fastgram1
+fastgram2               fastgram3               files
+flavours                foreach                 functional.style
+gc                      glossary                gram1
+gram2                   gram3                   gstart
+haiku-examples.txt      index                   index.old
+listanswers             listquestions           lists
+listsummary             lmr                     mark
+match_sorted            matcharrow              matchcollect
+matches                 matches.old             memofunctions
+minived                 mishaps                 morematch
+moreved                 morevt100               netstart
+number-rulebase.p       objectclass             oldoutput.p
+oneof                   oop                     pairs
+percent                 poem                    poem_bit
+popcore                 popnotes                popsummary
+popsys                  primer                  procedures
+proglect1               proglect2               proglect3
+proglect4               proglect5               proglect6
+proglect7               proglect8               proglect9
+progstyle               prolog                  quickved
+random                  random_walk             readarray
+readline                recurse1                recurse2
+recurse3                recursion               regexp
+rename_output           riverworld              sets
+sets.ans                sets1                   sets2
+sets2.ans               showarray               simplemaths
+sorted.txt              stack                   stats
+super_example           super_example.p         switchwindow
+teach                   teach_using_menu        teachfiles
+teachnums               teachnums.p             telnetkeys
+trace                   vars                    vars_and_lvars
+ved                     vednotes                vedpop
+vedproc                 vedsearch               vedtips
+vm                      vt100                   wal
+window                  yank
+
+
+-----------------------------------------------------------------------
+2  Other Indexes
+-----------------------------------------------------------------------
+
+NOTE: Some indexes may not be available until appropriate libraries have
+been loaded
+
+_____TEACH * _________XVEDINDEX
+_____TEACH * _________XPOPINDEX
+_____TEACH * _________PLOGINDEX
+_____TEACH * _____________________PACKAGESVEDUTILSINDEX
+_____TEACH * ____________________PACKAGESVEDMAILINDEX
+_____TEACH * _____________________PACKAGESVEDLATEXINDEX
+_____TEACH * _____________________PACKAGESTEACHINGINDEX
+_____TEACH * ________________PACKAGESSIMINDEX
+_____TEACH * ___________________PACKAGESRCMENUINDEX
+_____TEACH * __________________PACKAGESRCLIBINDEX
+_____TEACH * ________________PACKAGESPRBINDEX
+_____TEACH * ______________________PACKAGESPOPVISIONINDEX
+_____TEACH * ______________________PACKAGESNEWKITSIMINDEX
+_____TEACH * ______________________PACKAGESNEWKITPRBINDEX
+_____TEACH * ___________________PACKAGESNEURALINDEX
+_____TEACH * __________________PACKAGESBRAITINDEX
+_____TEACH * ___________________LIBOBJECTCLASSINDEX
+
+
+--- ________________________________________________/usr/local/poplog/current-poplog/pop/teach/index
+--- _________Copyright __________University __of ______Sussex _____2015. ___All ______rights _________reserved.

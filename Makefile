@@ -28,7 +28,8 @@ buildNoPie: POP__CC_OPTIONS=-v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed
 buildNoPie: pop/src/syscomp/x86_64/asmout.p
 	true
 
-# Must be called without buildWithoutNoPie or buildNoPie.
+# Must be called without buildWithoutNoPie or buildNoPie. The sed command
+# is used to replace a template-parameter that looks like {{{POP__CC_OPTIONS:_random_text_}}}.
 pop/src/syscomp/x86_64/asmout.p: pop/src/syscomp/x86_64/asmout.p.template
 	test ! -z "$(POP__CC_OPTIONS)" # Protect against being called from the wrong context.
 	sed -e 's/{{{POP__CC_OPTIONS:[^}]*}}}/$(POP__CC_OPTIONS)/' < $< > $@
