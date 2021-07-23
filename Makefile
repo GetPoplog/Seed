@@ -43,10 +43,6 @@
 #         It does not include documentation or Aaron Sloman's packages extension.
 #         And by implication it does not include the doc indexes.
 #
-#     _build/Docs.proxy
-#         This represents the addition of the Poplog documentation into the
-#         build-tree.
-#
 #     _build/Packages.proxy
 #         This represents the addition of the additional packages library
 #         curated by Aaron Sloman into the build-tree.
@@ -102,11 +98,9 @@ EXEC_DIR:=$(PREFIX)/bin
 # Allow overriding of the branches used for the different repositories.
 DEFAULT_BRANCH:=main
 BASE_BRANCH:=$(DEFAULT_BRANCH)
-DOCS_BRANCH:=$(DEFAULT_BRANCH)
 COREPOPS_BRANCH:=$(DEFAULT_BRANCH)
 
 BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.gz
-DOCS_TARBALL_URL:=https://github.com/GetPoplog/Docs/archive/$(DOCS_BRANCH).tar.gz
 COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
 
 .PHONY: all
@@ -303,10 +297,10 @@ jumpstart-opensuse-leap:
 	xterm espeak csh
 
 .PHONY: download
-download: _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Packages.Downloaded.proxy
+download: _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Packages.Downloaded.proxy
 
 # Instructs the build process to assume that the sister github repos have been
-# cloned and/or downloaded and reside in ../Base, ../Docs etc. This does not
+# cloned and/or downloaded and reside in ../Base etc. This does not
 # include Aaron Sloman's packages at this time. 
 .PHONY: use-repos
 use-repos: _build/Packages.Downloaded.proxy
@@ -314,9 +308,7 @@ use-repos: _build/Packages.Downloaded.proxy
 	( cd ../Corepops; tar cf - . ) | ( cd _build/Corepops; tar xf - )
 	mkdir -p _build/Base
 	( cd ../Base; tar cf - . ) | ( cd _build/Base; tar xf - )
-	mkdir -p _build/Docs
-	( cd ../Docs; tar cf - . ) | ( cd _build/Docs; tar xf - )
-	touch _build/Docs.Downloaded.proxy _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy 
+	touch _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy 
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
@@ -331,15 +323,6 @@ _build/Packages.proxy: _build/packages-V16.tar.bz2
 	touch $@
 
 _build/Packages.Downloaded.proxy: _build/packages-V16.tar.bz2
-	touch $@
-
-_build/Docs.proxy: _build/Base.proxy _build/Docs.Downloaded.proxy
-	( cd _build/Docs; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
-	touch $@
-
-_build/Docs.Downloaded.proxy:
-	mkdir -p _build/Docs
-	curl -LsS $(DOCS_TARBALL_URL) | ( cd _build/Docs; tar zxf - --exclude LICENSE --strip-components=1 )
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
@@ -412,7 +395,7 @@ _build/PoplogCommander.proxy: _build/Stage2.proxy
 	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
 	touch $@
 
-_build/MakeIndexes.proxy: _build/Stage2.proxy _build/Docs.proxy _build/Packages.proxy
+_build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
         && . ./_build/poplog_base/pop/com/popinit.sh \
         && $$usepop/pop/com/makeindexes > _build/makeindexes.log
