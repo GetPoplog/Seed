@@ -18,6 +18,15 @@ cat << \****
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <limits.h>
+
+// POSIX doesn't guarantee that <limits.h> will provide PATH_MAX if there
+// aren't limits imposed by the OS.  In this case, the recommended approach is
+// to use pathconf(3) with _PC_PATH_MAX to get the max limit but this is
+// overkill.
+#ifndef PATH_MAX
+#define PATH_MAX            512  // 256 is the minimum required by POSIX.
+#endif
 
 //  Bit-flags.
 #define RUN_INIT_P          1
