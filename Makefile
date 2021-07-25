@@ -355,7 +355,7 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
 _build/Corepops.proxy: _build/Base.proxy _download/Corepops.Downloaded.proxy
-	cp -r _download/Corepops _build/
+	cp -rpP _download/Corepops _build/
 	cp _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
 	$(MAKE) -C _build/Corepops corepop
 	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
@@ -369,7 +369,6 @@ _download/Corepops.Downloaded.proxy:
 _build/Base.proxy: _download/Base.Downloaded.proxy
 	mkdir -p _build
 	cp -r _download/Base/ _build/
-	ls -l _build
 	$(MAKE) -C _build/Base build
 	mkdir -p _build/poplog_base
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
