@@ -167,6 +167,13 @@ help-jumpstart:
 build: _build/Done.proxy
 	# Target "build" completed
 
+.PHONY: add-uninstall-instructions
+add-uninstall-instructions: _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
+
+_build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
+	mkdir -p _build/poplog_base
+	EXEC_DIR=$(EXEC_DIR) POPLOG_HOME_DIR=$(POPLOG_HOME_DIR) sh writeUninstallInstructions.sh > _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
+
 # At the start of the installation we must be able to cope with all these use-cases.
 #   1. $(POPLOG_HOME_DIR) does not exist. We will mkdir -p the folder and then install V16
 #      and set the current_usepop symlink to it.
