@@ -364,7 +364,7 @@ void * safe_malloc( size_t n ) {
     return ptr;
 }
 
-void setEnvSpec( const char * envspec) {
+void setEnvSpec( const char * envspec ) {
     // envspec is a string of the form "name=val"
     char * equalpos = strchr( envspec, '=' );
     if ( equalpos == NULL ) {
@@ -386,6 +386,9 @@ void setEnvSpec( const char * envspec) {
         fprintf( stderr, "Cannot set the environment variable %s\n", envspec );
         exit( EXIT_FAILURE );
     };
+    // name and val could be freed here since setenv should copy its
+    // arguments. Steve had observed that sometimes it didn't copy the
+    // key value, so we don't free just in case.
 }
 
 #else
