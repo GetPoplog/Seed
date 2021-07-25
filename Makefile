@@ -66,6 +66,8 @@
 
 # CONVENTION: If we want to allow the user of the Makefile to set via the CLI 
 # then we use ?= to bind it. If it's an internal variables then we use :=
+CC?=gcc
+CFLAGS?=-Wall -std=c99
 
 # The prefix variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
 # nowhere else, please). It is provided in order to fit in with the conventions 
@@ -140,6 +142,7 @@ help:
 	#       corepop executable and is useful for O/S upgrades.
 	#   jumpstart-ubuntu [^] - installs the packages a Ubuntu system needs.
 	#   jumpstart-fedora [^] - installs the packages a Fedora system needs.
+	#   jumpstart-rocky [^] - installs the packages a Rocky Linux system needs.
 	#   jumpstart-* [^] - and more, try `make help-jumpstart`.
 	#   clean - removes all the build artifacts.
 	#   help - this explanation, for more info read the Makefile comments.
@@ -156,6 +159,7 @@ help-jumpstart:
 	#   jumpstart-debian - installs the packages a Debian system needs
 	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
 	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#   jumpstart-rocky - installs the packages a Rocky Linux system needs.
 	#   jumpstart-opensuse-leap - installs the packages a openSUSE Leap system needs.
 	#
 
@@ -288,6 +292,13 @@ jumpstart-fedora:
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak csh
 
+.PHONY: jumpstart-rocky
+jumpstart-rocky:
+	dnf install \
+	curl make bzip2 \
+	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
+	libXt-devel openmotif-devel xterm csh ncurses-compat-libs
+
 .PHONY: jumpstart-opensuse-leap
 jumpstart-opensuse-leap:
 	zypper --non-interactive install \
@@ -319,7 +330,7 @@ _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog
 _build/Packages.proxy: _build/packages-V16.tar.bz2
 	mkdir -p _build
 	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
-	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
+	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do $(CC) $(CFLAGS) -O3 -fpic -shared -o bin/linux/`basename $$f .c`.so $$f; done
 	touch $@
 
 _build/Packages.Downloaded.proxy: _build/packages-V16.tar.bz2
@@ -390,7 +401,7 @@ _build/packages-V16.tar.bz2:
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
 	GET_POPLOG_VERSION=`cat VERSION` sh makePoplogCommander.sh > _build/cmdr/poplog.c
-	( cd _build/cmdr && gcc -Wall -o poplog poplog.c )
+	( cd _build/cmdr && $(CC) $(CFLAGS) -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
 	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
 	touch $@
