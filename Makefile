@@ -307,11 +307,11 @@ download: _download/Base.Downloaded.proxy _download/Corepops.Downloaded.proxy _d
 # cloned and/or downloaded and reside in ../Base etc. This does not
 # include Aaron Sloman's packages at this time. 
 .PHONY: use-repos
-use-repos: _build/Packages.Downloaded.proxy
-	mkdir -p _build/Corepops
-	( cd ../Corepops; tar cf - . ) | ( cd _build/Corepops; tar xf - )
-	mkdir -p _build/Base
-	( cd ../Base; tar cf - . ) | ( cd _build/Base; tar xf - )
+use-repos: _download/Packages.Downloaded.proxy
+	mkdir -p _download/Corepops
+	( cd ../Corepops; tar cf - . ) | ( cd _download/Corepops; tar xf - )
+	mkdir -p _download/Base
+	( cd ../Base; tar cf - . ) | ( cd _download/Base; tar xf - )
 	touch _download/Base.Downloaded.proxy _download/Corepops.Downloaded.proxy
 
 # It is not clear that these scripts should be included or not. If they are it makes
