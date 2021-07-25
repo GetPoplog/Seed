@@ -355,6 +355,14 @@ char * selfHome() {
     	return NULL;
     }
 }
+void * safe_malloc( size_t n ) {
+    void * ptr = malloc( n );
+    if ( ptr == NULL ) {
+        perror( NULL );
+        exit( EXIT_FAILURE );
+    }
+    return ptr;
+}
 
 void setEnvSpec( const char * envspec) {
     // envspec is a string of the form "name=val"
@@ -365,20 +373,12 @@ void setEnvSpec( const char * envspec) {
     };
 
     size_t namelen = equalpos - envspec;
-    char * name = malloc( namelen + 1 );
-    if ( name == NULL ) {
-        fprintf( stderr, "Malloc failed\n" );
-        exit( EXIT_FAILURE );
-    }
+    char * name = safe_malloc( namelen + 1 );
     strncpy( name, envspec, namelen );
     name[namelen] = '\0';
 
     int vallen = strlen( envspec ) - ( namelen );
-    char * val = malloc( vallen + 1 );
-    if ( val == NULL ) {
-        fprintf( stderr, "Malloc failed\n" );
-        exit( EXIT_FAILURE );
-    }
+    char * val = safe_malloc( vallen + 1 );
     strncpy( val, equalpos + 1, vallen );
     val[vallen] = '\0';
 
@@ -437,11 +437,7 @@ int howManyTimes( const char * haystack, const char * needle ) {
 void setEnvReplacingUSEPOP( char * name, char * value, char * base, bool inherit_env ) {
     int count = howManyTimes( value, USEPOP );
     size_t len_needed = strlen( value ) + strlen( base ) * count + 1;
-    char * rhs = malloc( len_needed );
-    if ( rhs == NULL ) {
-        fprintf( stderr, "Malloc failed\n" );
-        exit( EXIT_FAILURE );
-    }
+    char * rhs = safe_malloc( len_needed );
     rhs[ 0 ] = '\0';    //  Initialise as empty
 
     char * end_of_rhs = rhs;
@@ -465,11 +461,7 @@ void extendPath( char * prefix, char * path, char * suffix ) {
         exit( EXIT_FAILURE );
     }
 
-    char * buff = malloc( strlen( prefix ) + 1 + strlen( path ) + 1 + strlen( suffix ) + 1 );
-    if ( buff == NULL ) {
-        fprintf( stderr, "Cannot extend $PATH, malloc failed\n" );
-        exit( EXIT_FAILURE );
-    }
+    char * buff = safe_malloc( strlen( prefix ) + 1 + strlen( path ) + 1 + strlen( suffix ) + 1 );
     char * d = stpcpy( buff, prefix );
     d = stpcpy( d, ":" );
     d = stpcpy( d, path );
@@ -548,7 +540,7 @@ cat << \****
         char * home = getenv( "HOME" );
         if ( home != NULL ) {
             const char * const folder = ".poplog";
-            char * path = malloc( strlen( home ) + 1 + strlen( folder ) + 1 );
+            char * path = safe_malloc( strlen( home ) + 1 + strlen( folder ) + 1 );
             char * p = stpcpy( path, home );
             p = stpcpy( p, "/" );
             p = stpcpy( p, folder );
@@ -557,7 +549,7 @@ cat << \****
     } else {
         // Point to a specially constructed 'empty init files' folder.
         const char * const subpath = "/pop/com/noinit" ;
-        char * path = malloc( strlen( base ) + strlen( subpath ) + 1 );
+        char * path = safe_malloc( strlen( base ) + strlen( subpath ) + 1 );
         char * p = stpcpy( path, base );
         p = stpcpy( p, subpath );
         setenv( "poplib", path, !inherit_env );
