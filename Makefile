@@ -253,6 +253,10 @@ clean:
 	rm -rf ./_build
 	# Target "clean" completed
 
+.PHONY: deepclean
+deepclean: clean
+	rm -rf ./_download
+
 # We used nose2 to drive a simple test-discovery process. It turns out that we
 # could have used pytest if we made use of the @pytest.mark.parameterize
 # decorator.
@@ -315,18 +319,18 @@ jumpstart-opensuse-leap:
 	xterm espeak csh
 
 .PHONY: download
-download: _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy _build/Packages.Downloaded.proxy
+download: _download/Base.Downloaded.proxy _download/Corepops.Downloaded.proxy _download/Packages.Downloaded.proxy
 
 # Instructs the build process to assume that the sister github repos have been
 # cloned and/or downloaded and reside in ../Base etc. This does not
 # include Aaron Sloman's packages at this time. 
 .PHONY: use-repos
-use-repos: _build/Packages.Downloaded.proxy
-	mkdir -p _build/Corepops
-	( cd ../Corepops; tar cf - . ) | ( cd _build/Corepops; tar xf - )
-	mkdir -p _build/Base
-	( cd ../Base; tar cf - . ) | ( cd _build/Base; tar xf - )
-	touch _build/Base.Downloaded.proxy _build/Corepops.Downloaded.proxy 
+use-repos: _download/Packages.Downloaded.proxy
+	mkdir -p _download/Corepops
+	( cd ../Corepops; tar cf - . ) | ( cd _download/Corepops; tar xf - )
+	mkdir -p _download/Base
+	( cd ../Base; tar cf - . ) | ( cd _download/Base; tar xf - )
+	touch _download/Base.Downloaded.proxy _download/Corepops.Downloaded.proxy
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
@@ -334,13 +338,12 @@ use-repos: _build/Packages.Downloaded.proxy
 _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
 	touch $@
 
-_build/Packages.proxy: _build/packages-V16.tar.bz2
-	mkdir -p _build
-	(cd _build/poplog_base/pop; tar jxf ../../packages-V16.tar.bz2)
-	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do $(CC) $(CFLAGS) -O3 -fpic -shared -o bin/linux/`basename $$f .c`.so $$f; done
+_build/Packages.proxy: _download/packages-V16.tar.bz2 _build/Base.proxy
+	(cd _build/poplog_base/pop; tar jxf "../../../$<")
+	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
-_build/Packages.Downloaded.proxy: _build/packages-V16.tar.bz2
+_download/Packages.Downloaded.proxy: _download/packages-V16.tar.bz2
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
@@ -369,18 +372,21 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
-_build/Corepops.proxy: _build/Base.proxy _build/Corepops.Downloaded.proxy
-	cp _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
+_build/Corepops.proxy: _build/Base.proxy _download/Corepops.Downloaded.proxy
+	cp -rpP _download/Corepops _build/
+	cp -p _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
 	$(MAKE) -C _build/Corepops corepop
-	cp _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
+	cp -p _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
 	touch $@
 
-_build/Corepops.Downloaded.proxy:
-	mkdir -p _build/Corepops
-	curl -LsS $(COREPOPS_TARBALL_URL) | ( cd _build/Corepops; tar zxf - --strip-components=1 )
+_download/Corepops.Downloaded.proxy:
+	mkdir -p _download/Corepops
+	curl -LsS $(COREPOPS_TARBALL_URL) | ( cd _download/Corepops; tar zxf - --strip-components=1 )
 	touch $@
 
-_build/Base.proxy: _build/Base.Downloaded.proxy
+_build/Base.proxy: _download/Base.Downloaded.proxy
+	mkdir -p _build
+	cp -rpP _download/Base/ _build/
 	$(MAKE) -C _build/Base build
 	mkdir -p _build/poplog_base
 	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
@@ -389,9 +395,9 @@ _build/Base.proxy: _build/Base.Downloaded.proxy
 _build/POPLOG_VERSION: _build/Base.proxy
 	_build/poplog_base/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
 
-_build/Base.Downloaded.proxy:
-	mkdir -p _build/Base
-	curl -LsS $(BASE_TARBALL_URL) | ( cd _build/Base; tar zxf - --strip-components=1)
+_download/Base.Downloaded.proxy:
+	mkdir -p _download/Base
+	curl -LsS $(BASE_TARBALL_URL) | ( cd _download/Base; tar zxf - --strip-components=1)
 	touch $@
 
 _build/poplog_base/pop/com/poplogout.%: _build/poplogout.%
@@ -401,8 +407,8 @@ _build/poplogout.%:
 	mkdir -p _build
 	curl -LsS https://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/$(notdir $@) > $@
 
-_build/packages-V16.tar.bz2:
-	mkdir -p _build
+_download/packages-V16.tar.bz2:
+	mkdir -p _download
 	curl -LsS http://www.cs.bham.ac.uk/research/projects/poplog/V16/DL/packages-V16.tar.bz2 > $@
 
 _build/PoplogCommander.proxy: _build/Stage2.proxy
