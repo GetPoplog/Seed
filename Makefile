@@ -71,9 +71,9 @@ CFLAGS?=-g -Wall -std=c11 -D_POSIX_C_SOURCE=200809L
 
 # The prefix variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
 # nowhere else, please). It is provided in order to fit in with the conventions 
-# of Makefiles. 
+# of Makefiles.
 DESTDIR?=
-prefix?=$(DESTDIR)/usr/local
+prefix?=/usr/local
 
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
@@ -191,29 +191,29 @@ _build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
 .PHONY: install
 install:
 	[ -f _build/Done.proxy ] # We have successfully built the new distro? Else fail!
-	if [ -d $(POPLOG_VERSION_DIR) ] \
-	&& [ -d $(POPLOG_VERSION_DIR).orig ] \
-	&& [ -d $(POPLOG_VERSION_DIR).prev ]; then \
-	    rm -rf $(POPLOG_VERSION_DIR).prev; \
+	if [ -d $(DESTDIR)$(POPLOG_VERSION_DIR) ] \
+	&& [ -d $(DESTDIR)$(POPLOG_VERSION_DIR).orig ] \
+	&& [ -d $(DESTDIR)$(POPLOG_VERSION_DIR).prev ]; then \
+	    rm -rf $(DESTDIR)$(POPLOG_VERSION_DIR).prev; \
 	fi
-	if [ -d $(POPLOG_VERSION_DIR) ] \
-	&& [ -d $(POPLOG_VERSION_DIR).orig ]; then \
-	    mv $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_DIR).prev; \
+	if [ -d $(DESTDIR)$(POPLOG_VERSION_DIR) ] \
+	&& [ -d $(DESTDIR)$(POPLOG_VERSION_DIR).orig ]; then \
+	    mv $(DESTDIR)$(POPLOG_VERSION_DIR) $(DESTDIR)$(POPLOG_VERSION_DIR).prev; \
 	fi
-	if [ -d $(POPLOG_VERSION_DIR) ]; then \
-	    mv $(POPLOG_VERSION_DIR) $(POPLOG_VERSION_DIR).orig; \
+	if [ -d $(DESTDIR)$(POPLOG_VERSION_DIR) ]; then \
+	    mv $(DESTDIR)$(POPLOG_VERSION_DIR) $(DESTDIR)$(POPLOG_VERSION_DIR).orig; \
 	fi
-	mkdir -p $(POPLOG_VERSION_DIR)
-	( cd _build/poplog_base; tar cf - . ) | ( cd $(POPLOG_VERSION_DIR); tar xf - )
-	cd $(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
-	mkdir -p $(EXEC_DIR)
-	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(EXEC_DIR)/
+	mkdir -p $(DESTDIR)$(POPLOG_VERSION_DIR)
+	( cd _build/poplog_base; tar cf - . ) | ( cd $(DESTDIR)$(POPLOG_VERSION_DIR); tar xf - )
+	cd $(DESTDIR)$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
+	mkdir -p $(DESTDIR)$(EXEC_DIR)
+	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(DESTDIR)$(EXEC_DIR)/
 	# Target "install" completed
 
 .PHONY: install-poplocal
 install-poplocal:
-	mkdir -p $(POPLOCAL_HOME_DIR)
-	( cd poplocal; tar cf - --exclude=.gitkeep . ) | ( cd $(POPLOCAL_HOME_DIR); tar xf - . )
+	mkdir -p $(DESTDIR)$(POPLOCAL_HOME_DIR)
+	( cd poplocal; tar cf - --exclude=.gitkeep . ) | ( cd $(DESTDIR)$(POPLOCAL_HOME_DIR); tar xf - . )
 	# Target "install-poplocal" completed.
 
 
