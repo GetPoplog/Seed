@@ -5,6 +5,9 @@ import sys
 import argparse
 from pathlib import Path
 
+ADDR_NO_RANDOMIZE = 0x0040000
+READ_IMPLIES_EXEC = 0x0400000
+
 def loadDefault( filename ):
     with open( filename, 'r' ) as f:
         return json.load( f )
