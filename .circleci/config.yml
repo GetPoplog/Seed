@@ -211,7 +211,7 @@ jobs:
             cd docker
             make build
       - persist_to_workspace:
-          root: _build
+          root: docker/_build
           paths:
             - artifacts/poplog_seccomp.json
   publish_github_release:
