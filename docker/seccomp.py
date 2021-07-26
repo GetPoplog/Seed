@@ -16,7 +16,7 @@ def inPlaceTransform( jdata ):
             "action": "SCMP_ACT_ALLOW",
             "args": [ { "index": 0, "value": value, "op": "SCMP_CMP_EQ" } ]
         }
-        for value in [ 0x0040000, 0x0400000, 0x0440000 ]
+        for value in [ ADDR_NO_RANDOMIZE, READ_IMPLIES_EXEC, (ADDR_NO_RANDOMIZE|READ_IMPLIES_EXEC) ]
     )
 
 parser = argparse.ArgumentParser(description="Modify default docker seccomp profile to allow syscalls needed by poplog")
