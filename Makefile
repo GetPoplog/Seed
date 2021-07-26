@@ -67,7 +67,7 @@
 # CONVENTION: If we want to allow the user of the Makefile to set via the CLI 
 # then we use ?= to bind it. If it's an internal variables then we use :=
 CC?=gcc
-CFLAGS?=-Wall -std=c99
+CFLAGS?=-g -Wall -std=c11 -D_POSIX_C_SOURCE=200809L
 
 # The prefix variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
 # nowhere else, please). It is provided in order to fit in with the conventions 
@@ -408,7 +408,7 @@ _build/packages-V16.tar.bz2:
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
 	GET_POPLOG_VERSION=`cat VERSION` sh makePoplogCommander.sh > _build/cmdr/poplog.c
-	( cd _build/cmdr && $(CC) $(CFLAGS) -o poplog poplog.c )
+	( cd _build/cmdr && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
 	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
 	touch $@

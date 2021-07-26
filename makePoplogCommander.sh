@@ -145,7 +145,7 @@ Ref chain_index( Chain r, int n ) {
 ################################################################################
 
 cat << \****
-void printUsage( int argc, char * const argv[] ) {
+void printUsage() {
 ****
 
 ( sed -e 's/"/\\"/g' | sed -e 's/.*/    puts( "&" );/') << \****
@@ -355,6 +355,41 @@ char * selfHome() {
     	return NULL;
     }
 }
+void * safe_malloc( size_t n ) {
+    void * ptr = malloc( n );
+    if ( ptr == NULL ) {
+        perror( NULL );
+        exit( EXIT_FAILURE );
+    }
+    return ptr;
+}
+
+void setEnvSpec( const char * envspec ) {
+    // envspec is a string of the form "name=val"
+    char * equalpos = strchr( envspec, '=' );
+    if ( equalpos == NULL ) {
+        fprintf( stderr, "Invalid environment variable spec %s, missing '='.\n", envspec );
+        exit( EXIT_FAILURE );
+    };
+
+    size_t namelen = equalpos - envspec;
+    char * name = safe_malloc( namelen + 1 );
+    strncpy( name, envspec, namelen );
+    name[namelen] = '\0';
+
+    int vallen = strlen( envspec ) - ( namelen );
+    char * val = safe_malloc( vallen + 1 );
+    strncpy( val, equalpos + 1, vallen );
+    val[vallen] = '\0';
+
+    if ( setenv( name, val, 1 ) < 0) {
+        fprintf( stderr, "Cannot set the environment variable %s\n", envspec );
+        exit( EXIT_FAILURE );
+    };
+    // name and val could be freed here since setenv should copy its
+    // arguments. Steve had observed that sometimes it didn't copy the
+    // key value, so we don't free just in case.
+}
 
 #else
 
@@ -405,13 +440,9 @@ int howManyTimes( const char * haystack, const char * needle ) {
 void setEnvReplacingUSEPOP( char * name, char * value, char * base, bool inherit_env ) {
     int count = howManyTimes( value, USEPOP );
     size_t len_needed = strlen( value ) + strlen( base ) * count + 1;
-    char * rhs = malloc( len_needed );
-    if ( rhs == NULL ) {
-        fprintf( stderr, "Malloc failed\n" );
-        exit( EXIT_FAILURE );
-    }
+    char * rhs = safe_malloc( len_needed );
     rhs[ 0 ] = '\0';    //  Initialise as empty
-    
+
     char * end_of_rhs = rhs;
     const char * haystack = value;
     for (;;) {
@@ -433,11 +464,7 @@ void extendPath( char * prefix, char * path, char * suffix ) {
         exit( EXIT_FAILURE );
     }
 
-    char * buff = malloc( strlen( prefix ) + 1 + strlen( path ) + 1 + strlen( suffix ) + 1 );
-    if ( buff == NULL ) {
-        fprintf( stderr, "Cannot extend $PATH, malloc failed\n" );
-        exit( EXIT_FAILURE );
-    }
+    char * buff = safe_malloc( strlen( prefix ) + 1 + strlen( path ) + 1 + strlen( suffix ) + 1 );
     char * d = stpcpy( buff, prefix );
     d = stpcpy( d, ":" );
     d = stpcpy( d, path );
@@ -450,8 +477,8 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 }
 
 void setUpEnvironment( char * base, int flags, Chain envv ) {
-    bool inherit_env = ( flags && INHERIT_ENV ) != 0;
-    bool run_init_p = ( flags && RUN_INIT_P ) != 0;
+    bool inherit_env = ( flags & INHERIT_ENV ) != 0;
+    bool run_init_p = ( flags & RUN_INIT_P ) != 0;
 
     setenv( "usepop", base, !inherit_env );
 ****
@@ -516,7 +543,7 @@ cat << \****
         char * home = getenv( "HOME" );
         if ( home != NULL ) {
             const char * const folder = ".poplog";
-            char * path = malloc( strlen( home ) + 1 + strlen( folder ) + 1 );
+            char * path = safe_malloc( strlen( home ) + 1 + strlen( folder ) + 1 );
             char * p = stpcpy( path, home );
             p = stpcpy( p, "/" );
             p = stpcpy( p, folder );
@@ -525,7 +552,7 @@ cat << \****
     } else {
         // Point to a specially constructed 'empty init files' folder.
         const char * const subpath = "/pop/com/noinit" ;
-        char * path = malloc( strlen( base ) + strlen( subpath ) + 1 );
+        char * path = safe_malloc( strlen( base ) + strlen( subpath ) + 1 );
         char * p = stpcpy( path, base );
         p = stpcpy( p, subpath );
         setenv( "poplib", path, !inherit_env );
@@ -542,7 +569,7 @@ cat << \****
 
     int n = chain_length( envv );
     for ( int i = 0; i < n; i++ ) {
-        putenv( chain_index( envv, i ) );
+        setEnvSpec( chain_index( envv, i ) );
     }
 }
 
@@ -600,7 +627,7 @@ cat << \****
             pop11_args[ argc ] = NULL; 
             execvp( "pop11", pop11_args );
         } else if ( strcmp( "--help", argv[1] ) == 0 ) {
-            printUsage( argc - 2, &argv[2] );
+            printUsage();
             return EXIT_SUCCESS;
         } else if ( strcmp( "--version", argv[1] ) == 0 ) {
             setUpEnvironment( base, flags, envv );
