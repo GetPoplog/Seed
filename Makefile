@@ -144,7 +144,8 @@ help:
 	#   jumpstart-fedora [^] - installs the packages a Fedora system needs.
 	#   jumpstart-rocky [^] - installs the packages a Rocky Linux system needs.
 	#   jumpstart-* [^] - and more, try `make help-jumpstart`.
-	#   clean - removes all the build artifacts.
+	#   clean - removes all the build artifacts but not the _download cache.
+	#   deepclean - removes build artifacts and the _download cache.
 	#   help - this explanation, for more info read the Makefile comments.
 
 .PHONY: help-jumpstart
