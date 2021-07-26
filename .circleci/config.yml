@@ -210,12 +210,9 @@ jobs:
           command: |
             cd docker
             make build
-            mkdir -p _build/artifacts
-            mv _build/poplog_seccomp.json _build/artifacts/
-      - persist_to_workspace:
-          root: docker/_build
-          paths:
-            - artifacts/poplog_seccomp.json
+      - store_artifacts:
+          path: docker/_build/poplog_seccomp.json
+          destination: poplog_seccomp.json
   publish_github_release:
     docker:
       - image: cibuilds/github:0.10
