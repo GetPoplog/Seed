@@ -8,11 +8,6 @@ def loadDefault( filename ):
         return json.load( f )
 
 def inPlaceTransform( jdata ):
-    # for names_action_etc in jdata[ 'syscalls' ]:
-    #     names = names_action_etc[ 'names' ]
-    #     action = names_action_etc[ 'action' ]
-    #     if 'personality' in names:
-    #         print( action )
     jdata[ 'syscalls' ].extend(
         { 
             "names": [ "personality" ],
