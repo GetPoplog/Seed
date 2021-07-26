@@ -172,7 +172,7 @@ add-uninstall-instructions: _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
 
 _build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
 	mkdir -p _build/poplog_base
-	EXEC_DIR=$(EXEC_DIR) POPLOG_HOME_DIR=$(POPLOG_HOME_DIR) sh writeUninstallInstructions.sh > _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
+	EXEC_DIR="$(EXEC_DIR)" POPLOG_HOME_DIR="$(POPLOG_HOME_DIR)" sh writeUninstallInstructions.sh > _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
 
 # At the start of the installation we must be able to cope with all these use-cases.
 #   1. $(POPLOG_HOME_DIR) does not exist. We will mkdir -p the folder and then install V16
