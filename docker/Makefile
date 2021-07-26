@@ -31,7 +31,7 @@ deepclean: clean
 # Generate a Docker security profile
 _build/poplog_seccomp.json: _download/default.json
 	mkdir -p _build
-	python3 seccomp.py _download/default.json > $@
+	python3 seccomp.py --docker_seccomp_json=_download/default.json > $@
 
 _download/default.json:
 	mkdir -p _download
