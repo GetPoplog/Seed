@@ -66,12 +66,14 @@
 
 # CONVENTION: If we want to allow the user of the Makefile to set via the CLI 
 # then we use ?= to bind it. If it's an internal variables then we use :=
+CC?=gcc
+CFLAGS?=-Wall -std=c99
 
-# The PREFIX variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
+# The prefix variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and 
 # nowhere else, please). It is provided in order to fit in with the conventions 
 # of Makefiles. 
 DESTDIR?=
-PREFIX?=$(DESTDIR)/usr/local
+prefix?=$(DESTDIR)/usr/local
 
 # This is the folder in which the new Poplog build will be installed. To install Poplog 
 # somewhere different, such as /opt/poplog either edit this line or try:
@@ -81,7 +83,7 @@ PREFIX?=$(DESTDIR)/usr/local
 #	POPLOG_VERSION_DIR			/opt/poplog/V16			$usepop
 #	POPLOG_VERSION_SYMLINK		/opt/poplog/current_usepop -> /opt/poplog/V16
 #   POPLOCAL_HOME_DIR           /opt/poplog				$poplocal = $usepop/..
-POPLOG_HOME_DIR:=$(PREFIX)/poplog
+POPLOG_HOME_DIR:=$(prefix)/poplog
 MAJOR_VERSION:=16
 MINOR_VERSION:=1
 FULL_VERSION:=$(MAJOR_VERSION).$(MINOR_VERSION)
@@ -93,7 +95,7 @@ POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
 # This is the folder where the link to the poplog-shell executable will be installed.
-EXEC_DIR:=$(PREFIX)/bin
+EXEC_DIR:=$(prefix)/bin
 
 # Allow overriding of the branches used for the different repositories.
 DEFAULT_BRANCH:=main
@@ -140,6 +142,7 @@ help:
 	#       corepop executable and is useful for O/S upgrades.
 	#   jumpstart-ubuntu [^] - installs the packages a Ubuntu system needs.
 	#   jumpstart-fedora [^] - installs the packages a Fedora system needs.
+	#   jumpstart-rocky [^] - installs the packages a Rocky Linux system needs.
 	#   jumpstart-* [^] - and more, try `make help-jumpstart`.
 	#   clean - removes all the build artifacts.
 	#   help - this explanation, for more info read the Makefile comments.
@@ -156,12 +159,20 @@ help-jumpstart:
 	#   jumpstart-debian - installs the packages a Debian system needs
 	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
 	#   jumpstart-fedora - installs the packages a Fedora system needs.
+	#   jumpstart-rocky - installs the packages a Rocky Linux system needs.
 	#   jumpstart-opensuse-leap - installs the packages a openSUSE Leap system needs.
 	#
 
 .PHONY: build
 build: _build/Done.proxy
 	# Target "build" completed
+
+.PHONY: add-uninstall-instructions
+add-uninstall-instructions: _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
+
+_build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
+	mkdir -p _build/poplog_base
+	EXEC_DIR="$(EXEC_DIR)" POPLOG_HOME_DIR="$(POPLOG_HOME_DIR)" sh writeUninstallInstructions.sh > _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
 
 # At the start of the installation we must be able to cope with all these use-cases.
 #   1. $(POPLOG_HOME_DIR) does not exist. We will mkdir -p the folder and then install V16
@@ -292,6 +303,13 @@ jumpstart-fedora:
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak csh
 
+.PHONY: jumpstart-rocky
+jumpstart-rocky:
+	dnf install \
+	curl make bzip2 \
+	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
+	libXt-devel openmotif-devel xterm csh ncurses-compat-libs
+
 .PHONY: jumpstart-opensuse-leap
 jumpstart-opensuse-leap:
 	zypper --non-interactive install \
@@ -396,7 +414,7 @@ _download/packages-V16.tar.bz2:
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
 	GET_POPLOG_VERSION=`cat VERSION` sh makePoplogCommander.sh > _build/cmdr/poplog.c
-	( cd _build/cmdr && gcc -Wall -o poplog poplog.c )
+	( cd _build/cmdr && $(CC) $(CFLAGS) -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
 	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
 	touch $@
