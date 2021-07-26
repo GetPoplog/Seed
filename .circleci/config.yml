@@ -199,11 +199,15 @@ jobs:
     docker:
       - image: cimg/python:3.9.6
     steps:
+      - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
       - run:
           name: "Generate security profile for Poplog"
           command: |
-            sudo apt update 
-            sudo apt install -y wget
             cd docker
             make build
       - persist_to_workspace:
