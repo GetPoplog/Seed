@@ -16,8 +16,9 @@ cd $TMP_DIR
 echo "Using temporary directory $TMP_DIR as a build folder"
 curl -LsS ${SEED_TARBALL_URL} | tar zxf - --strip-components=1
 
-sudo make jumpstart-ubuntu    # fetch dependencies (Debian based systems only)
+sudo make jumpstart-ubuntu      # fetch dependencies (Debian based systems only)
 make build
+make add-uninstall-instructions # specific for the 1-line installer
 sudo make install 
 
 echo "-----------------------------------------------------------"
