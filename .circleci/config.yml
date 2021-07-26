@@ -232,8 +232,6 @@ workflows:
   version: 2
   mainflow:
     jobs:
-      - build_poplog_seccomp:
-          filters:  *default_filters
       - one_line_install:
           filters:  *default_filters
       - build_tree:
@@ -262,6 +260,12 @@ workflows:
           requires:
             - build_deb
           filters:  *default_filters
+      - build_poplog_seccomp:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+.*$/
       - publish_github_release:
           requires:
             - test_deb_1604
