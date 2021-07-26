@@ -195,6 +195,21 @@ jobs:
           root: _build
           paths:
             - artifacts/poplog_16.0.1_amd64.snap
+  build_poplog_seccomp:
+    docker:
+      - image: cimg/python:3.9.6
+    steps:
+      - run:
+          name: "Generate security profile for Poplog"
+          command: |
+            sudo apt update 
+            sudo apt install -y wget
+            cd docker
+            make build
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - artifacts/poplog_seccomp.json
   publish_github_release:
     docker:
       - image: cibuilds/github:0.10
@@ -205,7 +220,6 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             ghr -t "${GITHUB_TOKEN}" -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" -c "${CIRCLE_SHA1}" -delete "${CIRCLE_TAG}" ./_build/artifacts/
-
 default_filters: &default_filters
   # required to run on tagged releases.
   tags:
@@ -215,6 +229,8 @@ workflows:
   version: 2
   mainflow:
     jobs:
+      - build_poplog_seccomp:
+          filters:  *default_filters
       - one_line_install:
           filters:  *default_filters
       - build_tree:
@@ -254,4 +270,3 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
-
