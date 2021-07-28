@@ -8,6 +8,19 @@ jobs:
       - run:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
+  build_src_tarball:
+    machine:
+      image: ubuntu-1604:202104-01
+    steps:
+      - checkout
+      - run:
+          name: Build poplog src tarball
+          command: |
+            make srctarball
+            mkdir -p /tmp/tarballs
+            cp _build/poplog*.tar.gz /tmp/tarballs/
+      - store_artifacts:
+          path: /tmp/tarballs
   build_tree:
     machine:
       image: ubuntu-1604:202104-01
@@ -20,7 +33,8 @@ jobs:
             ldd --version
       - run:
           name: Install dependencies
-          command: sudo make jumpstart-ubuntu
+          command: |
+            sudo make jumpstart-ubuntu
       - run:
           name: Build poplog_base file-tree
           command: make build
@@ -37,19 +51,20 @@ jobs:
           name: TEST - Verify uninstallation
           command: make verify-uninstall
       - run:
-          name: Export file-tree as tarball
-          command: make _build/poplog-binary.tar.gz
+          name: Export file-tree as binary tarball
+          command: |
+            make binarytarball
+            mkdir -p /tmp/tarballs
+            cp _build/poplog-binary*.tar.gz /tmp/tarballs/
       - store_artifacts:
-          path: _build/poplog-binary.tar.gz
-          destination: poplog-binary.tar.gz
+          path: /tmp/tarballs
       - persist_to_workspace:
           root: _build
           paths:
-            - Done.proxy
-            - poplog-binary.tar.gz
+            - '*.tar.gz'
   build_deb:
-    docker:
-      - image: cimg/base:2021.04
+    machine:
+      image: ubuntu-1604:202104-01
     steps:
       - checkout
       - run:
@@ -58,23 +73,19 @@ jobs:
             uname -a
             ldd --version
       - run:
+          name: Install dependencies
           command: |
-            sudo apt update
-            sudo apt install -y make curl
-      - attach_workspace:
-          at: _build
+            sudo make jumpstart-ubuntu
       - run:
+          name: Build deb
           command: |
-            make builddeb POPLOG_HOME_DIR=/opt/poplog
-            mkdir -p _build/artifacts
-            mv _build/poplog_16.1-1_amd64.deb _build/artifacts/
+            make deb
       - store_artifacts:
-          path: _build/artifacts/poplog_16.1-1_amd64.deb
-          destination: poplog_16.1-1_amd64.deb
+          path: _build/packages
       - persist_to_workspace:
           root: _build
           paths:
-            - artifacts/poplog_16.1-1_amd64.deb
+            - packages/*.deb
   test_deb_1604:
     machine:
       image: ubuntu-1604:202104-01
@@ -94,9 +105,9 @@ jobs:
       - attach_workspace:
           at: ./_build
       - run:
-          name: Install Poplog from *.deb file
+          name: 'Install Poplog from *.deb file'
           command: |
-            sudo apt install ./_build/artifacts/poplog_16.1-1_amd64.deb
+            sudo apt install -y ./_build/packages/poplog_*_amd64.deb
       - run:
           name: Run systests
           command: |
@@ -216,16 +227,16 @@ workflows:
     jobs:
       - one_line_install:
           filters:  *default_filters
+      - build_src_tarball:
+          filters:  *default_filters
       - build_tree:
           filters:  *default_filters
       - build_deb:
-          requires:
-            - build_tree
           filters:  *default_filters
-      - build_rpm:
-          requires:
-            - build_tree
-          filters:  *default_filters
+#      - build_rpm:
+#          requires:
+#            - build_tree
+#          filters:  *default_filters
       - build_appimage:
           requires:
             - build_tree
