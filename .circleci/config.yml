@@ -195,24 +195,6 @@ jobs:
           root: _build
           paths:
             - artifacts/poplog_16.0.1_amd64.snap
-  build_poplog_seccomp:
-    docker:
-      - image: cimg/python:3.9.6
-    steps:
-      - checkout
-      - run:
-          name: Get system info
-          command: |
-            uname -a
-            ldd --version
-      - run:
-          name: "Generate security profile for Poplog"
-          command: |
-            cd docker
-            make build
-      - store_artifacts:
-          path: docker/_build/poplog_seccomp.json
-          destination: poplog_seccomp.json
   publish_github_release:
     docker:
       - image: cibuilds/github:0.10
@@ -260,12 +242,6 @@ workflows:
           requires:
             - build_deb
           filters:  *default_filters
-      - build_poplog_seccomp:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
       - publish_github_release:
           requires:
             - test_deb_1604
