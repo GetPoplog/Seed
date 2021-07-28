@@ -3,7 +3,7 @@ Version: 16.1
 Release: 1
 Summary: Poplog development environment
 License: MIT
-Source0: poplog.tar.gz
+Source0: poplog-binary.tar.gz
 Buildroot: %{_tmppath}/%{name}/%{version}
 Buildarch: x86_64
 

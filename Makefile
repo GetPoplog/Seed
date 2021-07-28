@@ -503,9 +503,9 @@ full:
 #-- Pop-tree, the fundamental basis of packaging -------------------------------
 
 .PHONY: dottgz
-dottgz: _build/poplog.tar.gz
+dottgz: _build/poplog-binary.tar.gz
 
-_build/poplog.tar.gz: _build/Done.proxy
+_build/poplog-binary.tar.gz: _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
@@ -514,20 +514,20 @@ _build/poplog.tar.gz: _build/Done.proxy
 .PHONY: dotdeb
 dotdeb: _build/poplog_$(FULL_VERSION)-1_amd64.deb
 
-_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog.tar.gz
+_build/poplog_$(FULL_VERSION)-1_amd64.deb: _build/poplog-binary.tar.gz
 	$(MAKE) builddeb
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
-# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+# _build/poplog-binary.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: builddeb
 builddeb:
-	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -f _build/poplog-binary.tar.gz ] # Enforce required tarball
 	rm -rf _build/dotdeb
 	mkdir -p _build/dotdeb$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotdeb$(EXEC_DIR)
 	tar cf - DEBIAN | ( cd _build/dotdeb; tar xf - )
-	cat _build/poplog.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar zxf - )
+	cat _build/poplog-binary.tar.gz | ( cd _build/dotdeb$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotdeb$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	P=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_SYMLINK)/pop/pop`; ln -s "$$P/poplog" _build/dotdeb$(EXEC_DIR)/poplog
 	Q=`realpath -ms --relative-to=$(EXEC_DIR) $(POPLOG_VERSION_DIR)/pop/pop`; ln -s "$$Q/poplog" _build/dotdeb$(EXEC_DIR)/poplog$(VERSION_DIR)
@@ -539,20 +539,20 @@ builddeb:
 dotrpm: _build/poplog-$(FULL_VERSION)-1.x86_64.rpm
 
 # Use this target when working standalone.
-_build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog.tar.gz
+_build/poplog-$(FULL_VERSION)-1.x86_64.rpm: _build/poplog-binary.tar.gz
 	$(MAKE) buildrpm
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
-# _build/poplog.tar.gz exists and doesn't try to rebuild anything.
+# _build/poplog-binary.tar.gz exists and doesn't try to rebuild anything.
 .PHONY: buildrpm
 buildrpm:
-	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -f _build/poplog-binary.tar.gz ] # Enforce required tarball
 	rm -rf _build/rpmbuild
 	mkdir -p _build/rpmbuild
 	( cd rpmbuild; tar cf - . ) | ( cd _build/rpmbuild; tar xf - )
 	cd _build/rpmbuild; mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
-	cp _build/poplog.tar.gz _build/rpmbuild/SOURCES/
+	cp _build/poplog-binary.tar.gz _build/rpmbuild/SOURCES/
 	cd _build/rpmbuild; rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
 	mv _build/rpmbuild/RPMS/x86_64/poplog-$(FULL_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
 
@@ -561,20 +561,20 @@ buildrpm:
 .PHONY: dotappimage
 dotappimage: _build/Poplog-x86_64.AppImage
 
-_build/Poplog-x86_64.AppImage: _build/poplog.tar.gz
+_build/Poplog-x86_64.AppImage: _build/poplog-binary.tar.gz
 	$(MAKE) buildappimage
 	[ -f $@ ] # Sanity check that we built the target
 
 # We need a target that the CircleCI script can use for a process that assumes
-# _build/poplog.tar.gz exists and doesn't try to rebuild anything. 
+# _build/poplog-binary.tar.gz exists and doesn't try to rebuild anything. 
 .PHONY: buildappimage
 buildappimage: _build/appimagetool
-	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -f _build/poplog-binary.tar.gz ] # Enforce required tarball
 	rm -rf _build/AppDir
 	mkdir -p _build/AppDir
 	( cd AppDir; tar cf - . ) | ( cd _build/AppDir; tar xf - )	
 	mkdir -p _build/AppDir$(POPLOG_VERSION_DIR)
-	tar zxf _build/poplog.tar.gz -C _build/AppDir$(POPLOG_VERSION_DIR)
+	tar zxf _build/poplog-binary.tar.gz -C _build/AppDir$(POPLOG_VERSION_DIR)
 	mkdir -p _build/AppDir/usr/lib
 	# List the libraries needed (for debugging)
 	ldd _build/AppDir$(POPLOG_VERSION_DIR)/pop/pop/basepop11
@@ -602,7 +602,7 @@ _build/appimagetool:
 .PHONY: dotsnap
 dotsnap: _build/dotsnap/poplog_16.0.1_amd64.snap
 
-_build/dotsnap/poplog_16.0.1_amd64.snap: _build/poplog.tar.gz 
+_build/dotsnap/poplog_16.0.1_amd64.snap: _build/poplog-binary.tar.gz 
 	$(MAKE) buildsnap
 	[ -f $@ ] # Sanity check that we built the target
 
@@ -615,10 +615,10 @@ PREBUILT_DIR:=/prebuilt
 
 .PHONY: buildsnapcraftready
 buildsnapcraftready:
-	[ -f _build/poplog.tar.gz ] # Enforce required tarball
+	[ -f _build/poplog-binary.tar.gz ] # Enforce required tarball
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)/usr/bin
-	cat _build/poplog.tar.gz | ( cd _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
+	cat _build/poplog-binary.tar.gz | ( cd _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
 	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
 	cp snapcraft.yaml _build/dotsnap	
 

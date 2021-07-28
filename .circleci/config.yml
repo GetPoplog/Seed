@@ -38,15 +38,15 @@ jobs:
           command: make verify-uninstall
       - run:
           name: Export file-tree as tarball
-          command: make _build/poplog.tar.gz
+          command: make _build/poplog-binary.tar.gz
       - store_artifacts:
-          path: _build/poplog.tar.gz
-          destination: poplog.tar.gz
+          path: _build/poplog-binary.tar.gz
+          destination: poplog-binary.tar.gz
       - persist_to_workspace:
           root: _build
           paths:
             - Done.proxy
-            - poplog.tar.gz
+            - poplog-binary.tar.gz
   build_deb:
     docker:
       - image: cimg/base:2021.04
