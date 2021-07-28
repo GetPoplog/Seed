@@ -13,12 +13,17 @@ all: build
 help:
 	# Valid targets are:
 	#   all, build - creates the security profile
+	#   update - update the poplog_seccomp.json file (best used with git)
 	#	clean - removes all build artefacts but not the _download cache.
 	#   deepclean - removes all build artefacts and also the _download cache.
 	#   help - lists the valid targets of this particular Makefile
 
 .PHONY: build
 build: _build/poplog_seccomp.json
+
+.PHONY: update
+update: _build/poplog_seccomp.json
+	cp $< .
 
 .PHONY: clean
 clean:
