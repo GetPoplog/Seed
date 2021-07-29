@@ -122,30 +122,20 @@ jobs:
     steps: *systests_steps
 
   build_rpm:
-    docker:
-      - image: cimg/base:2021.04
+    machine:
+      image: ubuntu-1604:202104-01
     steps:
       - checkout
-      - when:
-          condition: false
-          steps:
-            - run:
-                name: Get system info
-                command: |
-                  uname -a
-                  ldd --version
-            - attach_workspace:
-                at: _build
-            - run:
-                command: |
-                  sudo apt update
-                  sudo apt install -y make alien curl
-            - run:
-                command: |
-                  make buildrpm
-            - store_artifacts:
-                path: _build/poplog-16.1-1.x86_64.rpm
-                destination: poplog-16.1-1.x86_64.rpm
+      - attach_workspace:
+          at: _build
+      - run:
+          command: |
+            docker ps
+      - run:
+          command: |
+            make buildrpm
+      - store_artifacts:
+          path: _build/packages
   build_appimage:
     machine:
       image: ubuntu-1604:202104-01
@@ -233,8 +223,8 @@ workflows:
           filters:  *default_filters
       - build_deb:
           filters:  *default_filters
-#      - build_rpm:
-#          filters:  *default_filters
+      - build_rpm:
+          filters:  *default_filters
       - build_appimage:
           requires:
             - build_tree
