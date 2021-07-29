@@ -40,7 +40,7 @@ make
 
 %install
 mkdir -p %{buildroot}/opt/#poplog/%{name}-%{version}-%{release}
-make install EXEC_DIR=%{_bindir} DESTDIR=%{buildroot} prefix=/opt
+make install DESTDIR=%{buildroot} prefix=/opt bindir=%{_bindir}
 # Create the new test-package directory
 
 # Copy the contents of the RPM into our new directory

@@ -16,11 +16,13 @@
 CC?=gcc
 CFLAGS?=-g -Wall -std=c11 -D_POSIX_C_SOURCE=200809L
 
-# The prefix variable is used to set up POPLOG_HOME_DIR and EXEC_DIR (and
+# The prefix variable is used to set up POPLOG_HOME_DIR and bindir (and
 # nowhere else, please). It is provided in order to fit in with the conventions
 # of Makefiles.
 DESTDIR?=
 prefix?=/usr/local
+# This is the folder where the link to the poplog-shell executable will be installed.
+bindir:=$(prefix)/bin
 
 TMP_DIR?=/tmp
 
@@ -42,8 +44,6 @@ POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 
 POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
-# This is the folder where the link to the poplog-shell executable will be installed.
-EXEC_DIR:=$(prefix)/bin
 
 # Allow overriding of the branches used for the different repositories.
 DEFAULT_BRANCH:=main
@@ -149,8 +149,8 @@ install:
 	mkdir -p $(DESTDIR)$(POPLOG_VERSION_DIR)
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(DESTDIR)$(POPLOG_VERSION_DIR); tar xf - )
 	cd $(DESTDIR)$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
-	mkdir -p $(DESTDIR)$(EXEC_DIR)
-	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(DESTDIR)$(EXEC_DIR)/
+	mkdir -p $(DESTDIR)$(bindir)
+	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(DESTDIR)$(bindir)/
 	# Target "install" completed
 
 .PHONY: install-poplocal
@@ -179,19 +179,19 @@ really-uninstall-poplog:
 	[ -f $(POPLOG_VERSION_DIR)/pop/com/popenv.sh ] # Can we find a characteristic file?
 	# OK, let's take out the home-directory.
 	rm -rf $(POPLOG_HOME_DIR)
-	rm -f $(EXEC_DIR)/poplog
+	rm -f $(bindir)/poplog
 
 .PHONY: verify-uninstall
 verify-uninstall:
 	# A sanity check that the Poplog installation has actually been removed.
 	test ! -e $(POPLOG_VERSION_DIR)
-	test ! -e $(EXEC_DIR)/poplog
+	test ! -e $(bindir)/poplog
 
 .PHONY: verify-install
 verify-install:
 	# A sanity check that the Poplog installation has actually been installed.
 	test -d $(POPLOG_VERSION_DIR)
-	test -f $(EXEC_DIR)/poplog
+	test -f $(bindir)/poplog
 
 ################################################################################
 # Helper targets
@@ -473,7 +473,7 @@ _build/Base.proxy: _download/Base
 
 _build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
 	mkdir -p "$(@D)"
-	EXEC_DIR="$(EXEC_DIR)" POPLOG_HOME_DIR="$(POPLOG_HOME_DIR)" sh writeUninstallInstructions.sh > _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
+	bindir="$(bindir)" POPLOG_HOME_DIR="$(POPLOG_HOME_DIR)" sh writeUninstallInstructions.sh > _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
 
 ################################################################################
 # Transplant targets
