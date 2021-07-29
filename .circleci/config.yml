@@ -9,8 +9,8 @@ jobs:
           command: |
             curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
   build_src_tarball:
-    machine:
-      image: ubuntu-1604:202104-01
+    docker:
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - run:
@@ -234,8 +234,6 @@ workflows:
       - build_deb:
           filters:  *default_filters
 #      - build_rpm:
-#          requires:
-#            - build_tree
 #          filters:  *default_filters
       - build_appimage:
           requires:
