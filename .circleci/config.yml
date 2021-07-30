@@ -23,7 +23,7 @@ jobs:
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
-          root: _build
+          root: /tmp/tarballs
           paths:
             - '*.tar.gz'
 
