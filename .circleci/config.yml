@@ -124,7 +124,7 @@ jobs:
           name: Run systests
           command: |
             cd systests
-            nose2
+            nose2 --junit-xml
       - store_test_results:
           path: systests
 
