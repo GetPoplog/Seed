@@ -1,3 +1,6 @@
+# See https://rpm-packaging-guide.github.io/
+# for help on writing spec files.
+
 Name: poplog
 Version: 0.2.0
 Release: 1
@@ -14,10 +17,10 @@ BuildRequires: libXext-devel
 BuildRequires: libX11-devel
 BuildRequires: libXt-devel
 BuildRequires: openmotif-devel
-%if 0%{?rhel} >= 8
-BuildRequires: ncurses-compat-libs
-%else
+%if 0%{?rhel} < 8
 BuildRequires: ncurses-libs
+%else
+BuildRequires: ncurses-compat-libs
 %endif
 Requires: libXext
 Requires: libX11
@@ -25,14 +28,19 @@ Requires: libXt
 # libXt-devel is needed for some reason, without it libXt.so load errors occur.
 Requires: libXt-devel  
 Requires: openmotif
-%if 0%{?rhel} >= 8
-Requires: ncurses-compat-libs
-%else
+%if 0%{?rhel} < 8
 Requires: ncurses-libs
+%else
+Requires: ncurses-compat-libs
 %endif
+
+%if 0%{?rhel} < 8
+# RHEL 7/CentOS 7 don't support Suggests.
+%else
 Suggests: csh
 Suggests: xterm
 Suggests: espeak
+%endif
 
 %description
 Poplog is a software development environment for the programming languages
