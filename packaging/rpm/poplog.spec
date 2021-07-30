@@ -1,5 +1,5 @@
 Name: poplog
-Version: 0.2
+Version: 0.2.0
 Release: 1
 Summary: Poplog development environment
 License: MIT
