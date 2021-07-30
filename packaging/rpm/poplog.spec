@@ -31,7 +31,7 @@ POP-11, Common Lisp, Prolog, and Standard ML.
 # Currently, poplog ships some .so files which cause the post RPM build
 # check to fail as they don't have build IDs stamped within them. We
 # can't do much about that, so we tell rpmbuild to ignore them.
-%global _missing_build_ids_terminate_build 0
+%undefine _missing_build_ids_terminate_build
 
 %prep
 # Without setting the umask, there are issues unpacking the tarballs.
@@ -48,3 +48,4 @@ make install DESTDIR=%{buildroot} prefix=/opt bindir=%{_bindir}
 %files
 %defattr(-,root,root,-)
 /opt/poplog
+/usr/bin/poplog
