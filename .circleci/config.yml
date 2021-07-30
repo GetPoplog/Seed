@@ -19,11 +19,11 @@ jobs:
           command: |
             make srctarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog*.tar.gz /tmp/tarballs/
+            cp _build/poplog*.tar.gz /tmp/tarballs/poplog.tar.gz
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
-          root: _build
+          root: /tmp/tarballs
           paths:
             - '*.tar.gz'
 
@@ -36,7 +36,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog-*.tar.gz
+            tar -xvf _build/poplog.tar.gz
             mv poplog*/* .
       - run:
           name: Get system info
@@ -67,7 +67,7 @@ jobs:
           command: |
             make binarytarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog-binary*.tar.gz /tmp/tarballs/
+            cp _build/poplog-binary*.tar.gz /tmp/tarballs/poplog-binary.tar.gz
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
@@ -79,12 +79,13 @@ jobs:
     machine:
       image: ubuntu-1604:202104-01
     steps:
+      - checkout
       - attach_workspace:
           at: _build
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog-*.tar.gz
+            tar -xvf _build/poplog.tar.gz
             mv poplog*/* .
       - run:
           name: Get system info
@@ -141,12 +142,13 @@ jobs:
     machine:
       image: ubuntu-1604:202104-01
     steps:
+      - checkout
       - attach_workspace:
           at: _build
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog-*.tar.gz
+            tar -xvf _build/poplog.tar.gz
             mv poplog*/* .
       - run:
           command: |
@@ -199,7 +201,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog-*.tar.gz
+            tar -xvf _build/poplog.tar.gz
             mv poplog*/* .
       - run:
           name: Get system info
@@ -232,7 +234,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog-*.tar.gz
+            tar -xvf _build/poplog.tar.gz
             mv poplog*/* .
       - run:
           name: Get system info
