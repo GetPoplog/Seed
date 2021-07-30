@@ -19,11 +19,11 @@ jobs:
           command: |
             make srctarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog*.tar.gz /tmp/tarballs/poplog.tar.gz
+            cp _build/poplog*.tar.gz /tmp/tarballs/
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
-          root: /tmp/tarballs
+          root: _build
           paths:
             - '*.tar.gz'
 
@@ -32,6 +32,13 @@ jobs:
       image: ubuntu-1604:202104-01
     steps:
       - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          name: Extract src tarball
+          command: |
+            tar -xvf _build/poplog-*.tar.gz
+            mv poplog*/* .
       - run:
           name: Get system info
           command: |
@@ -61,7 +68,7 @@ jobs:
           command: |
             make binarytarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog-binary*.tar.gz /tmp/tarballs/poplog-binary.tar.gz
+            cp _build/poplog-binary*.tar.gz /tmp/tarballs/
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
@@ -73,7 +80,6 @@ jobs:
     machine:
       image: ubuntu-1604:202104-01
     steps:
-      - checkout
       - attach_workspace:
           at: _build
       - run:
@@ -131,7 +137,6 @@ jobs:
     machine:
       image: ubuntu-1604:202104-01
     steps:
-      - checkout
       - attach_workspace:
           at: _build
       - run:
@@ -210,6 +215,13 @@ jobs:
       - image: cibuilds/snapcraft:core20
     steps:
       - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          name: Extract src tarball
+          command: |
+            tar -xvf _build/poplog-*.tar.gz
+            mv poplog*/* .
       - run:
           name: Get system info
           command: |
