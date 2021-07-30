@@ -118,7 +118,7 @@ jobs:
           name: Run systests
           command: |
             cd systests
-            nose2 -X
+            nose2
       - store_test_results:
           path: systests
 
