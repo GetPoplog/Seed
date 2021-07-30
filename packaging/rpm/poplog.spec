@@ -51,3 +51,5 @@ make install DESTDIR=%{buildroot} prefix=/opt bindir=%{_bindir}
 %defattr(-,root,root,-)
 /opt/poplog
 /usr/bin/poplog
+
+%changelog
