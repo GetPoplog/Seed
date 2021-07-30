@@ -31,13 +31,7 @@ jobs:
     machine:
       image: ubuntu-1604:202104-01
     steps:
-      - attach_workspace:
-          at: _build
-      - run:
-          name: Extract src tarball
-          command: |
-            tar -xvf _build/poplog.tar.gz
-            mv poplog*/* .
+      - checkout
       - run:
           name: Get system info
           command: |
@@ -82,11 +76,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: _build
-      - run:
-          name: Extract src tarball
-          command: |
-            tar -xvf _build/poplog.tar.gz
-            mv poplog*/* .
       - run:
           name: Get system info
           command: |
@@ -146,11 +135,6 @@ jobs:
       - attach_workspace:
           at: _build
       - run:
-          name: Extract src tarball
-          command: |
-            tar -xvf _build/poplog.tar.gz
-            mv poplog*/* .
-      - run:
           command: |
             docker ps
       - run:
@@ -196,18 +180,14 @@ jobs:
     machine:
       image: ubuntu-1604:202104-01
     steps:
-      - attach_workspace:
-          at: _build
-      - run:
-          name: Extract src tarball
-          command: |
-            tar -xvf _build/poplog.tar.gz
-            mv poplog*/* .
+      - checkout
       - run:
           name: Get system info
           command: |
             uname -a
             ldd --version
+      - attach_workspace:
+          at: _build
       - run:
           command: |
             sudo apt update
@@ -229,13 +209,7 @@ jobs:
     docker:
       - image: cibuilds/snapcraft:core20
     steps:
-      - attach_workspace:
-          at: _build
-      - run:
-          name: Extract src tarball
-          command: |
-            tar -xvf _build/poplog.tar.gz
-            mv poplog*/* .
+      - checkout
       - run:
           name: Get system info
           command: |
@@ -244,6 +218,8 @@ jobs:
       - run:
           name: Get system info
           command: uname -a
+      - attach_workspace:
+          at: _build
       - run:
           command: |
             sudo apt update
@@ -288,16 +264,10 @@ workflows:
           filters:  *default_filters
       - build_tree:
           filters:  *default_filters
-          requires:
-            - build_src_tarball
       - build_deb:
           filters:  *default_filters
-          requires:
-            - build_src_tarball
       - build_rpm:
           filters:  *default_filters
-          requires:
-            - build_src_tarball
       - build_appimage:
           requires:
             - build_tree
@@ -320,7 +290,6 @@ workflows:
           filters:  *default_filters
       - publish_github_release:
           requires:
-            - build_tree
             - test_deb_1604
             - test_deb_2004
             - test_rpm_centos8
