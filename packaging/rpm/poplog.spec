@@ -18,6 +18,8 @@ BuildRequires: ncurses-compat-libs
 Requires: libXext
 Requires: libX11
 Requires: libXt
+# libXt-devel is needed for some reason, without it libXt.so load errors occur.
+Requires: libXt-devel  
 Requires: openmotif
 Requires: ncurses-compat-libs
 Suggests: csh
