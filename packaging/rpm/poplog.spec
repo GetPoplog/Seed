@@ -14,14 +14,22 @@ BuildRequires: libXext-devel
 BuildRequires: libX11-devel
 BuildRequires: libXt-devel
 BuildRequires: openmotif-devel
+%if 0%{?rhel} >= 8
 BuildRequires: ncurses-compat-libs
+%else
+BuildRequires: ncurses-libs
+%endif
 Requires: libXext
 Requires: libX11
 Requires: libXt
 # libXt-devel is needed for some reason, without it libXt.so load errors occur.
 Requires: libXt-devel  
 Requires: openmotif
+%if 0%{?rhel} >= 8
 Requires: ncurses-compat-libs
+%else
+Requires: ncurses-libs
+%endif
 Suggests: csh
 Suggests: xterm
 Suggests: espeak
