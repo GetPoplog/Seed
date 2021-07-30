@@ -73,13 +73,9 @@ jobs:
             uname -a
             ldd --version
       - run:
-          name: Install dependencies
-          command: |
-            sudo make jumpstart-ubuntu
-      - run:
           name: Build deb
           command: |
-            make deb
+            ./.circleci/scripts/make_deb.sh
       - store_artifacts:
           path: _build/packages
       - persist_to_workspace:
@@ -133,7 +129,12 @@ jobs:
             docker ps
       - run:
           command: |
-            make buildrpm
+            docker run \
+                -it \
+                --security-opt seccomp=docker/poplog_seccomp.json \
+                -v $PWD:/mnt \
+                centos:8 \
+                /mnt/.circleci/scripts/make_rpm.sh /mnt
       - store_artifacts:
           path: _build/packages
   build_appimage:
