@@ -248,14 +248,14 @@ jumpstart-ubuntu:
 
 .PHONY: jumpstart-fedora
 jumpstart-fedora:
-	dnf install \
+	dnf install -y \
 	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak csh
 
 .PHONY: jumpstart-centos
 jumpstart-centos:
-	dnf install \
+	dnf install -y \
 	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm csh ncurses-compat-libs \
