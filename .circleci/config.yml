@@ -19,13 +19,13 @@ jobs:
           command: |
             make srctarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog*.tar.gz /tmp/tarballs/poplog.tar.gz
+            cp _build/poplog*.tar.gz /tmp/tarballs/
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
-          root: /tmp/tarballs
+          root: _build
           paths:
-            - '*.tar.gz'
+            - 'poplog*.tar.gz'
 
   build_tree:
     machine:
@@ -36,7 +36,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog.tar.gz
+            tar -xvf _build/poplog*.tar.gz
             mv poplog*/* .
       - run:
           name: Get system info
