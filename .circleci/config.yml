@@ -67,6 +67,8 @@ jobs:
       image: ubuntu-1604:202104-01
     steps:
       - checkout
+      - attach_workspace:
+          at: _build
       - run:
           name: Get system info
           command: |
@@ -77,11 +79,11 @@ jobs:
           command: |
             ./.circleci/scripts/make_deb.sh
       - store_artifacts:
-          path: _build/packages
+          path: _build/artifacts
       - persist_to_workspace:
           root: _build
           paths:
-            - packages/*.deb
+            - artifacts/*.deb
   test_deb_1604:
     machine:
       image: ubuntu-1604:202104-01
@@ -103,7 +105,7 @@ jobs:
       - run:
           name: 'Install Poplog from *.deb file'
           command: |
-            sudo apt install -y ./_build/packages/poplog_*_amd64.deb
+            sudo apt install -y ./_build/artifacts/poplog_*_amd64.deb
       - run:
           name: Run systests
           command: |
@@ -136,7 +138,12 @@ jobs:
                 centos:8 \
                 /mnt/.circleci/scripts/make_rpm.sh /mnt
       - store_artifacts:
-          path: _build/packages
+          path: _build/artifacts
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - artifacts/*.rpm
+
   build_appimage:
     machine:
       image: ubuntu-1604:202104-01

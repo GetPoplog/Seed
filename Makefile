@@ -536,12 +536,12 @@ relink-and-build:
 
 #-- Debian *.deb packaging -----------------------------------------------------
 .PHONY: deb
-deb: _build/packages/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb
+deb: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb
 
 # Assumes the following dependencies are installed
 # - debmake
 # - debhelper
-_build/packages/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: $(SRC_TARBALL)
+_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: $(SRC_TARBALL)
 	mkdir -p "$(@D)"
 	rm -rf _build/packaging/deb
 	mkdir -p _build/packaging/deb
@@ -556,10 +556,11 @@ _build/packages/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: $(SRC_TARBALL)
 #-- Redhat *.rpm packaging -----------------------------------------------------
 
 .PHONY: rpm
-rpm: _build/packages/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm
+rpm: _build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm
 
-_build/packages/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: $(SRC_TARBALL) packaging/rpm/poplog.spec
+_build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: $(SRC_TARBALL) packaging/rpm/poplog.spec
 	[ -f "$(SRC_TARBALL)" ] # Enforce required tarball
+	mkdir -p "$(@D)"
 	rm -rf _build/packaging/rpm
 	mkdir -p _build/packaging/rpm
 	cd _build/packaging/rpm && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
