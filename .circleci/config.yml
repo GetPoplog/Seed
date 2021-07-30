@@ -270,6 +270,8 @@ workflows:
           filters:  *default_filters
       - build_tree:
           filters:  *default_filters
+          requires:
+            - build_src_tarball
       - build_deb:
           filters:  *default_filters
       - build_rpm:
