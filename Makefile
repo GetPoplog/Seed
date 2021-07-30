@@ -203,16 +203,13 @@ clean:
 deepclean: clean
 	rm -rf ./_download
 
-# We used nose2 to drive a simple test-discovery process. It turns out that we
-# could have used pytest if we made use of the @pytest.mark.parameterize
-# decorator.
-.PHONY: systests
-systests:
+.PHONY: test
+test:
 	cd systests; \
 	if [ -e venv ]; then \
 	    . venv/bin/activate; \
 	fi; \
-	nose2
+	pytest
 
 ################################################################################
 # Jump-start targets

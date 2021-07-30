@@ -113,7 +113,7 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y python3 python3-pip
-            pip3 install nose2
+            pip3 install pytest
       - attach_workspace:
           at: ./_build
       - run:
@@ -123,8 +123,7 @@ jobs:
       - run:
           name: Run systests
           command: |
-            cd systests
-            nose2 --junit-xml
+            make test
       - store_test_results:
           path: systests
 
