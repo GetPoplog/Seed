@@ -17,7 +17,7 @@ BuildRequires: libXext-devel
 BuildRequires: libX11-devel
 BuildRequires: libXt-devel
 BuildRequires: openmotif-devel
-%if 0%{?rhel} < 8
+%if 0${?rhel} && 0%{?rhel} < 8
 BuildRequires: ncurses-libs
 %else
 BuildRequires: ncurses-compat-libs
@@ -28,7 +28,7 @@ Requires: libXt
 # libXt-devel is needed for some reason, without it libXt.so load errors occur.
 Requires: libXt-devel  
 Requires: openmotif
-%if 0%{?rhel} < 8
+%if 0${?rhel} && 0%{?rhel} < 8
 Requires: ncurses-libs
 %else
 Requires: ncurses-compat-libs
