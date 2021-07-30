@@ -11,7 +11,7 @@ def runtest( in_file_name ):
     expected_file_name = re.sub( r'\.test\.sh$', r'.expected.txt', in_file_name )
     res = subprocess.getoutput( f"/bin/bash {in_file_name}" )
     with open( expected_file_name ) as exp:
-        assert res.strip() == exp.read().strip()
+        self.assertEquals(exp.read().strip(), res.strip())
 
 def test_examples():
     for in_file_name in glob.glob( "poplog_commander_tests/*.test.sh" ):
