@@ -566,7 +566,7 @@ _build/packages/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: $(SRC_TARBALL) packagi
 	cp packaging/rpm/poplog.spec _build/packaging/rpm/SPECS/
 	cp "$(SRC_TARBALL)" _build/packaging/rpm/SOURCES/
 	cd _build/packaging/rpm && rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
-	mv _build/packaging/rpm/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm _build/  # mv is safe - rpmbuild is idempotent
+	mv _build/packaging/rpm/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm "$@"  # mv is safe - rpmbuild is idempotent
 
 #-- AppImage *.AppImage packaging ----------------------------------------------
 
