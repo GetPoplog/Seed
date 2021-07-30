@@ -4,5 +4,5 @@ SEED_DIR="${1:-$PWD}"
 
 apt update && apt install -y make
 cd "$SEED_DIR"
-make jumpstart-debian
+sudo make jumpstart-debian
 make deb
