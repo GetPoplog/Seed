@@ -91,9 +91,6 @@ help:
 	#   really-uninstall-poplog [^] - removes Poplog and does not create a backup.
 	#   relink-and-build - a more complex build process that can relink the
 	#       corepop executable and is useful for O/S upgrades.
-	#   jumpstart-ubuntu [^] - installs the packages a Ubuntu system needs.
-	#   jumpstart-fedora [^] - installs the packages a Fedora system needs.
-	#   jumpstart-rocky [^] - installs the packages a Rocky Linux system needs.
 	#   jumpstart-* [^] - and more, try `make help-jumpstart`.
 	#   clean - removes all the build artifacts but not the _download cache.
 	#   deepclean - removes build artifacts and the _download cache.
@@ -112,6 +109,7 @@ help-jumpstart:
 	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
 	#   jumpstart-fedora - installs the packages a Fedora system needs.
 	#   jumpstart-rocky - installs the packages a Rocky Linux system needs.
+	#   jumpstart-centos - installs the packages a Rocky Linux system needs.
 	#   jumpstart-opensuse-leap - installs the packages a openSUSE Leap system needs.
 	#
 
@@ -255,13 +253,16 @@ jumpstart-fedora:
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm espeak csh
 
-.PHONY: jumpstart-rocky
-jumpstart-rocky:
+.PHONY: jumpstart-centos
+jumpstart-centos:
 	dnf install \
 	curl make bzip2 \
 	gcc glibc-devel ncurses-devel libXext-devel libX11-devel \
 	libXt-devel openmotif-devel xterm csh ncurses-compat-libs \
 	rpm-build
+
+.PHONY: jumpstart-rocky
+jumpstart-rocky: jumpstart-centos
 
 .PHONY: jumpstart-opensuse-leap
 jumpstart-opensuse-leap:
