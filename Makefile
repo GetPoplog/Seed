@@ -532,7 +532,7 @@ relink-and-build:
 # Changelogs
 ################################################################################
 _build/changelogs/CHANGELOG.debian: CHANGELOG.yml
-	python3 contributor_tools/make_changelog.py --type debian "$<" "$@"
+	python3 contributor_tools/make_changelog.py --format debian "$<" "$@"
 
 _build/changelogs/CHANGELOG.md: CHANGELOG.yml
 	python3 contributor_tools/make_changelog.py --latest "$<" "$@"

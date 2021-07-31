@@ -27,7 +27,7 @@ def test_generating_latest_markdown_changelog(tmp_path):
 
 def test_generating_debian_changelog(tmp_path):
     output_path = tmp_path / 'CHANGELOG.debian'
-    subprocess.check_call(["python3",  str(MAKE_CHANGELOG_PATH), "--type", "debian", str(CHANGELOG_YAML_PATH), str(output_path)])
+    subprocess.check_call(["python3",  str(MAKE_CHANGELOG_PATH), "--format", "debian", str(CHANGELOG_YAML_PATH), str(output_path)])
     with open(HERE / 'CHANGELOG.debian', 'r') as f:
         expected = f.read()
     assert output_path.exists()
