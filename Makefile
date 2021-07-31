@@ -568,13 +568,12 @@ _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GET
 .PHONY: rpm
 rpm: _build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm
 
-_build/packaging/rpm/poplog.spec:  packaging/rpm/poplog.spec.tmpl
+_build/packaging/rpm/poplog.spec: packaging/rpm/poplog.spec.tmpl
 	mkdir -p "$(@D)"
 	cp "$<" "$@"
 	sed -i 's/&VERSION&/$(GETPOPLOG_VERSION)/g' "$@"
 
-_build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: _build/packaging/rpm/poplog.spec
-	[ -f "$(SRC_TARBALL)" ] # Enforce required tarball
+_build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: _build/packaging/rpm/poplog.spec $(SRC_TARBALL)
 	mkdir -p "$(@D)"
 	rm -rf _build/packaging/rpm/rpmbuild && mkdir -p _build/packaging/rpm/rpmbuild
 	cd _build/packaging/rpm/rpmbuild && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
