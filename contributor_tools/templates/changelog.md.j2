@@ -15,7 +15,7 @@ Release created {{entry.datetime}} UTC.
 
 ## Bugfixes
 {% for bugfix in entry.bugfixes %}
-- {{ bugfix}}
+- {{ bugfix|trim|wordwrap(width=78, wrapstring='\n  ') }}
 {% endfor %}
 {% endif %}
 {% if not loop.last %}

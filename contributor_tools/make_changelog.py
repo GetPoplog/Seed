@@ -38,7 +38,7 @@ parser.add_argument(
 )
 HERE = Path(__file__).parent
 
-env = Environment(
+ENV = Environment(
     loader=FileSystemLoader(HERE / "templates"),
     autoescape=select_autoescape(),
     trim_blocks=True,
@@ -66,15 +66,13 @@ def load_changelog_yaml(changelog_yml_path: Path) -> Dict[Any, Any]:
 
 
 def generate_debian_changelog(changelog_entries) -> str:
-    tmpl = env.get_template("changelog.debian.j2")
-    return tmpl.render({**changelog_entries})
+    return ENV.get_template("changelog.debian.j2").render(changelog_entries)
 
 
 def generate_markdown_changelog(changelog_entries, latest: bool = False) -> str:
-    tmpl = env.get_template("changelog.md.j2")
     if latest:
         changelog_entries = {"entries": [changelog_entries["entries"][0]]}
-    return tmpl.render(**changelog_entries)
+    return ENV.get_template("changelog.md.j2").render(changelog_entries)
 
 
 def main(args):

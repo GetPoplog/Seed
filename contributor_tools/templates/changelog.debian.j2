@@ -1,19 +1,19 @@
 {% for entry in entries %}
 poplog ({{ entry.version }}-1) unstable; urgency=medium
 
-  {{ entry.description|wordwrap(width=76, wrapstring="\n  ") }}
+  {{ entry.description|trim|wordwrap(width=78, wrapstring="\n  ") }}
 
   {% if entry.changes|length > 0 %}
   Changes:
   {% for change in entry.changes %}
-  * {{ change|wordwrap(width=76, wrapstring="\n    ")}}
+  * {{ change|trim|wordwrap(width=76, wrapstring="\n    ")}}
   {% endfor %}
   {% endif %}
   {% if entry.bugfixes|length > 0 %}
 
   Bugfixes:
   {% for bugfix in entry.bugfixes %}
-  * {{ bugfix|wordwrap(width=76, wrapstring="\n    ") }}
+  * {{ bugfix|trim|wordwrap(width=76, wrapstring="\n    ") }}
   {% endfor %}
   {% endif %}
 
