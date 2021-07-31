@@ -570,6 +570,12 @@ _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: _build/packaging/deb/p
 _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz &: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
 	mkdir -p "$(@D)"
 	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && dpkg-source -b .
+	# https://en.opensuse.org/openSUSE:Build_Service_Debian_builds#DEBTRANSFORM_tags
+	# The following additional line is used by OBS to pick up the
+	# correct tar.gz file. Without this additional field in the .dsc
+	# file, OBS is unable to determine which file to use to build the
+	# deb.
+	echo "Debtransform-Tar: poplog-$(GETPOPLOG_VERSION).tar.gz" >> _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc
 	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc "$(@D)"
 	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.tar.gz "$(@D)"
 
