@@ -1,3 +1,15 @@
+# This changelog file drives the generation of the changelog files
+# that are included in the deb files and published as part of the github
+# release.
+#
+# The syntax of the file is as follows:
+# <version:str>:
+#   author: <full author name:str, required>
+#   author_email: <full author email:str, required>
+#   datetime: <utc date time of release:ISO 8601, required>
+#   description: <overview of changes since last releaes:str, required>
+#   changes: <list of changes:list[str], optional>
+#   bugfixes: <list of bugfixes:list[str], optional>
 "0.2.0":
   author: Will Price
   author_email: will.price94@gmail.com
