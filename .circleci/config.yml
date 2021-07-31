@@ -314,7 +314,7 @@ jobs:
           command: |
             zypper --non-interactive addrepo -C "https://download.opensuse.org/repositories/openSUSE:/Tools/openSUSE_15.3/openSUSE:Tools.repo"
             zypper --gpg-auto-import-keys refresh
-            zypper --non-interactive install osc
+            zypper --non-interactive install osc make
             mkdir -p ~/.config/osc
             cat > ~/.config/osc/oscrc \<<EOF
             [general]
