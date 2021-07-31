@@ -18,14 +18,12 @@ jobs:
           name: Build poplog src tarball
           command: |
             make srctarball
-            mkdir -p /tmp/tarballs
-            cp _build/poplog*.tar.gz /tmp/tarballs/
       - store_artifacts:
-          path: /tmp/tarballs
+          path: _build/artifacts
       - persist_to_workspace:
           root: _build
           paths:
-            - 'poplog*.tar.gz'
+            - 'artifacts/poplog*.tar.gz'
 
   build_tree:
     machine:
@@ -36,7 +34,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog*.tar.gz
+            tar -xvf _build/artifacts/poplog*.tar.gz
             mv poplog*/* .
       - run:
           name: Get system info
@@ -67,13 +65,13 @@ jobs:
           command: |
             make binarytarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog-binary*.tar.gz /tmp/tarballs/
+            cp _build/artifacts/poplog-binary*.tar.gz /tmp/tarballs/
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
           root: _build
           paths:
-            - '*.tar.gz'
+            - 'artifacts/poplog-binary*.tar.gz'
 
   build_deb:
     machine:
@@ -266,6 +264,42 @@ jobs:
           paths:
             - artifacts/poplog_16.0.1_amd64.snap
 
+  push_to_open_build_service:
+    docker:
+      - image: opensuse/tumbleweed
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies for attaching workspace
+          command: zypper install -y tar gzip
+      - attach_workspace:
+          at: ./_build
+      - run:
+          name: "Install osc tools"
+          command: |
+            zypper --non-interactive addrepo -C "https://download.opensuse.org/repositories/openSUSE:/Tools/openSUSE_15.3/openSUSE:Tools.repo"
+            zypper --gpg-auto-import-keys refresh
+            zypper --non-interactive install osc
+            mkdir -p ~/.config/osc
+            cat > ~/.config/osc/oscrc \<<EOF
+            [general]
+            apiurl = https://api.opensuse.org
+            checkout_no_colon = 1
+            [https://api.opensuse.org]
+            user=willprice
+            pass=${OSC_KEY}
+            credentials_mgr_class=osc.credentials.ObfuscatedConfigFileCredentialsManager
+            EOF
+      - run:
+          name: "Deploy files to the Open Build Service"
+          command: |
+            cd ~
+            osc checkout home:willprice
+            cd home/willprice/poplog
+            cp ~/project/_build/artifacts/* .
+            ls -lh
+            osc commit -m "Update for v$(cat ~/project/VERSION)"
+
   publish_github_release:
     docker:
       - image: cibuilds/github:0.10
@@ -320,6 +354,15 @@ workflows:
           requires:
             - build_rpm
           filters:  *default_filters
+      - push_to_open_build_service:
+          requires:
+            - test_rpm_centos8
+            - test_deb_1604
+            - test_deb_2004
+            - build_debsrc
+            - build_deb
+            - build_rpm
+            - build_src_tarball
       - publish_github_release:
           requires:
             - test_deb_1604

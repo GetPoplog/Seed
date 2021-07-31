@@ -54,9 +54,9 @@ BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.g
 COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
 
 SRC_TARBALL_FILENAME:=poplog-$(GETPOPLOG_VERSION)
-SRC_TARBALL:=_build/$(SRC_TARBALL_FILENAME).tar.gz
+SRC_TARBALL:=_build/artifacts/$(SRC_TARBALL_FILENAME).tar.gz
 BINARY_TARBALL_FILENAME:=poplog-binary-$(GETPOPLOG_VERSION)
-BINARY_TARBALL:=_build/$(BINARY_TARBALL_FILENAME).tar.gz
+BINARY_TARBALL:=_build/artifacts/$(BINARY_TARBALL_FILENAME).tar.gz
 
 .PHONY: all
 all:
