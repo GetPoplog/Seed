@@ -532,23 +532,36 @@ relink-and-build:
 ################################################################################
 
 #-- Debian *.deb packaging -----------------------------------------------------
+# The following rules assume that the following dependencies are installed:
+# - debmake
+# - debhelper
+
 .PHONY: deb
 deb: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb
 
-# Assumes the following dependencies are installed
-# - debmake
-# - debhelper
-_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: $(SRC_TARBALL)
-	mkdir -p "$(@D)"
+.PHONY: debsrc
+debsrc: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz
+
+_build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL)
+	mkdir -p "$@"
 	rm -rf _build/packaging/deb
 	mkdir -p _build/packaging/deb
 	cp $(SRC_TARBALL) poplog_$(GETPOPLOG_VERSION).orig.tar.gz
 	tar xf poplog_$(GETPOPLOG_VERSION).orig.tar.gz -C _build/packaging/deb
 	mkdir _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian
 	( cd packaging/deb && tar cf - . ) | ( cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian && tar xf - )
+
+_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
+	mkdir -p "$(@D)"
 	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && debuild --no-lintian -i -us -uc -b
 	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb "$@"
-	[ -f $@ ] # Sanity check that we built the target
+
+
+_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz &: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
+	mkdir -p "$(@D)"
+	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && dpkg-source -b .
+	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc "$(@D)"
+	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.tar.gz "$(@D)"
 
 #-- Redhat *.rpm packaging -----------------------------------------------------
 
