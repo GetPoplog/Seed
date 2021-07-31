@@ -2,7 +2,7 @@
 # for help on writing spec files.
 
 Name: poplog
-Version: 0.2.0
+Version: &VERSION&
 Release: 1
 Summary: Poplog development environment
 License: MIT
@@ -26,7 +26,7 @@ Requires: libXext
 Requires: libX11
 Requires: libXt
 # libXt-devel is needed for some reason, without it libXt.so load errors occur.
-Requires: libXt-devel  
+Requires: libXt-devel
 Requires: openmotif
 %if 0%{?rhel} && 0%{?rhel} < 8
 Requires: ncurses-libs
