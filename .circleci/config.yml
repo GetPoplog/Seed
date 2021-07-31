@@ -332,7 +332,15 @@ jobs:
             cd ~
             osc checkout home:willprice
             cd home/willprice/poplog
+            echo "Directory contents after checkout:"
+            ls -lh
+            echo "Directory contents after cleaning:"
+            ls -lh
+            rm *.dsc
             cp ~/project/_build/artifacts/* .
+            mv poplog*.dsc poplog.dsc
+            osc add *
+            echo "Directory contents before commit:"
             ls -lh
             osc commit -m "Update for v$(cat ~/project/VERSION)"
 
