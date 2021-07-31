@@ -117,7 +117,6 @@ jobs:
           root: _build
           paths:
             - artifacts/poplog*.dsc
-            - artifacts/poplog_*-*.tar.gz  # debian src package
 
   test_deb_1604:
     machine:
@@ -329,16 +328,31 @@ jobs:
       - run:
           name: "Deploy files to the Open Build Service"
           command: |
+            # make spec file for RPM
+            make _build/packaging/rpm/poplog.spec
+
+            # Check out OBS repo
             cd ~
             osc checkout home:willprice
             cd home/willprice/poplog
             echo "Directory contents after checkout:"
             ls -lh
+
+            # Clean repo
+            rm *.tar.gz
+            rm *.dsc
             echo "Directory contents after cleaning:"
             ls -lh
-            rm *.dsc
+
+            # Update OBS repo contents
             cp ~/project/_build/artifacts/* .
+            for f in compat control copyright rules; do
+              cp ~/project/packaging/deb/$f debian.$f
+            done
+            cp ~/project/_build/packaging/rpm/poplog.spec .
             mv poplog*.dsc poplog.dsc
+
+            # Commit changes back to OBS repo
             osc add *
             echo "Directory contents before commit:"
             ls -lh
