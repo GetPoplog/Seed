@@ -116,8 +116,8 @@ jobs:
       - persist_to_workspace:
           root: _build
           paths:
-            - artifacts/*.dsc
-            - artifacts/*.tar.gz
+            - artifacts/poplog*.dsc
+            - artifacts/poplog_*-*.tar.gz  # debian src package
 
   test_deb_1604:
     machine:
