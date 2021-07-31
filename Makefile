@@ -579,7 +579,7 @@ _build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: _build/packaging/rpm/
 	cd _build/packaging/rpm/rpmbuild && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 	cp "$(SRC_TARBALL)" _build/packaging/rpm/rpmbuild/SOURCES/
 	cd _build/packaging/rpm && rpmbuild --define "_topdir `pwd`/rpmbuild" -bb poplog.spec
-	mv _build/packaging/rpm/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm "$@"  # mv is safe - rpmbuild is idempotent
+	mv _build/packaging/rpm/rpmbuild/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm "$@"  # mv is safe - rpmbuild is idempotent
 
 #-- AppImage *.AppImage packaging ----------------------------------------------
 
