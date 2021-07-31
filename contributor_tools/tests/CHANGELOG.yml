@@ -1,0 +1,39 @@
+"0.0.3":
+  author: Jane Doe
+  author_email: jane.doe@example.com
+  datetime: 2021-01-03T00:03:00Z
+  description: |
+    Release 3
+  changes:
+    - Upgrade bar from Y to X
+    - Upgrade bar2 from Y to X
+    - Upgrade bar3 from Y to X
+  bugfixes:
+    - Fix bar
+    - Fix bar2
+    - Fix bar3
+
+"0.0.2":
+  author: Jane Doe
+  author_email: jane.doe@example.com
+  datetime: 2021-01-02T00:02:00Z
+  description: |
+    Release 2
+
+"0.0.1":
+  author: John Doe
+  author_email: john.doe@example.com
+  datetime: 2021-01-01T00:01:00Z
+  description: |
+    Earlier release
+  bugfixes:
+    - blah
+  changes:
+    - Upgrade foo from X to Y.
+    - |
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+      enim ad minim veniam, quis nostrud exercitation ullamco laboris
+      nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+      reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+

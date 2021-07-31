@@ -264,6 +264,42 @@ jobs:
           paths:
             - artifacts/poplog_16.0.1_amd64.snap
 
+  test_contributor_tools:
+    docker:
+      - image: python:3
+    steps:
+      - checkout
+      - run:
+          name: Install requirements
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Test contributor tools
+          command: |
+            cd contributor_tools
+            pytest
+      - store_test_results:
+          path: contributor_tools/tests
+
+  build_changelog:
+    docker:
+      - image: python:3
+    steps:
+      - checkout
+      - run:
+          name: Install deps
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Generate latest markdown changelog
+          command: |
+            cd contributor_tools
+            python make_changelog.py ../CHANGELOG.yml ../_build/changelogs/CHANGELOG.md
+      - persist_to_workspace:
+          root: _build/
+          paths:
+            - changelogs
+
   push_to_open_build_service:
     docker:
       - image: opensuse/tumbleweed
@@ -330,8 +366,12 @@ workflows:
             - build_src_tarball
       - build_deb:
           filters:  *default_filters
+          requires:
+            - test_contributor_tools
       - build_debsrc:
           filters:  *default_filters
+          requires:
+            - test_contributor_tools
       - build_rpm:
           filters:  *default_filters
       - build_appimage:
@@ -354,6 +394,12 @@ workflows:
           requires:
             - build_rpm
           filters:  *default_filters
+      - test_contributor_tools:
+          filters:  *default_filters
+      - build_changelog:
+          requires:
+            - test_contributor_tools
+          filters:  *default_filters
       - push_to_open_build_service:
           requires:
             - test_rpm_centos8
@@ -368,6 +414,7 @@ workflows:
             - test_deb_1604
             - test_deb_2004
             - test_rpm_centos8
+            - build_changelog
             - build_appimage
             - build_snap
           filters:

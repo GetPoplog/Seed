@@ -236,6 +236,7 @@ jumpstart-debian:
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	libc6-i386 debmake debhelper \
+	python3 python3-pip \
 	csh \
 	espeak
 
@@ -528,6 +529,14 @@ relink-and-build:
 
 
 ################################################################################
+# Changelogs
+################################################################################
+_build/changelogs/CHANGELOG.debian: CHANGELOG.yml
+	python3 contributor_tools/make_changelog.py --type debian "$<" "$@"
+
+_build/changelogs/CHANGELOG.md: CHANGELOG.yml
+	python3 contributor_tools/make_changelog.py --latest "$<" "$@"
+################################################################################
 # Packaging formats
 ################################################################################
 
@@ -542,7 +551,7 @@ deb: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb
 .PHONY: debsrc
 debsrc: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz
 
-_build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL)
+_build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL) _build/changelogs/CHANGELOG.debian
 	mkdir -p "$@"
 	rm -rf _build/packaging/deb
 	mkdir -p _build/packaging/deb
@@ -550,6 +559,7 @@ _build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL)
 	tar xf poplog_$(GETPOPLOG_VERSION).orig.tar.gz -C _build/packaging/deb
 	mkdir _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian
 	( cd packaging/deb && tar cf - . ) | ( cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian && tar xf - )
+	cp _build/changelogs/CHANGELOG.debian _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian/changelog
 
 _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
 	mkdir -p "$(@D)"

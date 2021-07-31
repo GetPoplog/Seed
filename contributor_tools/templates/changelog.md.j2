@@ -1,0 +1,26 @@
+{% for entry in entries %}
+# v{{ entry.version }} Release Notes
+
+{{ entry.description|trim|wordwrap(width=80)}}
+
+Release created {{entry.datetime}} UTC.
+{% if entry.changes|length > 0 %}
+
+## Changes
+{% for change in entry.changes %}
+- {{ change|trim|wordwrap(width=78, wrapstring='\n  ') }}
+{% endfor %}
+{% endif %}
+{% if entry.bugfixes|length > 0 %}
+
+## Bugfixes
+{% for bugfix in entry.bugfixes %}
+- {{ bugfix}}
+{% endfor %}
+{% endif %}
+{% if not loop.last %}
+
+---
+
+{% endif %}
+{% endfor %}

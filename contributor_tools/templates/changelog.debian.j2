@@ -1,0 +1,24 @@
+{% for entry in entries %}
+poplog ({{ entry.version }}-1) unstable; urgency=medium
+
+  {{ entry.description|wordwrap(width=76, wrapstring="\n  ") }}
+
+  {% if entry.changes|length > 0 %}
+  Changes:
+  {% for change in entry.changes %}
+  * {{ change|wordwrap(width=76, wrapstring="\n    ")}}
+  {% endfor %}
+  {% endif %}
+  {% if entry.bugfixes|length > 0 %}
+
+  Bugfixes:
+  {% for bugfix in entry.bugfixes %}
+  * {{ bugfix|wordwrap(width=76, wrapstring="\n    ") }}
+  {% endfor %}
+  {% endif %}
+
+ -- {{ entry.author }} <{{ entry.author_email }}>  {{ entry.datetime.strftime('%a, %d %b %Y %H:%M:%S +0000') }}
+ {% if not loop.last %}
+
+ {% endif %}
+ {% endfor %}
