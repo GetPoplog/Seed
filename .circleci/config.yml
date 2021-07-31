@@ -346,6 +346,7 @@ jobs:
 
             # Update OBS repo contents
             cp ~/project/_build/artifacts/* .
+            rm *.deb *.rpm
             for f in compat control copyright rules; do
               cp ~/project/packaging/deb/$f debian.$f
             done
