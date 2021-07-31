@@ -3,11 +3,12 @@ Section: devel
 Priority: optional
 Maintainer: Will Price <will.price94@gmail.com>
 Build-Depends: debhelper (>=9~),
+ libncurses5,
  libncurses5-dev,
  libxt-dev,
  libmotif-dev,
  libxext-dev,
- libc6-i386
+ libc6-i386,
  libtinfo5
 Standards-Version: 4.5.1
 Homepage: https://getpoplog.github.io/
@@ -23,7 +24,7 @@ Depends: ${misc:Depends},
  libstdc++6,
  libncurses5,
  libxext6,
- libx11-6
+ libx11-6,
  libtinfo5
 Suggests: espeak, xterm, csh
 Description: Integrated development environment for POP-11, Common Lisp, Prolog and Standard ML.
