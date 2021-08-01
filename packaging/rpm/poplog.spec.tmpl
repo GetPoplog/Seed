@@ -20,7 +20,7 @@ BuildRequires: openmotif-devel
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: ncurses-libs
 %else
-%if 0%{?suse_version} > 1000
+%if 0%{?suse_version}
 Requires: ncurses5-devel
 %else
 BuildRequires: ncurses-compat-libs
@@ -35,7 +35,7 @@ Requires: openmotif
 %if 0%{?rhel} && 0%{?rhel} < 8
 Requires: ncurses-libs
 %else
-%if 0%{?suse_version} > 1500
+%if 0%{?suse_version}
 Requires: libncurses5
 %else
 Requires: ncurses-compat-libs
