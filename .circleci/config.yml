@@ -95,6 +95,7 @@ jobs:
           root: _build
           paths:
             - artifacts/*.deb
+
   build_debsrc:
     machine:
       image: ubuntu-1604:202104-01
@@ -168,7 +169,7 @@ jobs:
                 -it \
                 --security-opt seccomp=docker/poplog_seccomp.json \
                 -v $PWD:/mnt \
-                centos:8 \
+                getpoplog/build:centos8 \
                 /mnt/.circleci/scripts/make_rpm.sh /mnt
       - store_artifacts:
           path: _build/artifacts
