@@ -21,7 +21,8 @@ BuildRequires: openmotif-devel
 BuildRequires: ncurses-libs
 %else
 %if 0%{?suse_version}
-Requires: ncurses5-devel
+BuildRequires: ncurses5-devel
+BuildRequires: libncurses5
 %else
 BuildRequires: ncurses-compat-libs
 %endif
