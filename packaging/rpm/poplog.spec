@@ -60,7 +60,6 @@ umask 0
 make
 
 %install
-mkdir -p %{buildroot}/opt/
 make install DESTDIR=%{buildroot} prefix=/opt bindir=%{_bindir}
 
 %files
