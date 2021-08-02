@@ -287,7 +287,7 @@ jobs:
           command: |
             pip3 install -r requirements.txt
       - run:
-          name: Generate latest markdown changelog
+          name: Generate latest changelogs
           command: |
             cd contributor_tools
             python make_changelog.py ../CHANGELOG.yml ../_build/CHANGELOG.md
@@ -441,6 +441,7 @@ workflows:
             - build_deb
             - build_rpm
             - build_src_tarball
+            - build_changelog
       - publish_github_release:
           requires:
             - test_deb_1604
