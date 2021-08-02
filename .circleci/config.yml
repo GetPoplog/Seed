@@ -336,14 +336,13 @@ jobs:
             ls -lh
 
             # Clean repo
-            rm *.tar.gz
-            rm *.dsc
+            for f in *.tar.gz *.dsc; do rm -f "$f"; done
             echo "Directory contents after cleaning:"
             ls -lh
 
             # Update OBS repo contents
             cp ~/project/_build/artifacts/* .
-            rm *.deb *.rpm
+            for f in *.deb *.rpm; do rm -f "$f"; done
             for f in compat control copyright rules; do
               cp ~/project/packaging/deb/$f debian.$f
             done
