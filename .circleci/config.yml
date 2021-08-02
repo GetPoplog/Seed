@@ -318,7 +318,7 @@ jobs:
             apiurl = https://api.opensuse.org
             checkout_no_colon = 1
             [https://api.opensuse.org]
-            user=willprice
+            user=getpoplog
             pass=${OSC_KEY}
             credentials_mgr_class=osc.credentials.ObfuscatedConfigFileCredentialsManager
             EOF
@@ -330,8 +330,8 @@ jobs:
 
             # Check out OBS repo
             cd ~
-            osc checkout home:willprice
-            cd home/willprice/poplog
+            osc checkout home:getpoplog
+            cd home/getpoplog/poplog
             echo "Directory contents after checkout:"
             ls -lh
 
