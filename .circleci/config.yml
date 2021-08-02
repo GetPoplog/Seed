@@ -384,6 +384,12 @@ default_filters: &default_filters
   tags:
     only: /.*/
 
+release_filters: &release_filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /^v\d+\.\d+\.\d+.*$/
+
 workflows:
   version: 2
   mainflow:
@@ -442,6 +448,7 @@ workflows:
             - build_rpm
             - build_src_tarball
             - build_changelog
+          filters: *release_filters
       - publish_github_release:
           requires:
             - test_deb_1604
@@ -450,8 +457,4 @@ workflows:
             - build_changelog
             - build_appimage
             - build_snap
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
+          filters: *release_filters 
