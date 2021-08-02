@@ -140,13 +140,10 @@ jobs:
           at: _build
       - run:
           command: |
-            docker ps
-      - run:
-          command: |
             docker run \
                 -it \
                 --security-opt seccomp=docker/poplog_seccomp.json \
-                -v $PWD:/mnt \
+                --volume $PWD:/mnt \
                 centos:8 \
                 /mnt/.circleci/scripts/make_rpm.sh /mnt
       - store_artifacts:
