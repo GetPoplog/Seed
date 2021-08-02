@@ -34,8 +34,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/artifacts/poplog*.tar.gz
-            mv poplog*/* .
+            tar --strip-components=1 -xvf _build/artifacts/poplog*.tar.gz
       - run:
           name: Get system info
           command: |
@@ -162,14 +161,11 @@ jobs:
           at: _build
       - run:
           command: |
-            docker ps
-      - run:
-          command: |
             docker run \
                 -it \
                 --security-opt seccomp=docker/poplog_seccomp.json \
-                -v $PWD:/mnt \
-                getpoplog/build:centos8 \
+                --volume $PWD:/mnt \
+                centos:8 \
                 /mnt/.circleci/scripts/make_rpm.sh /mnt
       - store_artifacts:
           path: _build/artifacts
@@ -181,7 +177,7 @@ jobs:
   test_rpm_centos8:
     machine:
       image: ubuntu-1604:202104-01
-    steps: &rpm_systests_steps
+    steps:
       - checkout
       - run:
           name: Get system info
