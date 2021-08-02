@@ -1,0 +1,33 @@
+Source: poplog
+Section: devel
+Priority: optional
+Maintainer: Will Price <will.price94@gmail.com>
+Build-Depends: debhelper (>=9~),
+ libncurses5-dev,
+ libxt-dev,
+ libmotif-dev,
+ libxext-dev,
+ libc6-i386
+Standards-Version: 4.5.1
+Homepage: https://getpoplog.github.io/
+Vcs-Browser: https://github.com/GetPoplog/Seed
+Vcs-Git: https://github.com/GetPoplog/Seed.git
+
+Package: poplog
+Architecture: amd64
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ libc6,
+ libc6-i386,
+ libstdc++6,
+ libncurses5,
+ libxext6,
+ libx11-6
+Suggests: espeak, xterm, csh
+Description: Integrated development environment for POP-11, Common Lisp, Prolog and Standard ML.
+ Poplog is an Open Source, reflective, incrementally compiled software
+ development environment for the programming languages POP-11, Common Lisp,
+ Prolog, and Standard ML, originally created in the UK for teaching and
+ research in Artificial Intelligence at the University of Sussex, and later
+ marketed as a commercial package for software development as well as for
+ teaching and research.

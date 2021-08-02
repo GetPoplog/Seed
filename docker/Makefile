@@ -41,4 +41,3 @@ _build/poplog_seccomp.json: _download/default.json
 _download/default.json:
 	mkdir -p _download
 	cd _download; wget https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json
-

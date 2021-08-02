@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_install:
+	dh_auto_install -- prefix=/opt bindir=/usr/bin
+
+# without pytest installed, these tests can't run.
+# we don't want to add python and pytest as a build depends.
+override_dh_auto_test:
+	# pass
