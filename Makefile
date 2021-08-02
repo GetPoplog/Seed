@@ -571,7 +571,7 @@ _build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: $(SRC_TARBALL) packag
 .PHONY: dotappimage
 dotappimage: _build/Poplog-x86_64.AppImage
 
-_build/Poplog-x86_64.AppImage: 
+_build/Poplog-x86_64.AppImage: $(BINARY_TARBALL)
 	$(MAKE) buildappimage
 	[ -f $@ ] # Sanity check that we built the target
 
