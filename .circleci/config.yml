@@ -291,10 +291,12 @@ jobs:
           command: |
             cd contributor_tools
             python make_changelog.py ../CHANGELOG.yml ../_build/CHANGELOG.md
+            python make_changelog.py --format debian ../CHANGELOG.yml ../_build/debian.changelog
       - persist_to_workspace:
           root: _build/
           paths:
             - CHANGELOG.md
+            - debian.changelog
 
   push_to_open_build_service:
     docker:
@@ -342,6 +344,7 @@ jobs:
 
             # Update OBS repo contents
             cp ~/project/_build/artifacts/* .
+            cp ~/project/_build/debian.changelog .
             for f in *.deb *.rpm; do rm -f "$f"; done
             for f in compat control copyright rules; do
               cp ~/project/packaging/deb/$f debian.$f
