@@ -36,8 +36,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar -xvf _build/poplog*.tar.gz
-            mv poplog*/* .
+            tar -xvf --strip-components=1 _build/poplog*.tar.gz
       - run:
           name: Get system info
           command: |
