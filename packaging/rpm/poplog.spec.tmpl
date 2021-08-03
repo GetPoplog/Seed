@@ -17,22 +17,28 @@ BuildRequires: libXext-devel
 BuildRequires: libX11-devel
 BuildRequires: libXt-devel
 BuildRequires: openmotif-devel
+# RHEL and CentOS 7 and below ships with ncurses5 as ncurses-libs
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: ncurses-libs
 %else
 %if 0%{?suse_version}
+# OpenSUSE has different names for ncurses5 than RHEL/CentOS/Fedora
 BuildRequires: ncurses5-devel
 BuildRequires: libncurses5
 %else
+# RHEL and CentOS 8 and above, and Fedora 31+ ship ncurses5 as ncurses-compat-libs
 BuildRequires: ncurses-compat-libs
 %endif
 %endif
+
 Requires: libXext
 Requires: libX11
 Requires: libXt
 # libXt-devel is needed for some reason, without it libXt.so load errors occur.
 Requires: libXt-devel
 Requires: openmotif
+# See comments on conditional BuildRequires for information on
+# which packages are selected for different distributions
 %if 0%{?rhel} && 0%{?rhel} < 8
 Requires: ncurses-libs
 %else
