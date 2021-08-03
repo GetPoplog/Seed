@@ -4,10 +4,9 @@ import re
 import glob
 import subprocess
 import pytest
-from pathlib     import Path
+from pathlib import Path
 
 here = Path( os.path.realpath( __file__ ) ).parent
-
 
 @pytest.mark.parametrize("in_file_name", glob.glob(f"{here.absolute()}/poplog_commander_tests/*.test.sh"))
 def test_poplog_commander(in_file_name):
