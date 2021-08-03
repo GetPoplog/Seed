@@ -54,9 +54,9 @@ BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.g
 COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
 
 SRC_TARBALL_FILENAME:=poplog-$(GETPOPLOG_VERSION)
-SRC_TARBALL:=_build/$(SRC_TARBALL_FILENAME).tar.gz
+SRC_TARBALL:=_build/artifacts/$(SRC_TARBALL_FILENAME).tar.gz
 BINARY_TARBALL_FILENAME:=poplog-binary-$(GETPOPLOG_VERSION)
-BINARY_TARBALL:=_build/$(BINARY_TARBALL_FILENAME).tar.gz
+BINARY_TARBALL:=_build/artifacts/$(BINARY_TARBALL_FILENAME).tar.gz
 
 .PHONY: all
 all:
@@ -236,6 +236,7 @@ jumpstart-debian:
 	gcc build-essential libc6 libncurses5 libncurses5-dev \
 	libstdc++6 libxext6 libxext-dev libx11-6 libx11-dev libxt-dev libmotif-dev \
 	libc6-i386 debmake debhelper \
+	python3 python3-pip \
 	csh \
 	espeak
 
@@ -528,43 +529,73 @@ relink-and-build:
 
 
 ################################################################################
+# Changelogs
+################################################################################
+_build/changelogs/CHANGELOG.debian: CHANGELOG.yml
+	python3 contributor_tools/make_changelog.py --format debian "$<" "$@"
+
+_build/changelogs/CHANGELOG.md: CHANGELOG.yml
+	python3 contributor_tools/make_changelog.py --latest "$<" "$@"
+################################################################################
 # Packaging formats
 ################################################################################
 
 #-- Debian *.deb packaging -----------------------------------------------------
+# The following rules assume that the following dependencies are installed:
+# - debmake
+# - debhelper
+
 .PHONY: deb
 deb: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb
 
-# Assumes the following dependencies are installed
-# - debmake
-# - debhelper
-_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: $(SRC_TARBALL)
-	mkdir -p "$(@D)"
+.PHONY: debsrc
+debsrc: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz
+
+_build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL) _build/changelogs/CHANGELOG.debian
+	mkdir -p "$@"
 	rm -rf _build/packaging/deb
 	mkdir -p _build/packaging/deb
 	cp $(SRC_TARBALL) poplog_$(GETPOPLOG_VERSION).orig.tar.gz
 	tar xf poplog_$(GETPOPLOG_VERSION).orig.tar.gz -C _build/packaging/deb
 	mkdir _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian
 	( cd packaging/deb && tar cf - . ) | ( cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian && tar xf - )
+	cp _build/changelogs/CHANGELOG.debian _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)/debian/changelog
+
+_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
+	mkdir -p "$(@D)"
 	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && debuild --no-lintian -i -us -uc -b
 	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb "$@"
-	[ -f $@ ] # Sanity check that we built the target
+
+
+_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz &: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
+	mkdir -p "$(@D)"
+	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && dpkg-source -b .
+	# https://en.opensuse.org/openSUSE:Build_Service_Debian_builds#DEBTRANSFORM_tags
+	# The following additional line is used by OBS to pick up the
+	# correct tar.gz file. Without this additional field in the .dsc
+	# file, OBS is unable to determine which file to use to build the
+	# deb.
+	echo "Debtransform-Tar: poplog-$(GETPOPLOG_VERSION).tar.gz" >> _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc
+	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc "$(@D)"
+	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.tar.gz "$(@D)"
 
 #-- Redhat *.rpm packaging -----------------------------------------------------
 
 .PHONY: rpm
 rpm: _build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm
 
-_build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: $(SRC_TARBALL) packaging/rpm/poplog.spec
-	[ -f "$(SRC_TARBALL)" ] # Enforce required tarball
+_build/packaging/rpm/poplog.spec: packaging/rpm/poplog.spec.tmpl
 	mkdir -p "$(@D)"
-	rm -rf _build/packaging/rpm
-	mkdir -p _build/packaging/rpm
-	cd _build/packaging/rpm && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
-	cp packaging/rpm/poplog.spec _build/packaging/rpm/SPECS/
-	cp "$(SRC_TARBALL)" _build/packaging/rpm/SOURCES/
-	cd _build/packaging/rpm && rpmbuild --define "_topdir `pwd`" -bb ./SPECS/poplog.spec
-	mv _build/packaging/rpm/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm "$@"  # mv is safe - rpmbuild is idempotent
+	cp "$<" "$@"
+	sed -i 's/&VERSION&/$(GETPOPLOG_VERSION)/g' "$@"
+
+_build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: _build/packaging/rpm/poplog.spec $(SRC_TARBALL)
+	mkdir -p "$(@D)"
+	rm -rf _build/packaging/rpm/rpmbuild && mkdir -p _build/packaging/rpm/rpmbuild
+	cd _build/packaging/rpm/rpmbuild && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+	cp "$(SRC_TARBALL)" _build/packaging/rpm/rpmbuild/SOURCES/
+	cd _build/packaging/rpm && rpmbuild --define "_topdir `pwd`/rpmbuild" -bb poplog.spec
+	mv _build/packaging/rpm/rpmbuild/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm "$@"  # mv is safe - rpmbuild is idempotent
 
 #-- AppImage *.AppImage packaging ----------------------------------------------
 

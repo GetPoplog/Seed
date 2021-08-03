@@ -18,14 +18,12 @@ jobs:
           name: Build poplog src tarball
           command: |
             make srctarball
-            mkdir -p /tmp/tarballs
-            cp _build/poplog*.tar.gz /tmp/tarballs/
       - store_artifacts:
-          path: /tmp/tarballs
+          path: _build/artifacts
       - persist_to_workspace:
           root: _build
           paths:
-            - 'poplog*.tar.gz'
+            - 'artifacts/poplog*.tar.gz'
 
   build_tree:
     machine:
@@ -36,7 +34,7 @@ jobs:
       - run:
           name: Extract src tarball
           command: |
-            tar --strip-components=1 -xvf _build/poplog*.tar.gz
+            tar --strip-components=1 -xvf _build/artifacts/poplog*.tar.gz
       - run:
           name: Get system info
           command: |
@@ -66,13 +64,13 @@ jobs:
           command: |
             make binarytarball
             mkdir -p /tmp/tarballs
-            cp _build/poplog-binary*.tar.gz /tmp/tarballs/
+            cp _build/artifacts/poplog-binary*.tar.gz /tmp/tarballs/
       - store_artifacts:
           path: /tmp/tarballs
       - persist_to_workspace:
           root: _build
           paths:
-            - '*.tar.gz'
+            - 'artifacts/poplog-binary*.tar.gz'
 
   build_deb:
     machine:
@@ -96,6 +94,29 @@ jobs:
           root: _build
           paths:
             - artifacts/*.deb
+
+  build_debsrc:
+    machine:
+      image: ubuntu-1604:202104-01
+    steps:
+      - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
+      - run:
+          name: Build deb source files (.dsc and tar.gz)
+          command: |
+            ./.circleci/scripts/make_debsrc.sh
+      - store_artifacts:
+          path: _build/artifacts
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - artifacts/poplog*.dsc
 
   test_deb_1604:
     machine:
@@ -156,7 +177,7 @@ jobs:
   test_rpm_centos8:
     machine:
       image: ubuntu-1604:202104-01
-    steps: &rpm_systests_steps
+    steps:
       - checkout
       - run:
           name: Get system info
@@ -239,21 +260,135 @@ jobs:
           paths:
             - artifacts/poplog_16.0.1_amd64.snap
 
+  test_contributor_tools:
+    docker:
+      - image: python:3
+    steps:
+      - checkout
+      - run:
+          name: Install requirements
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Test contributor tools
+          command: |
+            cd contributor_tools
+            pytest
+      - store_test_results:
+          path: contributor_tools/tests
+
+  build_changelog:
+    docker:
+      - image: python:3
+    steps:
+      - checkout
+      - run:
+          name: Install deps
+          command: |
+            pip3 install -r requirements.txt
+      - run:
+          name: Generate latest changelogs
+          command: |
+            cd contributor_tools
+            python make_changelog.py ../CHANGELOG.yml ../_build/CHANGELOG.md
+            python make_changelog.py --format debian ../CHANGELOG.yml ../_build/debian.changelog
+      - persist_to_workspace:
+          root: _build/
+          paths:
+            - CHANGELOG.md
+            - debian.changelog
+
+  push_to_open_build_service:
+    docker:
+      - image: opensuse/tumbleweed
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies for attaching workspace
+          command: zypper install -y tar gzip
+      - attach_workspace:
+          at: ./_build
+      - run:
+          name: "Install osc tools"
+          command: |
+            zypper --non-interactive addrepo -C "https://download.opensuse.org/repositories/openSUSE:/Tools/openSUSE_15.3/openSUSE:Tools.repo"
+            zypper --gpg-auto-import-keys refresh
+            zypper --non-interactive install osc make
+            mkdir -p ~/.config/osc
+            cat > ~/.config/osc/oscrc \<<EOF
+            [general]
+            apiurl = https://api.opensuse.org
+            checkout_no_colon = 1
+            [https://api.opensuse.org]
+            user=getpoplog
+            pass=${OSC_KEY}
+            credentials_mgr_class=osc.credentials.ObfuscatedConfigFileCredentialsManager
+            EOF
+      - run:
+          name: "Deploy files to the Open Build Service"
+          command: |
+            # make spec file for RPM
+            make _build/packaging/rpm/poplog.spec
+
+            # Check out OBS repo
+            cd ~
+            osc checkout home:getpoplog
+            cd home/getpoplog/poplog
+            echo "Directory contents after checkout:"
+            ls -lh
+
+            # Clean repo
+            for f in *.tar.gz *.dsc; do rm -f "$f"; done
+            echo "Directory contents after cleaning:"
+            ls -lh
+
+            # Update OBS repo contents
+            cp ~/project/_build/artifacts/* .
+            cp ~/project/_build/debian.changelog .
+            for f in *.deb *.rpm; do rm -f "$f"; done
+            for f in compat control copyright rules; do
+              cp ~/project/packaging/deb/$f debian.$f
+            done
+            cp ~/project/_build/packaging/rpm/poplog.spec .
+            mv poplog*.dsc poplog.dsc
+
+            # Commit changes back to OBS repo
+            osc add *
+            echo "Directory contents before commit:"
+            ls -lh
+            osc commit -m "Update for v$(cat ~/project/VERSION)"
+
   publish_github_release:
     docker:
       - image: cibuilds/github:0.10
     steps:
+      - checkout
       - attach_workspace:
           at: ./_build
       - run:
           name: "Publish Release on GitHub"
           command: |
-            ls -l ./build/artifacts/
-            ghr -t "${GITHUB_TOKEN}" -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" -c "${CIRCLE_SHA1}" -delete "${CIRCLE_TAG}" ./_build/artifacts/
+            ls -l ./_build/artifacts/
+            ghr \
+              -t "${GITHUB_TOKEN}" \
+              -u "${CIRCLE_PROJECT_USERNAME}" \
+              -r "${CIRCLE_PROJECT_REPONAME}" \
+              -c "${CIRCLE_SHA1}" \
+              -delete "${CIRCLE_TAG}" \
+              -n "v$(cat VERSION)" \
+              -b "$(cat _build/CHANGELOG.md)" \
+              ./_build/artifacts/
+
 default_filters: &default_filters
   # required to run on tagged releases.
   tags:
     only: /.*/
+
+release_filters: &release_filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /^v\d+\.\d+\.\d+.*$/
 
 workflows:
   version: 2
@@ -269,6 +404,12 @@ workflows:
             - build_src_tarball
       - build_deb:
           filters:  *default_filters
+          requires:
+            - test_contributor_tools
+      - build_debsrc:
+          filters:  *default_filters
+          requires:
+            - test_contributor_tools
       - build_rpm:
           filters:  *default_filters
       - build_appimage:
@@ -291,15 +432,29 @@ workflows:
           requires:
             - build_rpm
           filters:  *default_filters
+      - test_contributor_tools:
+          filters:  *default_filters
+      - build_changelog:
+          requires:
+            - test_contributor_tools
+          filters:  *default_filters
+      - push_to_open_build_service:
+          requires:
+            - test_rpm_centos8
+            - test_deb_1604
+            - test_deb_2004
+            - build_debsrc
+            - build_deb
+            - build_rpm
+            - build_src_tarball
+            - build_changelog
+          filters: *release_filters
       - publish_github_release:
           requires:
             - test_deb_1604
             - test_deb_2004
             - test_rpm_centos8
+            - build_changelog
             - build_appimage
             - build_snap
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
+          filters: *release_filters 

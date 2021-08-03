@@ -1,2 +1,5 @@
 /_build/
 /_download/
+__pycache__
+.ropeproject
+report.xml

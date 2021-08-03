@@ -6,4 +6,4 @@ apt update && apt install -y make
 cd "$SEED_DIR"
 sudo make jumpstart-debian
 pip3 install -r requirements.txt
-make deb
+make debsrc
