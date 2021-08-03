@@ -607,7 +607,7 @@ cat << \****
             setUpEnvironment( base, flags, envv );
             execvp( argv[1], &argv[1] );
         } else if (
-            0
+            ( argv[1][0] == ':' )    // :[EXPRESSION]
 ****
 
 # Implied pop11 commands N.B. 'ved' appears here as well but not xved.
