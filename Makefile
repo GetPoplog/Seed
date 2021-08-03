@@ -307,7 +307,7 @@ srctarball: $(SRC_TARBALL)
 $(SRC_TARBALL): _download/Corepops _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 	mkdir -p "$(@D)"
 	rm -f "$@"; \
-	ASSEMBLY_DIR="$$(mktemp --directory --tmpdir="$(TMP_DIR)")"; \
+	ASSEMBLY_DIR="$$(umask u=rwx,go=r && mktemp --directory --tmpdir="$(TMP_DIR)")"; \
 	POPLOG_TAR_DIR="$$ASSEMBLY_DIR/$(SRC_TARBALL_FILENAME)"; \
 	mkdir -p "$$POPLOG_TAR_DIR"; \
 	tar cf - --exclude=_build . | ( cd $$POPLOG_TAR_DIR && tar xf - ); \
