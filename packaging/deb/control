@@ -25,6 +25,8 @@ Depends: ${misc:Depends},
  libncurses5,
  libxext6,
  libx11-6,
+ libxt-dev,
+ libx11-dev,
  libtinfo5
 Suggests: espeak, xterm, csh
 Description: Integrated development environment for POP-11, Common Lisp, Prolog and Standard ML.
