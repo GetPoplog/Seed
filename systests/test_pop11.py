@@ -4,7 +4,7 @@ import re
 import glob
 import subprocess
 import pytest
-from pathlib     import Path
+from pathlib import Path
 
 here = Path( os.path.realpath( __file__ ) ).parent
 
