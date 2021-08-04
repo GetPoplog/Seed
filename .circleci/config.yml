@@ -374,10 +374,10 @@ jobs:
               -u "${CIRCLE_PROJECT_USERNAME}" \
               -r "${CIRCLE_PROJECT_REPONAME}" \
               -c "${CIRCLE_SHA1}" \
-              -delete "${CIRCLE_TAG}" \
               -n "v$(cat VERSION)" \
               -b "$(cat _build/CHANGELOG.md)" \
-              ./_build/artifacts/
+              -delete \
+              "${CIRCLE_TAG}" ./_build/artifacts/
 
 default_filters: &default_filters
   # required to run on tagged releases.
