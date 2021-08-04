@@ -10,6 +10,16 @@
 #   description: <overview of changes since last releaes:str, required>
 #   changes: <list of changes:list[str], optional>
 #   bugfixes: <list of bugfixes:list[str], optional>
+"0.2.1":
+  author: Stephen Leach
+  author_email: stephen.leach@gmail.com
+  datetime: 2021-08-04T18:20:00Z
+  description: |
+    Minor update
+  bugfixes: 
+    - The poplog command now handles ':' options as Pop-11 commands
+    - Corrected dependencies for both RPM and Deb packages on OpenBuildService
+
 "0.2.0":
   author: Will Price
   author_email: will.price94@gmail.com
