@@ -360,16 +360,21 @@ jobs:
 
   publish_github_release:
     docker:
-      - image: cibuilds/github:0.10
+      - image: cimg/base:2021.04
     steps:
       - checkout
       - attach_workspace:
           at: ./_build
       - run:
+          name: "Download ghr"
+          command: |
+            wget "https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_linux_amd64.tar.gz"
+            tar --wildcards --strip-components=1 -xvf ghr_v0.14.0_linux_amd64.tar.gz ghr '*/ghr'
+      - run:
           name: "Publish Release on GitHub"
           command: |
             ls -l ./_build/artifacts/
-            ghr \
+            ./ghr \
               -t "${GITHUB_TOKEN}" \
               -u "${CIRCLE_PROJECT_USERNAME}" \
               -r "${CIRCLE_PROJECT_REPONAME}" \
