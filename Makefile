@@ -395,10 +395,10 @@ _build/NoInit.proxy: _build/Base.proxy
 	mkdir -p _build/poplog_base/pop/com/noinit
 	cd _build/poplog_base/pop/com/noinit; \
 	  touch init.p; \
-	  ln -s init.p vedinit.p; \
-	  ln -s init.p init.pl; \
-	  ln -s init.p init.lsp; \
-	  ln -s init.p init.ml
+	  ln -sf init.p vedinit.p; \
+	  ln -sf init.p init.pl; \
+	  ln -sf init.p init.lsp; \
+	  ln -sf init.p init.ml
 	chmod a-w _build/poplog_base/pop/com/noinit/*.*
 	touch $@
 
