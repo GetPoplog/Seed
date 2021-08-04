@@ -369,7 +369,7 @@ jobs:
           name: "Download ghr"
           command: |
             wget "https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_linux_amd64.tar.gz"
-            tar --wildcards --strip-components=1 -xvf ghr_v0.14.0_linux_amd64.tar.gz ghr '*/ghr'
+            tar --wildcards --strip-components=1 -xvf ghr_v0.14.0_linux_amd64.tar.gz '*/ghr'
       - run:
           name: "Publish Release on GitHub"
           command: |
