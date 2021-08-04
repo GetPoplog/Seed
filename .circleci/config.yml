@@ -290,12 +290,12 @@ jobs:
           name: Generate latest changelogs
           command: |
             cd contributor_tools
-            python make_changelog.py ../CHANGELOG.yml ../_build/CHANGELOG.md
+            python make_changelog.py --latest ../CHANGELOG.yml ../_build/CHANGELOG-latest.md
             python make_changelog.py --format debian ../CHANGELOG.yml ../_build/debian.changelog
       - persist_to_workspace:
           root: _build/
           paths:
-            - CHANGELOG.md
+            - CHANGELOG-latest.md
             - debian.changelog
 
   push_to_open_build_service:
@@ -375,7 +375,7 @@ jobs:
               -r "${CIRCLE_PROJECT_REPONAME}" \
               -c "${CIRCLE_SHA1}" \
               -n "v$(cat VERSION)" \
-              -b "$(cat _build/CHANGELOG.md)" \
+              -b "$(cat _build/CHANGELOG-latest.md)" \
               -delete \
               "${CIRCLE_TAG}" ./_build/artifacts/
 
