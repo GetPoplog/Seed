@@ -667,5 +667,5 @@ buildsnapcraftready:
 
 .PHONY: github-release
 github-release:
-	git tag $(GETPOPLOG_VERSION) -a -m "GetPoplog $(GETPOPLOG_VERSION)" ; \
-	git push origin $(GETPOPLOG_VERSION)
+	git tag v$(GETPOPLOG_VERSION) -a -m "GetPoplog v$(GETPOPLOG_VERSION)" ; \
+	git push origin v$(GETPOPLOG_VERSION)
