@@ -386,6 +386,7 @@ binarytarball: $(BINARY_TARBALL)
 # Pop-tree: can be untarred and used directly (as an alternative to
 # installing via a poplog package e.g. deb/rpm etc)
 $(BINARY_TARBALL): _build/Done.proxy
+	mkdir -p "$(@D)"
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
