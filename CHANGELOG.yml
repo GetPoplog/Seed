@@ -10,6 +10,16 @@
 #   description: <overview of changes since last releaes:str, required>
 #   changes: <list of changes:list[str], optional>
 #   bugfixes: <list of bugfixes:list[str], optional>
+"0.2.2":
+  author: Will Price
+  author_email: will.price94@gmail.com
+  datetime: 2021-08-05T08:47:00Z
+  description: |
+    Minor update
+  bugfixes:
+    - Strip dead symlink from pop-packages
+    - Force link init.p scripts so running `makepkg` on Arch does not fail.
+
 "0.2.1":
   author: Stephen Leach
   author_email: stephen.leach@gmail.com
