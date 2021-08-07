@@ -148,7 +148,7 @@ install:
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(DESTDIR)$(POPLOG_VERSION_DIR); tar xf - )
 	cd $(DESTDIR)$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	mkdir -p $(DESTDIR)$(bindir)
-	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/pop/poplog $(DESTDIR)$(bindir)/
+	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/bin/poplog $(DESTDIR)$(bindir)/
 	# Target "install" completed
 
 .PHONY: install-poplocal
@@ -404,10 +404,11 @@ _build/NoInit.proxy: _build/Base.proxy
 
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/cmdr
+	mkdir -p _build/poplog_base/pop/bin
 	GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" sh makePoplogCommander.sh > _build/cmdr/poplog.c
 	( cd _build/cmdr && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
-	cp _build/cmdr/poplog _build/poplog_base/pop/pop/
+	cp _build/cmdr/poplog _build/poplog_base/pop/bin/
 	touch $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
@@ -631,7 +632,7 @@ buildappimage: _download/appimagetool
 	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`; done
 	chmod a-w _build/AppDir/usr/lib/*
 	mkdir -p _build/AppDir/usr/bin
-	cd _build/AppDir/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
+	cd _build/AppDir/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/bin/poplog .
 	cd _build && ARCH=x86_64 ../_download/appimagetool AppDir
 
 
@@ -658,7 +659,7 @@ buildsnapcraftready:
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)/usr/bin
 	cat "$(BINARY_TARBALL)" | ( cd _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
-	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/pop/poplog .
+	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/bin/poplog .
 	cp snapcraft.yaml _build/dotsnap
 
 
