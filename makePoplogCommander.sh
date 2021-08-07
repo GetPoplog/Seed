@@ -415,12 +415,13 @@ cat << \****
 const char * const USEPOP = USEPOP_LITERAL;
 
 void truncatePopCom( char * base ) {
-    const char * const required_suffix = "/pop/pop";
+    const char * const required_suffix = "/pop/bin";
     size_t len = strlen( base );
     if ( strcmp( required_suffix, &base[ len - 8 ] ) == 0 ) {
         base[ len - strlen( required_suffix ) ] = '\0';
     } else {
         fprintf( stderr, "Poplog installation folder missing $popsys folder\n" );
+        fprintf( stderr, "Base folder is: %s\n", base );
         exit( EXIT_FAILURE );
     }
 }
