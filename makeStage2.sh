@@ -101,5 +101,5 @@ mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-nox
 ################################################################################
 
 # Choose our default build variant.
-ln -sf pop-nox "$usepop/pop/pop"
-ln -sf psv-nox "$usepop/pop/lib/psv"
+ln -sf pop-xm "$usepop/pop/pop"
+ln -sf psv-xm "$usepop/pop/lib/psv"
