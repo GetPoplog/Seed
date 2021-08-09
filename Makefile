@@ -403,12 +403,12 @@ _build/NoInit.proxy: _build/Base.proxy
 	touch $@
 
 _build/PoplogCommander.proxy: _build/Stage2.proxy
-	mkdir -p _build/cmdr
+	mkdir -p _build/commander
 	mkdir -p _build/poplog_base/pop/bin
-	GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" sh makePoplogCommander.sh > _build/cmdr/poplog.c
-	( cd _build/cmdr && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c )
+	( cd commander && GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" sh makePoplogCommander.sh ) > _build/commander/poplog.c
+	( cd _build/commander && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
-	cp _build/cmdr/poplog _build/poplog_base/pop/bin/
+	cp _build/commander/poplog _build/poplog_base/pop/bin/
 	touch $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
