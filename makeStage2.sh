@@ -60,10 +60,10 @@ echo_env() {
 # -nox specifies basepop11 should not be linked against X-windows.
 $usepop/pop/src/newpop -link -nox -norsv
 
-echo_env "$usepop" > "${BUILD_HOME}/environments/nox"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/nox-cmp"
+echo_env "$usepop" > "${BUILD_HOME}/environments/nox-base"
+echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/nox-base-cmp"
 ( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-nox!g' < nox | \
+  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-nox!g' < nox-base | \
   sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-nox/!g' > nox-new )
 
 mkdir -p "$usepop"/pop/pop-nox
@@ -78,10 +78,10 @@ mkdir -p "$usepop"/pop/lib/psv-nox
 # -x=xm specifies basepop11 should be linked against the Motif-toolkit.
 $usepop/pop/src/newpop -link -x=-xm -norsv
 
-echo_env "$usepop" > "${BUILD_HOME}/environments/xm"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-cmp"
+echo_env "$usepop" > "${BUILD_HOME}/environments/xm-base"
+echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-base-cmp"
 ( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xm!g' < xm | \
+  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xm!g' < xm-base | \
   sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xm/!g' > xm-new )
 
 mkdir -p "$usepop"/pop/pop-xm
@@ -97,10 +97,10 @@ mkdir -p "$usepop"/pop/lib/psv-xm
 # -x=xt specifies basepop11 should be linked against the X-toolkit.
 $usepop/pop/src/newpop -link -x=-xt -norsv
 
-echo_env "$usepop" > "${BUILD_HOME}/environments/xt"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-cmp"
+echo_env "$usepop" > "${BUILD_HOME}/environments/xt-base"
+echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-base-cmp"
 ( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xt!g' < xt | \
+  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xt!g' < xt-base | \
   sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xt/!g' > xt-new )
 
 # Rename rather than copy.
