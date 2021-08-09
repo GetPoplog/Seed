@@ -70,24 +70,6 @@ mkdir -p "$usepop"/pop/lib/psv-xt
 ( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-xt; tar xf - )
 
 
-### motif ######################################################################
-
-# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
-# -x=xm specifies basepop11 should be linked against the Motif-toolkit.
-$usepop/pop/src/newpop -link -x=-xm -norsv
-
-echo_env "$usepop" > "${BUILD_HOME}/environments/xm"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-cmp"
-( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xm!g' < xm | \
-  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xm/!g' > xm-new )
-
-mkdir -p "$usepop"/pop/pop-xm
-mkdir -p "$usepop"/pop/lib/psv-xm
-( cd "$usepop"/pop/pop; tar cf - . ) | ( cd "$usepop"/pop/pop-xm; tar xf - )
-( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-xm; tar xf - )
-
-
 ### nox ########################################################################
 
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
@@ -100,9 +82,27 @@ echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/nox-cmp"
   sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-nox!g' < nox | \
   sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-nox/!g' > nox-new )
 
+mkdir -p "$usepop"/pop/pop-nox
+mkdir -p "$usepop"/pop/lib/psv-nox
+( cd "$usepop"/pop/pop; tar cf - . ) | ( cd "$usepop"/pop/pop-nox; tar xf - )
+( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-nox; tar xf - )
+
+### motif ######################################################################
+
+# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -x=xm specifies basepop11 should be linked against the Motif-toolkit.
+$usepop/pop/src/newpop -link -x=-xm -norsv
+
+echo_env "$usepop" > "${BUILD_HOME}/environments/xm"
+echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-cmp"
+( cd "${BUILD_HOME}/environments" && \
+  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xm!g' < xm | \
+  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xm/!g' > xm-new )
+
 # Rename rather than copy.
-mv "$usepop"/pop/pop "$usepop"/pop/pop-nox
-mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-nox
+mv "$usepop"/pop/pop "$usepop"/pop/pop-xm
+mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-xm
+
 
 ################################################################################
 
