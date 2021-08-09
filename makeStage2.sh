@@ -54,6 +54,8 @@ echo_env() {
 
 ### Xt #########################################################################
 
+# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -x=xt specifies basepop11 should be linked against the X-toolkit.
 $usepop/pop/src/newpop -link -x=-xt -norsv
 
 echo_env "$usepop" > "${BUILD_HOME}/environments/xt"
@@ -70,6 +72,8 @@ mkdir -p "$usepop"/pop/lib/psv-xt
 
 ### motif ######################################################################
 
+# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -x=xm specifies basepop11 should be linked against the Motif-toolkit.
 $usepop/pop/src/newpop -link -x=-xm -norsv
 
 echo_env "$usepop" > "${BUILD_HOME}/environments/xm"
@@ -86,6 +90,8 @@ mkdir -p "$usepop"/pop/lib/psv-xm
 
 ### nox ########################################################################
 
+# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -nox specifies basepop11 should not be linked against X-windows.
 $usepop/pop/src/newpop -link -nox -norsv
 
 echo_env "$usepop" > "${BUILD_HOME}/environments/nox"
