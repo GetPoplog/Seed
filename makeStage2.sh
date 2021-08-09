@@ -52,23 +52,6 @@ echo_env() {
     sed -e 's!'"$1"'![//USEPOP//]!g'
 }
 
-### Xt #########################################################################
-
-# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
-# -x=xt specifies basepop11 should be linked against the X-toolkit.
-$usepop/pop/src/newpop -link -x=-xt -norsv
-
-echo_env "$usepop" > "${BUILD_HOME}/environments/xt"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-cmp"
-( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xt!g' < xt | \
-  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xt/!g' > xt-new )
-
-mkdir -p "$usepop"/pop/pop-xt
-mkdir -p "$usepop"/pop/lib/psv-xt
-( cd "$usepop"/pop/pop; tar cf - . ) | ( cd "$usepop"/pop/pop-xt; tar xf - )
-( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-xt; tar xf - )
-
 
 ### nox ########################################################################
 
@@ -99,13 +82,31 @@ echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-cmp"
   sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xm!g' < xm | \
   sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xm/!g' > xm-new )
 
+mkdir -p "$usepop"/pop/pop-xm
+mkdir -p "$usepop"/pop/lib/psv-xm
+( cd "$usepop"/pop/pop; tar cf - . ) | ( cd "$usepop"/pop/pop-xm; tar xf - )
+( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-xm; tar xf - )
+
+
+### Xt #########################################################################
+
+# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -x=xt specifies basepop11 should be linked against the X-toolkit.
+$usepop/pop/src/newpop -link -x=-xt -norsv
+
+echo_env "$usepop" > "${BUILD_HOME}/environments/xt"
+echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-cmp"
+( cd "${BUILD_HOME}/environments" && \
+  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xt!g' < xt | \
+  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xt/!g' > xt-new )
+
 # Rename rather than copy.
-mv "$usepop"/pop/pop "$usepop"/pop/pop-xm
-mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-xm
+mv "$usepop"/pop/pop "$usepop"/pop/pop-xt
+mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-xt
 
 
 ################################################################################
 
-# Choose our default build variant.
-ln -sf pop-xm "$usepop/pop/pop"
-ln -sf psv-xm "$usepop/pop/lib/psv"
+# Choose our default build variant. 
+ln -sf pop-xt "$usepop/pop/pop"
+ln -sf psv-xt "$usepop/pop/lib/psv"
