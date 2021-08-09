@@ -55,6 +55,7 @@ echo_env() {
 
 ### nox ########################################################################
 
+# Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
 # -nox specifies basepop11 should not be linked against X-windows.
 $usepop/pop/src/newpop -link -nox -norsv
@@ -72,6 +73,7 @@ mkdir -p "$usepop"/pop/lib/psv-nox
 
 ### motif ######################################################################
 
+# Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
 # -x=xm specifies basepop11 should be linked against the Motif-toolkit.
 $usepop/pop/src/newpop -link -x=-xm -norsv
@@ -90,6 +92,7 @@ mkdir -p "$usepop"/pop/lib/psv-xm
 
 ### Xt #########################################################################
 
+# Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
 # -x=xt specifies basepop11 should be linked against the X-toolkit.
 $usepop/pop/src/newpop -link -x=-xt -norsv
