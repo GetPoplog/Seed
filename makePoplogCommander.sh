@@ -76,7 +76,7 @@ cat << \****
 //      strEquals, another predicate on strings
 //      mishap, an error reporting function
 //      Rope, managed strings
-//      Chain, managed 1D vectors
+//      Vector, managed 1D vectors
 ///////////////////////////////////////////////////////////////////////////////
 
 //  startsWith: does the subject start with prefix? ----------------------------
@@ -202,25 +202,25 @@ bool rope_starts_with( Rope r, const char * prefix ) {
 }
 
 
-//  Chains - 1D vectors --------------------------------------------------------
+//  Vectors - managed 1D arrays ------------------------------------------------
 
-typedef struct Chain * Chain;
+typedef struct Vector * Vector;
 typedef void * Ref;
 
 enum {
     BUMP = 16
 };
 
-struct Chain {
+struct Vector {
     int     size;
     int     used;
     Ref     *data;
 };
 
 // Ensure there is room for at least n more bytes
-// in the chain's buffer.
+// in the vector's buffer.
 //
-static Chain bump( Chain r, int n ) {
+static Vector bump( Vector r, int n ) {
     int size = r->size;
     int used = r->used;
     int newused = used + n;
@@ -233,7 +233,7 @@ static Chain bump( Chain r, int n ) {
         //  extensions becoming O(N^2). We use a factor of 1.5.
         int delta = ( r-> size ) >> 2;
         //  And we want to skip the initial slow growth when we are
-        //  just repeatedly extending the chain by 1 extra item. The value
+        //  just repeatedly extending the vector by 1 extra item. The value
         //  is arbitrary but 8 or 16 are commonly used.
         if ( delta < BUMP ) {
             delta = BUMP;
@@ -249,30 +249,30 @@ static Chain bump( Chain r, int n ) {
     return r;
 }
 
-Chain chain_push( Chain r, Ref ch ) {
+Vector vector_push( Vector r, Ref ch ) {
     bump( r, 1 );
     r->data[ r->used ] = ch;
     r->used += 1;
     return r;
 }
 
-Chain chain_new() {
+Vector vector_new() {
     // calloc implicitly zeros size & used & sets data to NULL.
-    return (Chain)calloc( sizeof( struct Chain ), 1 );
+    return (Vector)calloc( sizeof( struct Vector ), 1 );
 }
 
-void chain_free( Chain r ) {
+void vector_free( Vector r ) {
     free( r->data );
     free( r );
 }
 
-int chain_length( Chain r ) {
+int vector_length( Vector r ) {
     return r->used;
 }
 
-Ref chain_index( Chain r, int n ) {
+Ref vector_index( Vector r, int n ) {
     if ( !( 0 <= n && n < r->used ) ) {
-        mishap( "Chain index (%d) out of range (0-%d)", n, r->used );
+        mishap( "Vector index (%d) out of range (0-%d)", n, r->used );
     }
     return r->data[ n ];
 }
@@ -644,7 +644,7 @@ done
 
 cat << \****
 // This function will establish the environment variables for Poplog.
-void setUpEnvironment( char * base, int flags, Chain envv ) {
+void setUpEnvironment( char * base, int flags, Vector envv ) {
     bool inherit_env = ( flags & INHERIT_ENV ) != 0;
     bool run_init_p = ( flags & RUN_INIT_P ) != 0;
 
@@ -724,9 +724,9 @@ echo
 cat << \****
     extendPath( getenv( "popsys" ), getenv( "PATH" ), getenv( "popcom" ) );
 
-    int n = chain_length( envv );
+    int n = vector_length( envv );
     for ( int i = 0; i < n; i++ ) {
-        setEnvSpec( chain_index( envv, i ) );
+        setEnvSpec( vector_index( envv, i ) );
     }
 }
 
@@ -738,7 +738,7 @@ cat << \****
 ################################################################################
 
 cat << \****
-int processOptions( int argc, char *const argv[], char *base, int flags, Chain envv ) {
+int processOptions( int argc, char *const argv[], char *base, int flags, Vector envv ) {
     if ( argc <= 1 ) {
         setUpEnvironment( base, flags, envv );
         char *const pop11_args[] = { "pop11", NULL };
@@ -841,7 +841,7 @@ cat << \****
         }
     } else if ( strchr( argv[1], '=' ) != NULL ) {
         //  If there is an '=' sign in the argument it is an environment variable.
-        chain_push( envv, argv[1] );
+        vector_push( envv, argv[1] );
         return processOptions( argc - 1, &argv[1], base, flags, envv );
     } else {
         fprintf( stderr, "Unexpected arguments:" );
@@ -862,7 +862,7 @@ int main( int argc, char *const argv[] ) {
         exit( EXIT_FAILURE );
     }
 
-    Chain envv = chain_new();
+    Vector envv = vector_new();
 
     truncatePopCom( base );
     return processOptions( argc, argv, base, INITIAL_FLAGS, envv );
