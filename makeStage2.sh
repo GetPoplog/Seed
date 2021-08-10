@@ -45,11 +45,25 @@ cd $usepop/pop/x/src/
 mkdir -p "${BUILD_HOME}/environments"
 
 # We need to capture the Poplog environment for each build variant.
+# We run the popenv.sh script inside a clean environment to capture the 
+# set of environment variables needed. We then need to replace any matches
+# of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
+# This will allow us to dynamically substitute with the selfHome'd value
+# at run-time. 
+#
+# This is inherently a weak strategy because it relies on being able to 
+# identify substitutions of $usepop. We improve its robustness by doing the
+# process twice with different values of $usepop - using the '..' trick.
+# If the resultant code is not identical we have a problem and we halt.
+# (N.B It is probably not necessary to run the variables through sort but I 
+# couldn't find a clear guarantee that env generates a sorted list.)
+#
 echo_env() {
     cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env)'
     env -i sh -c "$cmd" | sort | \
     grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
-    sed -e 's!'"$1"'![//USEPOP//]!g'
+    sed -e 's!'"$1"'![//USEPOP//]!g' | \
+    sort
 }
 
 
