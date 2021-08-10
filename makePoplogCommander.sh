@@ -1,8 +1,32 @@
-#!/bin/sh
+#!/bin/bash
 # This is a script that will output the C source for a poplog-shell 
 # program. Sections of C-code and shell script are interleaved which
 # makes it harder to pick out comments - so a more emphatic style is
 # used.
+
+################################################################################
+# Refine the files containing env bindings for the 3 variants of Poplog.
+# We start from nox-new, xt-new and xm-new, all inside _build/environments.
+################################################################################
+
+# Verify that the base files are valid.
+if !( cd _build/environments && cmp nox-base nox-base-cmp && cmp xt-base xt-base-cmp && cmp xm-base xm-base-cmp ); then \;
+    echo "GetPoplog - cannot determine environment variables for Poplog" >&2 \;
+    exit 1 \;
+fi
+
+# Find lines that are common to all three.
+( cd _build/environments && \
+    comm -12 nox-new xt-new | comm -12 - xm-new > shared.env \
+)
+
+# Remove common lines from each.
+( cd _build/environments && \
+    comm -23 nox-new shared.env > nox.env && \
+    comm -23 xt-new shared.env > xt.env && \
+    comm -23 xm-new shared.env > xm.env \
+)
+
 
 ################################################################################
 # Generate the header files for the commander-tool. Note how we use \**** as
@@ -19,6 +43,7 @@ cat << \****
 #include <stddef.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <string.h>
 
 // POSIX doesn't guarantee that <limits.h> will provide PATH_MAX if there
 // aren't limits imposed by the OS.  In this case, the recommended approach is
@@ -29,18 +54,42 @@ cat << \****
 #endif
 
 //  Bit-flags.
-#define RUN_INIT_P          1
-#define INHERIT_ENV         2
-//  Bit-flag sets.
-#define PREFER_SECURITY     0
+#define RUN_INIT_P          0x1
+#define INHERIT_ENV         0x2
+#define VARIANT_X           0x4
+#define VARIANT_MOTIF       0x8
+//  Bit-flag sets for run vs dev.
+#define RUN_FLAGS           0x3
+#define PREFER_SECURITY     0x0
 #define PREFER_FLEXIBILITY  (RUN_INIT_P|INHERIT_ENV)
+//  Bit-flag sets for variants.
+#define VARIANT_FLAGS       0x12
+#define VARIANT_NOX         0x0
+#define VARIANT_XT          (VARIANT_X)
+#define VARIANT_XM          (VARIANT_X | VARIANT_MOTIF)
+#define INITIAL_FLAGS       (PREFER_FLEXIBILITY | VARIANT_XT)
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Library routines: 
-//      Mishap, an error reporting function
+//      startsWith, a predicate on strings
+//      strEquals, another predicate on strings
+//      mishap, an error reporting function
 //      Chain, a 1D vector
 ///////////////////////////////////////////////////////////////////////////////
+
+//  startsWith: does the subject start with prefix?
+bool startsWith( const char * subject, const char * prefix ) {
+    while ( *prefix ) {
+        if ( *prefix++ != *subject++ ) return false;
+    }
+    return true;
+}
+
+//  strEquals: are two strings equal?
+bool strEquals(const char * subject, const char * prefix ) {
+    return strcmp( subject, prefix ) == 0;
+}
 
 
 //  Mishap - Error reporting using printf-like functionality.
@@ -364,6 +413,14 @@ void * safe_malloc( size_t n ) {
     return ptr;
 }
 
+
+
+#else
+
+static_assert( false, "Not defined for operating systems other than Darwin nor Linux." );
+
+#endif
+
 void setEnvSpec( const char * envspec ) {
     // envspec is a string of the form "name=val"
     char * equalpos = strchr( envspec, '=' );
@@ -390,12 +447,6 @@ void setEnvSpec( const char * envspec ) {
     // arguments. Steve had observed that sometimes it didn't copy the
     // key value, so we don't free just in case.
 }
-
-#else
-
-static_assert( false, "Not defined for operating systems other than Darwin nor Linux." );
-
-#endif
 
 ****
 
@@ -477,46 +528,53 @@ void extendPath( char * prefix, char * path, char * suffix ) {
     free( buff );
 }
 
+****
+
+# Here we create three functions for setting the environment variables that
+# are unique to the build variants: nox, xm, xt. These will be called
+# nox_setUpEnvVars, xm_setUpEnvVars, xt_setUpEnvVars.
+VARIANTS='nox xt xm'
+for variant in $VARIANTS
+do
+    echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
+    cat _build/environments/$variant.env \
+    | sed -e 's/"/\\"/g' \
+    | sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
+    echo "}"
+    echo
+done
+
+cat << \****
+// This function will establish the environment variables for Poplog.
 void setUpEnvironment( char * base, int flags, Chain envv ) {
     bool inherit_env = ( flags & INHERIT_ENV ) != 0;
     bool run_init_p = ( flags & RUN_INIT_P ) != 0;
 
     setenv( "usepop", base, !inherit_env );
+
+    int vflags = flags & VARIANT_FLAGS;
+    switch ( vflags ) {
 ****
-echo
+for variant in $VARIANTS
+do
+    echo "        case VARIANT_${variant^^}:"
+    echo "            ${variant}_setUpEnvVars( base, inherit_env );"
+    echo "            break;"
+done
 
-################################################################################
-# We now run the popenv.sh script inside a clean environment to capture the 
-# set of environment variables needed. We then need to replace any matches
-# of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
-# This will allow us to dynamically substitute with the selfHome'd value
-# at run-time. 
-#
-# This is inherently a weak strategy because it relies on being able to 
-# identify substitutions of $usepop. We improve its robustness by doing the
-# process twice with different values of $usepop - using the '..' trick.
-# If the resultant code is not identical we have a problem and we halt.
-# (N.B It is probably not necessary to run the variables through sort but I 
-# couldn't find a clear guarantee that env generates a sorted list.)
-################################################################################
+cat << \****
+        default:
+            mishap( "Invalid use-build" );
+            break;
+    }
 
-CODE1=`env -i sh -c '(usepop="_build/poplog_base" && . $usepop/pop/com/popenv.sh && env)' | sort \
-| grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' \
-| sed -e 's!_build/poplog_base![//USEPOP//]!g' \
+****
+
+# Now we squirt in the shared environment variables.
+cat _build/environments/shared.env \
 | sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
+| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
 
-CODE2=`env -i sh -c '(usepop="_build/poplog_base/pop/.." && . $usepop/pop/com/popenv.sh && env)' | sort \
-| grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' \
-| sed -e 's!_build/poplog_base/pop/..![//USEPOP//]!g' \
-| sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'`
-
-if [ "$CODE1" != "$CODE2" ]; then
-    exit 1
-fi
-
-echo "$CODE1"
 echo 
 
 ################################################################################
@@ -583,54 +641,49 @@ cat << \****
 
 cat << \****
 int processOptions( int argc, char *const argv[], char *base, int flags, Chain envv ) {
-    if ( 0 ) {
-        printf( "argc = %d\n", argc );
-        for ( int i = 0; i < argc; i++ ) {
-            printf( "argv[%d] = %s\n", i, argv[i] );
-        }
-    } else {
-        if ( argc <= 1 ) {
-            setUpEnvironment( base, flags, envv );
-            char *const pop11_args[] = { "pop11", NULL };
-            execvp( "pop11", pop11_args );
-        } else if ( 
-            0
+    if ( argc <= 1 ) {
+        setUpEnvironment( base, flags, envv );
+        char *const pop11_args[] = { "pop11", NULL };
+        execvp( "pop11", pop11_args );
+    } else if ( 
+        0
 ****
 
 # Interpreter and tools that simply need to be run as-is.
 for i in basepop11 pop11 prolog clisp pml popc poplibr poplink ved xved
 do
-echo '            || strcmp( "'$i'", argv[1] ) == 0'
+echo '        || strcmp( "'$i'", argv[1] ) == 0'
 done
 
 cat << \****
-        ) {
-            setUpEnvironment( base, flags, envv );
-            execvp( argv[1], &argv[1] );
-        } else if (
-            ( argv[1][0] == ':' )    // :[EXPRESSION]
+    ) {
+        setUpEnvironment( base, flags, envv );
+        execvp( argv[1], &argv[1] );
+    } else if (
+        ( argv[1][0] == ':' )    // :[EXPRESSION]
 ****
 
 # Implied pop11 commands N.B. 'ved' appears here as well but not xved.
 for i in ved im 'help' teach doc ref
 do
-echo '            || strcmp( "'$i'", argv[1] ) == 0'
+echo '        || strcmp( "'$i'", argv[1] ) == 0'
 done
 
 cat << \****
-        ) {
-            setUpEnvironment( base, flags, envv );
-            char ** pop11_args = calloc( argc + 1, sizeof( char *const ) );
-            pop11_args[ 0 ] = "pop11";
-            for ( int i = 1; i < argc; i++ ) {
-                pop11_args[ i ] = argv[ i ];
-            }
-            pop11_args[ argc ] = NULL; 
-            execvp( "pop11", pop11_args );
-        } else if ( strcmp( "--help", argv[1] ) == 0 ) {
+    ) {
+        setUpEnvironment( base, flags, envv );
+        char ** pop11_args = calloc( argc + 1, sizeof( char *const ) );
+        pop11_args[ 0 ] = "pop11";
+        for ( int i = 1; i < argc; i++ ) {
+            pop11_args[ i ] = argv[ i ];
+        }
+        pop11_args[ argc ] = NULL; 
+        execvp( "pop11", pop11_args );
+    } else if ( startsWith( argv[1], "--" ) ) {
+        if ( strEquals( "--help", argv[1] ) ) {
             printUsage();
             return EXIT_SUCCESS;
-        } else if ( strcmp( "--version", argv[1] ) == 0 ) {
+        } else if ( strEquals( "--version", argv[1] ) ) {
             setUpEnvironment( base, flags, envv );
 ****
 
@@ -640,46 +693,65 @@ cat << \****
 
             execlp( "corepop", "corepop", "%nort", ":printf( pop_internal_version // 10000, 'Running base Poplog system %p.%p\\n' );", NULL );
             return EXIT_FAILURE; // Just in case the execlp fails.
-        } else if ( strcmp( "--run", argv[1] ) == 0 ) {
-            return processOptions( argc - 1, &argv[1], base, PREFER_SECURITY, envv );
-        } else if ( strcmp( "--dev", argv[1] ) == 0 ) {
+        } else if ( strEquals( "--run", argv[1] ) ) {
+            flags = ( PREFER_SECURITY | ( flags & ~RUN_FLAGS ) );
+            return processOptions( argc - 1, &argv[1], base, flags, envv );
+        } else if ( strEquals( "--dev", argv[1] ) ) {
             //  We want to force overwrites.
-            return processOptions( argc - 1, &argv[1], base, PREFER_FLEXIBILITY, envv );
-        } else if ( strcmp( "exec", argv[1] ) == 0 ) {
-            if ( argc >= 3 ) {
-                setUpEnvironment( base, flags, envv );
-                execvp( argv[2], &argv[2] );
+            flags = ( PREFER_FLEXIBILITY | ( flags & ~RUN_FLAGS ) );
+            return processOptions( argc - 1, &argv[1], base, flags, envv );
+        } else if ( startsWith( argv[1], "--use-build" ) ) {
+            char * build = strchr( argv[1], '=' ) + 1;
+            if ( 0 ) {
+                // Never taken - a trick to regularise the following cases.
+****
+for variant in $VARIANTS
+do
+    echo "            } else if ( strEquals( build, \"${variant}\" ) ) {"
+    echo "                flags = ( VARIANT_${variant^^} | ( flags & ~VARIANT_FLAGS ) );"
+done
+cat << \****
             } else {
-                fprintf( stderr, "Too few arguments for exec action\n" );
-                return EXIT_FAILURE;
+                mishap( "Unrecognised --use-build option: %s", argv[1] );
             }
-        } else if ( strcmp( "shell", argv[1] ) == 0 ) {
-            char * shell_path = getenv( "SHELL" );
-            if ( shell_path == NULL ) {
-                fprintf( stderr, "$SHELL not defined\n" );
-                return EXIT_FAILURE;
-            } else {
-                setUpEnvironment( base, flags, envv );
-                char ** shell_args = calloc( argc, sizeof( char *const ) );
-                shell_args[ 0 ] = shell_path;
-                for ( int i = 2; i < argc; i++ ) {
-                    shell_args[ i -  1 ] = argv[ i ];
-                }
-                shell_args[ argc - 1 ] = NULL; 
-                execvp( shell_path, shell_args );
-            }
-        } else if ( strchr( argv[1], '=' ) != NULL ) {
-            //  If there is an '=' sign in the argument it is an environment variable.
-            chain_push( envv, argv[1] );
             return processOptions( argc - 1, &argv[1], base, flags, envv );
         } else {
-            fprintf( stderr, "Unexpected arguments:" );
-            for ( int i = 1; i < argc; i++ ) {
-                fprintf( stderr, " %s", argv[ i ] );
-            }
-            fprintf( stderr, "\n" );
+            mishap( "Unrecognised --OPTION: %s", argv[1] );
+        }
+    } else if ( strcmp( "exec", argv[1] ) == 0 ) {
+        if ( argc >= 3 ) {
+            setUpEnvironment( base, flags, envv );
+            execvp( argv[2], &argv[2] );
+        } else {
+            fprintf( stderr, "Too few arguments for exec action\n" );
             return EXIT_FAILURE;
         }
+    } else if ( strcmp( "shell", argv[1] ) == 0 ) {
+        char * shell_path = getenv( "SHELL" );
+        if ( shell_path == NULL ) {
+            fprintf( stderr, "$SHELL not defined\n" );
+            return EXIT_FAILURE;
+        } else {
+            setUpEnvironment( base, flags, envv );
+            char ** shell_args = calloc( argc, sizeof( char *const ) );
+            shell_args[ 0 ] = shell_path;
+            for ( int i = 2; i < argc; i++ ) {
+                shell_args[ i -  1 ] = argv[ i ];
+            }
+            shell_args[ argc - 1 ] = NULL; 
+            execvp( shell_path, shell_args );
+        }
+    } else if ( strchr( argv[1], '=' ) != NULL ) {
+        //  If there is an '=' sign in the argument it is an environment variable.
+        chain_push( envv, argv[1] );
+        return processOptions( argc - 1, &argv[1], base, flags, envv );
+    } else {
+        fprintf( stderr, "Unexpected arguments:" );
+        for ( int i = 1; i < argc; i++ ) {
+            fprintf( stderr, " %s", argv[ i ] );
+        }
+        fprintf( stderr, "\n" );
+        return EXIT_FAILURE;
     }
     perror( NULL );
     return EXIT_FAILURE;
@@ -695,6 +767,6 @@ int main( int argc, char *const argv[] ) {
     Chain envv = chain_new();
 
     truncatePopCom( base );
-    return processOptions( argc, argv, base, PREFER_FLEXIBILITY, envv );
+    return processOptions( argc, argv, base, INITIAL_FLAGS, envv );
 }
 ****
