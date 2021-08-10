@@ -75,10 +75,11 @@ cat << \****
 //      startsWith, a predicate on strings
 //      strEquals, another predicate on strings
 //      mishap, an error reporting function
-//      Chain, a 1D vector
+//      Rope, managed strings
+//      Chain, managed 1D vectors
 ///////////////////////////////////////////////////////////////////////////////
 
-//  startsWith: does the subject start with prefix?
+//  startsWith: does the subject start with prefix? ----------------------------
 bool startsWith( const char * subject, const char * prefix ) {
     while ( *prefix ) {
         if ( *prefix++ != *subject++ ) return false;
@@ -86,13 +87,13 @@ bool startsWith( const char * subject, const char * prefix ) {
     return true;
 }
 
-//  strEquals: are two strings equal?
+//  strEquals: are two strings equal? ------------------------------------------
 bool strEquals(const char * subject, const char * prefix ) {
     return strcmp( subject, prefix ) == 0;
 }
 
 
-//  Mishap - Error reporting using printf-like functionality.
+//  Mishap - Error reporting using printf-like functionality. ------------------
 
 void mishap( const char *msg, ... ) {
     va_list args;
@@ -104,7 +105,104 @@ void mishap( const char *msg, ... ) {
     exit( EXIT_FAILURE );
 }
 
-//  Chains - 1D vectors.
+//  Ropes - managed strings ----------------------------------------------------
+
+typedef struct Rope * Rope;
+
+enum {
+    ROPE_BUMP = 16
+};
+
+struct Rope {
+    int         size;
+    int         used;
+    char     *data;
+};
+
+// Ensure there is room for at least n more bytes
+// in the rope's buffer.
+//
+static Rope rope_bump( Rope r, int n ) {
+    int size = r->size;
+    int used = r->used;
+    int newused = used + n;
+
+    if ( newused > size ) {
+        //  We must realloc - and We need the new size to be at least this.
+        int newsize = newused;
+
+        //  But we want to grow by a factor to stop repeated linear
+        //  extensions becoming O(N^2). We use a factor of 1.5.
+        int delta = ( r-> size ) >> 2;
+        //  And we want to skip the initial slow growth when we are
+        //  just repeatedly extending the rope by 1 extra item. The value
+        //  is arbitrary but 8 or 16 are commonly used.
+        if ( delta < ROPE_BUMP ) {
+            delta = ROPE_BUMP;
+        } 
+
+        //  This ensures we have delta extra capacity before the next realloc.
+        //  This delta is at least ROPE_BUMP and at least half the previous capacity.
+        newsize += delta; 
+        
+        r->data = (char *)realloc( r->data, newsize * sizeof( char ) );
+        r->size = newsize;
+    }
+    return r;
+}
+
+static Rope rope_nullify( Rope r ) {
+    rope_bump( r, 1 );
+    r->data[ r->used ] = '\0';
+    return r;
+} 
+
+Rope rope_push( Rope r, char ch ) {
+    rope_bump( r, 1 );
+    r->data[ r->used ] = ch;
+    r->used += 1;
+    return r;
+}
+
+Rope rope_append( Rope r, const char * str ) {
+    size_t n = strlen( str );
+    rope_bump( r, n );
+    strncpy( r->data + r->used, str, n );
+    r->used += n;
+    return r;
+}
+
+Rope rope_new() {
+    // calloc implicitly zeros size & used & sets data to NULL.
+    return (Rope)calloc( sizeof( struct Rope ), 1 );
+}
+
+void rope_free( Rope r ) {
+    free( r->data );
+    free( r );
+}
+
+int rope_length( Rope r ) {
+    return r->used;
+}
+
+char rope_index( Rope r, int n ) {
+    if ( !( 0 <= n && n < r->used ) ) {
+        mishap( "Rope index (%d) out of range (0-%d)", n, r->used );
+    }
+    return r->data[ n ];
+}
+
+char * rope_as_string( Rope r ) {
+    return rope_nullify( r )->data;
+}
+
+bool rope_starts_with( Rope r, const char * prefix ) {
+    return startsWith( rope_as_string( r ), prefix );
+}
+
+
+//  Chains - 1D vectors --------------------------------------------------------
 
 typedef struct Chain * Chain;
 typedef void * Ref;
