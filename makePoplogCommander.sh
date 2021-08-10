@@ -63,7 +63,7 @@ cat << \****
 #define PREFER_SECURITY     0x0
 #define PREFER_FLEXIBILITY  (RUN_INIT_P|INHERIT_ENV)
 //  Bit-flag sets for variants.
-#define VARIANT_FLAGS       0x12
+#define VARIANT_FLAGS       0xC
 #define VARIANT_NOX         0x0
 #define VARIANT_XT          (VARIANT_X)
 #define VARIANT_XM          (VARIANT_X | VARIANT_MOTIF)
@@ -564,7 +564,7 @@ done
 
 cat << \****
         default:
-            mishap( "Invalid use-build" );
+            mishap( "Invalid use-build: %d", vflags );
             break;
     }
 
