@@ -405,7 +405,7 @@ _build/NoInit.proxy: _build/Base.proxy
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/commander
 	mkdir -p _build/poplog_base/pop/bin
-	( cd commander && GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh ) > _build/commander/poplog.c
+	( GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh ) > _build/commander/poplog.c
 	( cd _build/commander && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c )
 	rm -f _build/poplog_base/pop/pop/poplog
 	cp _build/commander/poplog _build/poplog_base/pop/bin/
