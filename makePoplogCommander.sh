@@ -100,10 +100,11 @@ void mishap( const char *msg, ... ) {
     va_start( args, msg );
     fprintf( stderr, "Mishap: " );
     vfprintf( stderr, msg, args );
-    fprintf( stderr, "\n" );
+    fprintf( stderr, "\n" );            // You do not have to supply the \n.
     va_end( args );
     exit( EXIT_FAILURE );
 }
+
 
 //  Ropes - managed strings ----------------------------------------------------
 
@@ -201,11 +202,13 @@ bool rope_starts_with( Rope r, const char * prefix ) {
     return startsWith( rope_as_string( r ), prefix );
 }
 
+//  Ref, a synonym for void* ---------------------------------------------------
+
+typedef void * Ref;
 
 //  Vectors - managed 1D arrays ------------------------------------------------
 
 typedef struct Vector * Vector;
-typedef void * Ref;
 
 enum {
     BUMP = 16
@@ -220,7 +223,7 @@ struct Vector {
 // Ensure there is room for at least n more bytes
 // in the vector's buffer.
 //
-static Vector bump( Vector r, int n ) {
+static Vector vector_bump( Vector r, int n ) {
     int size = r->size;
     int used = r->used;
     int newused = used + n;
@@ -231,7 +234,7 @@ static Vector bump( Vector r, int n ) {
 
         //  But we want to grow by a factor to stop repeated linear
         //  extensions becoming O(N^2). We use a factor of 1.5.
-        int delta = ( r-> size ) >> 2;
+        int delta = ( r-> size ) >> 1;
         //  And we want to skip the initial slow growth when we are
         //  just repeatedly extending the vector by 1 extra item. The value
         //  is arbitrary but 8 or 16 are commonly used.
@@ -249,11 +252,10 @@ static Vector bump( Vector r, int n ) {
     return r;
 }
 
-Vector vector_push( Vector r, Ref ch ) {
-    bump( r, 1 );
+void vector_push( Vector r, Ref ch ) {
+    vector_bump( r, 1 );
     r->data[ r->used ] = ch;
     r->used += 1;
-    return r;
 }
 
 Vector vector_new() {
@@ -261,20 +263,107 @@ Vector vector_new() {
     return (Vector)calloc( sizeof( struct Vector ), 1 );
 }
 
-void vector_free( Vector r ) {
-    free( r->data );
-    free( r );
+void vector_free( Vector v ) {
+    free( v->data );
+    free( v );
 }
 
-int vector_length( Vector r ) {
-    return r->used;
+int vector_length( Vector v ) {
+    return v->used;
 }
 
-Ref vector_index( Vector r, int n ) {
+Ref vector_get( Vector r, int n ) {
     if ( !( 0 <= n && n < r->used ) ) {
         mishap( "Vector index (%d) out of range (0-%d)", n, r->used );
     }
     return r->data[ n ];
+}
+
+Ref vector_set( Vector r, int n, Ref x ) {
+    if ( !( 0 <= n && n < r->used ) ) {
+        mishap( "Vector index (%d) out of range (0-%d)", n, r->used );
+    }
+    return r->data[ n ] = x;
+}
+
+void vector_insert_n( Vector v, int insertion_posn, int n_copies, Ref r ) {
+    int Lv = vector_length( v );
+    if ( 0 <= insertion_posn && insertion_posn <= Lv && n_copies >= 0 ) {
+        vector_bump( v, n_copies );
+        for ( int i = Lv - 1; i < insertion_posn; i-- ) {
+            v->data[ i + n_copies ] = v->data[ i ];
+        }
+        for ( int i = 0; i < n_copies; i++ ) {
+            v->data[ insertion_posn + i ] = r;
+        }
+    } else if ( n_copies < 0 ) {
+        mishap( "Trying to insert a negative number of copies: %d", n_copies );
+    } else {
+        mishap( "Invalid insertion position: 0 <= %d && %d <= %d", insertion_posn, insertion_posn, vector_length( v ) );
+    }
+}
+
+
+//  Deque - managed 1D arrays that support efficient insertion at front & back 
+
+typedef struct Deque * Deque;
+
+enum {
+    DEQUE_BUMP = 16
+};
+
+struct Deque {
+    int     offset;
+    Vector  vector;
+};
+
+void deque_push_back( Deque d, Ref r ) {
+    vector_push( d->vector, r );
+}
+
+void deque_push_front( Deque d, Ref r ) {
+    if ( d->offset <= 0 ) {
+        int delta = ( vector_length( d->vector ) >> 1 );
+        if ( delta < DEQUE_BUMP ) {
+            delta = DEQUE_BUMP;
+        }
+        vector_insert_n( d->vector, 0, delta, NULL );
+        d->offset = delta;
+    }
+    d->offset -= 1;
+    vector_set( d->vector, d->offset, r );
+}
+
+Deque deque_new() {
+    // calloc implicitly zeros offset.
+    Deque d = (Deque)calloc( sizeof( struct Deque ), 1 );
+    d->vector = vector_new();
+    return d;
+}
+
+void deque_free( Deque d ) {
+    vector_free( d-> vector );
+    free( d );
+}
+
+int deque_length( Deque d ) {
+    return vector_length( d->vector ) - d->offset;
+}
+
+Ref deque_get( Deque d, int n ) {
+    int L = deque_length( d );
+    if ( !( 0 <= n && n < L ) ) {
+        mishap( "Deque index (%d) out of range (0-%d)", n, L );
+    }
+    return vector_get( d->vector, n + d->offset );
+}
+
+Ref deque_set( Deque d, int n, Ref r ) {
+    int L = deque_length( d );
+    if ( !( 0 <= n && n < L ) ) {
+        mishap( "Deque index (%d) out of range (0-%d)", n, L );
+    }
+    return vector_set( d->vector, n + d->offset, r );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -726,7 +815,7 @@ cat << \****
 
     int n = vector_length( envv );
     for ( int i = 0; i < n; i++ ) {
-        setEnvSpec( vector_index( envv, i ) );
+        setEnvSpec( vector_get( envv, i ) );
     }
 }
 
@@ -741,7 +830,7 @@ cat << \****
 int processOptions( int argc, char *const argv[], char *base, int flags, Vector envv ) {
     if ( argc <= 1 ) {
         setUpEnvironment( base, flags, envv );
-        char *const pop11_args[] = { "pop11", NULL };
+        char * const pop11_args[] = { "pop11", NULL };
         execvp( "pop11", pop11_args );
     } else if ( 
         0
