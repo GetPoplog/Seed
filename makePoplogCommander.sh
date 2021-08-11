@@ -67,7 +67,8 @@ cat << \****
 #define VARIANT_NOX         0x0
 #define VARIANT_XT          (VARIANT_X)
 #define VARIANT_XM          (VARIANT_X | VARIANT_MOTIF)
-#define INITIAL_FLAGS       (PREFER_FLEXIBILITY | VARIANT_XT)
+#define VARIANT_UNSET       (VARIANT_MOTIF)
+#define INITIAL_FLAGS       (PREFER_FLEXIBILITY | VARIANT_UNSET)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -75,8 +76,8 @@ cat << \****
 //      startsWith, a predicate on strings
 //      strEquals, another predicate on strings
 //      mishap, an error reporting function
-//      Rope, managed strings
 //      Vector, managed 1D vectors
+//      Deque, managed double ended queue
 ///////////////////////////////////////////////////////////////////////////////
 
 //  startsWith: does the subject start with prefix? ----------------------------
@@ -105,102 +106,6 @@ void mishap( const char *msg, ... ) {
     exit( EXIT_FAILURE );
 }
 
-
-//  Ropes - managed strings ----------------------------------------------------
-
-typedef struct Rope * Rope;
-
-enum {
-    ROPE_BUMP = 16
-};
-
-struct Rope {
-    int         size;
-    int         used;
-    char     *data;
-};
-
-// Ensure there is room for at least n more bytes
-// in the rope's buffer.
-//
-static Rope rope_bump( Rope r, int n ) {
-    int size = r->size;
-    int used = r->used;
-    int newused = used + n;
-
-    if ( newused > size ) {
-        //  We must realloc - and We need the new size to be at least this.
-        int newsize = newused;
-
-        //  But we want to grow by a factor to stop repeated linear
-        //  extensions becoming O(N^2). We use a factor of 1.5.
-        int delta = ( r-> size ) >> 1;
-        //  And we want to skip the initial slow growth when we are
-        //  just repeatedly extending the rope by 1 extra item. The value
-        //  is arbitrary but 8 or 16 are commonly used.
-        if ( delta < ROPE_BUMP ) {
-            delta = ROPE_BUMP;
-        } 
-
-        //  This ensures we have delta extra capacity before the next realloc.
-        //  This delta is at least ROPE_BUMP and at least half the previous capacity.
-        newsize += delta; 
-        
-        r->data = (char *)realloc( r->data, newsize * sizeof( char ) );
-        r->size = newsize;
-    }
-    return r;
-}
-
-static Rope rope_nullify( Rope r ) {
-    rope_bump( r, 1 );
-    r->data[ r->used ] = '\0';
-    return r;
-} 
-
-Rope rope_push( Rope r, char ch ) {
-    rope_bump( r, 1 );
-    r->data[ r->used ] = ch;
-    r->used += 1;
-    return r;
-}
-
-Rope rope_append( Rope r, const char * str ) {
-    size_t n = strlen( str );
-    rope_bump( r, n );
-    strncpy( r->data + r->used, str, n );
-    r->used += n;
-    return r;
-}
-
-Rope rope_new() {
-    // calloc implicitly zeros size & used & sets data to NULL.
-    return (Rope)calloc( sizeof( struct Rope ), 1 );
-}
-
-void rope_free( Rope r ) {
-    free( r->data );
-    free( r );
-}
-
-int rope_length( Rope r ) {
-    return r->used;
-}
-
-char rope_index( Rope r, int n ) {
-    if ( !( 0 <= n && n < r->used ) ) {
-        mishap( "Rope index (%d) out of range (0-%d)", n, r->used );
-    }
-    return r->data[ n ];
-}
-
-char * rope_as_string( Rope r ) {
-    return rope_nullify( r )->data;
-}
-
-bool rope_starts_with( Rope r, const char * prefix ) {
-    return startsWith( rope_as_string( r ), prefix );
-}
 
 //  Ref, a synonym for void* ---------------------------------------------------
 
@@ -762,6 +667,7 @@ void setUpEnvironment( char * base, int flags, Vector envv ) {
     int vflags = flags & VARIANT_FLAGS;
     switch ( vflags ) {
 ****
+
 for variant in $VARIANTS
 do
     echo "        case VARIANT_${variant^^}:"
@@ -771,7 +677,28 @@ done
 
 cat << \****
         default:
-            mishap( "Invalid use-build: %d", vflags );
+            if ( inherit_env ) {
+                char * use_build = getenv( "POPLOG_USE_BUILD" );
+                if ( use_build == NULL ) {
+                    use_build = "xm";
+                }
+                if ( 0 ) {
+                    // Skip
+****
+
+for variant in $VARIANTS
+do
+    echo '                } else if ( strEquals( "'$variant'", use_build ) ) {'
+    echo "                    ${variant}_setUpEnvVars( base, inherit_env );"
+done
+
+cat << \****
+                } else {
+                    xm_setUpEnvVars( base, inherit_env );
+                }
+            } else {
+                nox_setUpEnvVars( base, inherit_env );
+            }
             break;
     }
 
@@ -841,130 +768,6 @@ cat << \****
 
 ****
 
-################################################################################
-# Here we handle the options that it was invoked with. The overwrite parameter
-# is passed to setUpEnvironment.
-################################################################################
-
-cat << \****
-int processOptions( int argc, char *const argv[], char *base, int flags, Vector envv ) {
-    if ( argc <= 1 ) {
-        setUpEnvironment( base, flags, envv );
-        char * const pop11_args[] = { "pop11", NULL };
-        execvp( "pop11", pop11_args );
-    } else if ( 
-        0
-****
-
-# Interpreter and tools that simply need to be run as-is.
-for i in basepop11 pop11 prolog clisp pml popc poplibr poplink ved xved
-do
-echo '        || strcmp( "'$i'", argv[1] ) == 0'
-done
-
-cat << \****
-    ) {
-        setUpEnvironment( base, flags, envv );
-        execvp( argv[1], &argv[1] );
-    } else if (
-        ( argv[1][0] == ':' )    // :[EXPRESSION]
-****
-
-# Implied pop11 commands N.B. 'ved' appears here as well but not xved.
-for i in ved im 'help' teach doc ref
-do
-echo '        || strcmp( "'$i'", argv[1] ) == 0'
-done
-
-cat << \****
-    ) {
-        setUpEnvironment( base, flags, envv );
-        char ** pop11_args = calloc( argc + 1, sizeof( char *const ) );
-        pop11_args[ 0 ] = "pop11";
-        for ( int i = 1; i < argc; i++ ) {
-            pop11_args[ i ] = argv[ i ];
-        }
-        pop11_args[ argc ] = NULL; 
-        execvp( "pop11", pop11_args );
-    } else if ( startsWith( argv[1], "--" ) ) {
-        if ( strEquals( "--help", argv[1] ) ) {
-            printUsage();
-            return EXIT_SUCCESS;
-        } else if ( strEquals( "--version", argv[1] ) ) {
-            setUpEnvironment( base, flags, envv );
-****
-
-echo '            printf( "Poplog command tool v'${GET_POPLOG_VERSION:-Undefined}'\\n" );'
-
-cat << \****
-
-            execlp( "corepop", "corepop", "%nort", ":printf( pop_internal_version // 10000, 'Running base Poplog system %p.%p\\n' );", NULL );
-            return EXIT_FAILURE; // Just in case the execlp fails.
-        } else if ( strEquals( "--run", argv[1] ) ) {
-            flags = ( PREFER_SECURITY | ( flags & ~RUN_FLAGS ) );
-            return processOptions( argc - 1, &argv[1], base, flags, envv );
-        } else if ( strEquals( "--dev", argv[1] ) ) {
-            //  We want to force overwrites.
-            flags = ( PREFER_FLEXIBILITY | ( flags & ~RUN_FLAGS ) );
-            return processOptions( argc - 1, &argv[1], base, flags, envv );
-        } else if ( startsWith( argv[1], "--use-build" ) ) {
-            char * build = strchr( argv[1], '=' ) + 1;
-            if ( 0 ) {
-                // Never taken - a trick to regularise the following cases.
-****
-for variant in $VARIANTS
-do
-    echo "            } else if ( strEquals( build, \"${variant}\" ) ) {"
-    echo "                flags = ( VARIANT_${variant^^} | ( flags & ~VARIANT_FLAGS ) );"
-done
-cat << \****
-            } else {
-                mishap( "Unrecognised --use-build option: %s", argv[1] );
-            }
-            return processOptions( argc - 1, &argv[1], base, flags, envv );
-        } else {
-            mishap( "Unrecognised --OPTION: %s", argv[1] );
-        }
-    } else if ( strcmp( "exec", argv[1] ) == 0 ) {
-        if ( argc >= 3 ) {
-            setUpEnvironment( base, flags, envv );
-            execvp( argv[2], &argv[2] );
-        } else {
-            fprintf( stderr, "Too few arguments for exec action\n" );
-            return EXIT_FAILURE;
-        }
-    } else if ( strcmp( "shell", argv[1] ) == 0 ) {
-        char * shell_path = getenv( "SHELL" );
-        if ( shell_path == NULL ) {
-            fprintf( stderr, "$SHELL not defined\n" );
-            return EXIT_FAILURE;
-        } else {
-            setUpEnvironment( base, flags, envv );
-            char ** shell_args = calloc( argc, sizeof( char *const ) );
-            shell_args[ 0 ] = shell_path;
-            for ( int i = 2; i < argc; i++ ) {
-                shell_args[ i -  1 ] = argv[ i ];
-            }
-            shell_args[ argc - 1 ] = NULL; 
-            execvp( shell_path, shell_args );
-        }
-    } else if ( strchr( argv[1], '=' ) != NULL ) {
-        //  If there is an '=' sign in the argument it is an environment variable.
-        vector_push( envv, argv[1] );
-        return processOptions( argc - 1, &argv[1], base, flags, envv );
-    } else {
-        fprintf( stderr, "Unexpected arguments:" );
-        for ( int i = 1; i < argc; i++ ) {
-            fprintf( stderr, " %s", argv[ i ] );
-        }
-        fprintf( stderr, "\n" );
-        return EXIT_FAILURE;
-    }
-    perror( NULL );
-    return EXIT_FAILURE;
-}
-
-****
 
 ################################################################################
 # Here we handle the options that it was invoked with. The overwrite parameter
