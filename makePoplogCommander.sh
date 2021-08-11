@@ -134,7 +134,7 @@ static Rope rope_bump( Rope r, int n ) {
 
         //  But we want to grow by a factor to stop repeated linear
         //  extensions becoming O(N^2). We use a factor of 1.5.
-        int delta = ( r-> size ) >> 2;
+        int delta = ( r-> size ) >> 1;
         //  And we want to skip the initial slow growth when we are
         //  just repeatedly extending the rope by 1 extra item. The value
         //  is arbitrary but 8 or 16 are commonly used.
@@ -286,16 +286,23 @@ Ref vector_set( Vector r, int n, Ref x ) {
     return r->data[ n ] = x;
 }
 
+Ref * vector_nc_nt_array( Vector v ) {
+    vector_bump( v, 1 );
+    v->data[ v->used ] = NULL;
+    return v->data;
+}
+
 void vector_insert_n( Vector v, int insertion_posn, int n_copies, Ref r ) {
     int Lv = vector_length( v );
     if ( 0 <= insertion_posn && insertion_posn <= Lv && n_copies >= 0 ) {
         vector_bump( v, n_copies );
-        for ( int i = Lv - 1; i < insertion_posn; i-- ) {
+        for ( int i = Lv - 1; i >= insertion_posn; i-- ) {
             v->data[ i + n_copies ] = v->data[ i ];
         }
         for ( int i = 0; i < n_copies; i++ ) {
             v->data[ insertion_posn + i ] = r;
         }
+        v->used += n_copies;
     } else if ( n_copies < 0 ) {
         mishap( "Trying to insert a negative number of copies: %d", n_copies );
     } else {
@@ -323,7 +330,7 @@ void deque_push_back( Deque d, Ref r ) {
 
 void deque_push_front( Deque d, Ref r ) {
     if ( d->offset <= 0 ) {
-        int delta = ( vector_length( d->vector ) >> 1 );
+        int delta = vector_length( d->vector ) >> 1;
         if ( delta < DEQUE_BUMP ) {
             delta = DEQUE_BUMP;
         }
@@ -364,6 +371,19 @@ Ref deque_set( Deque d, int n, Ref r ) {
         mishap( "Deque index (%d) out of range (0-%d)", n, L );
     }
     return vector_set( d->vector, n + d->offset, r );
+}
+
+char * const * deque_nc_nt_array( Deque d ) {
+    return (char * const *)( vector_nc_nt_array( d->vector ) + d->offset );
+}
+
+void deque_pop_front( Deque d ) {
+    int L = vector_length( d->vector );
+    if ( L >= 1 ) {
+        d->offset += 1;
+    } else {
+        mishap( "Trying to pop from empty deque" );
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -944,16 +964,146 @@ cat << \****
     return EXIT_FAILURE;
 }
 
-int main( int argc, char *const argv[] ) {
+****
+
+################################################################################
+# Here we handle the options that it was invoked with. The overwrite parameter
+# is passed to setUpEnvironment.
+################################################################################
+
+cat << \****
+int processArgs( Deque argd, char * base, int flags, Vector envv ) {
+    if ( deque_length( argd ) == 0 ) {
+        setUpEnvironment( base, flags, envv );
+        char * const pop11_args[] = { "pop11", NULL };
+        execvp( "pop11", pop11_args );
+    } 
+    
+    char * arg0 = deque_get( argd, 0 );
+    if ( 
+        0
+****
+
+# Interpreter and tools that simply need to be run as-is.
+for i in basepop11 pop11 prolog clisp pml popc poplibr poplink ved xved
+do
+echo '        || strcmp( "'$i'", arg0 ) == 0'
+done
+
+cat << \****
+    ) {
+        setUpEnvironment( base, flags, envv );
+        execvp( arg0, deque_nc_nt_array( argd ) );
+    } else if (
+        ( arg0[0] == ':' )    // :[EXPRESSION]
+****
+
+# Implied pop11 commands N.B. 'ved' appears here as well but not xved.
+for i in ved im 'help' teach doc ref
+do
+echo '        || strcmp( "'$i'", arg0 ) == 0'
+done
+
+cat << \****
+    ) {
+        setUpEnvironment( base, flags, envv );
+        deque_push_front( argd, "pop11" );
+        execvp( "pop11", deque_nc_nt_array( argd ) );
+    } else if ( startsWith( arg0, "--" ) ) {
+        if ( strEquals( "--help", arg0 ) ) {
+            printUsage();
+            return EXIT_SUCCESS;
+        } else if ( strEquals( "--version", arg0 ) ) {
+            setUpEnvironment( base, flags, envv );
+****
+
+echo '            printf( "Poplog command tool v'${GET_POPLOG_VERSION:-Undefined}'\\n" );'
+
+cat << \****
+
+            execlp( "corepop", "corepop", "%nort", ":printf( pop_internal_version // 10000, 'Running base Poplog system %p.%p\\n' );", NULL );
+            return EXIT_FAILURE; // Just in case the execlp fails.
+        } else if ( strEquals( "--run", arg0 ) ) {
+            flags = ( PREFER_SECURITY | ( flags & ~RUN_FLAGS ) );
+            deque_pop_front( argd );
+            return processArgs( argd, base, flags, envv );
+        } else if ( strEquals( "--dev", arg0 ) ) {
+            //  We want to force overwrites.
+            flags = ( PREFER_FLEXIBILITY | ( flags & ~RUN_FLAGS ) );
+            deque_pop_front( argd );
+            return processArgs( argd, base, flags, envv );
+        } else if ( startsWith( arg0, "--use-build" ) ) {
+            char * build = strchr( arg0, '=' ) + 1;
+            if ( 0 ) {
+                // Never taken - a trick to regularise the following cases.
+****
+for variant in $VARIANTS
+do
+    echo "            } else if ( strEquals( build, \"${variant}\" ) ) {"
+    echo "                flags = ( VARIANT_${variant^^} | ( flags & ~VARIANT_FLAGS ) );"
+done
+cat << \****
+            } else {
+                mishap( "Unrecognised --use-build option: %s", arg0 );
+            }
+            deque_pop_front( argd );
+            return processArgs( argd, base, flags, envv );
+        } else {
+            mishap( "Unrecognised --OPTION: %s", arg0 );
+        }
+    } else if ( strcmp( "exec", arg0 ) == 0 ) {
+        if ( deque_length( argd ) >= 2 ) {
+            deque_pop_front( argd );
+            setUpEnvironment( base, flags, envv );
+            execvp( deque_get( argd, 0 ), deque_nc_nt_array( argd ) );
+        } else {
+            fprintf( stderr, "Too few arguments for exec action\n" );
+            return EXIT_FAILURE;
+        }
+    } else if ( strcmp( "shell", arg0 ) == 0 ) {
+        char * shell_path = getenv( "SHELL" );
+        if ( shell_path == NULL ) {
+            fprintf( stderr, "$SHELL not defined\n" );
+            return EXIT_FAILURE;
+        } else {
+            setUpEnvironment( base, flags, envv );
+            deque_pop_front( argd );
+            deque_push_front( argd, shell_path );
+            execvp( shell_path, deque_nc_nt_array( argd ) );
+        }
+    } else if ( strchr( arg0, '=' ) != NULL ) {
+        //  If there is an '=' sign in the argument it is an environment variable.
+        vector_push( envv, arg0 );
+        deque_pop_front( argd );
+        return processArgs( argd, base, flags, envv );
+    } else {
+        fprintf( stderr, "Unexpected arguments:" );
+        for ( int i = 1; i < deque_length( argd ); i++ ) {
+            fprintf( stderr, " %s", (char *)deque_get( argd, i ) );
+        }
+        fprintf( stderr, "\n" );
+        return EXIT_FAILURE;
+    }
+    perror( NULL );
+    return EXIT_FAILURE;
+}
+
+int main( int argc, char * const argv[] ) {
     char * base = selfHome();
     if ( base == NULL ) {
         fprintf( stderr, "Cannot locate the Poplog home directory" );
         exit( EXIT_FAILURE );
     }
 
+    Deque argd = deque_new();
+    //  Skip the 0th argument.
+    for ( int i = 1; i < argc; i++ ) {
+        deque_push_back( argd, argv[i] );
+    }
+
     Vector envv = vector_new();
 
     truncatePopCom( base );
-    return processOptions( argc, argv, base, INITIAL_FLAGS, envv );
+    return processArgs( argd, base, INITIAL_FLAGS, envv );
 }
 ****
