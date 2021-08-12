@@ -342,10 +342,20 @@ poplog (pop11|prolog|clisp|pml) [OPTION]... [VEDCOMMAND] [FILE]...
      %nobanner
          Suppress printing of the Poplog banner.
 
-    These interpreter commands have four different argument-patterns:
+    These interpreter commands (pop11, prolog, clisp, pml) have four different 
+    argument-patterns:
 
     1. If no other arguments are given, this will start a read-eval-print loop
-    (REPL) in the specified language.
+    (REPL) in the specified language. For example:
+
+        % poplog pop11
+
+        Sussex Poplog (Version 16.0001 Thu 12 Aug 00:47:01 BST 2021)
+        Copyright (c) 1982-1999 University of Sussex. All rights reserved.
+
+        Setpop
+        : 
+
 
     2. If a file argument is given, this will start Poplog in the specified
     language, load and run the file and then exit. This implies --noinit.
@@ -387,7 +397,7 @@ poplog [OPTION]... (help|teach|doc|ref) [TOPIC]
     If found opens a buffer in the editor and otherwise drops into a REPL.
 
 
-RESTRICTED AND UNRESTRICTED MODE
+MODES
 
 poplog --run [OPTION]...
     This option forces the Poplog to use the pre-set defaults for all 
@@ -401,6 +411,20 @@ poplog --dev [OPTION]...
     variables and runs the $poplib/init.p and $poplib/vedinit.p. This is the
     normal mode for programming in Poplog. It is not normally necessary to
     supply this option.
+
+poplog --use-build=(nox|xt|xm) [OPTION]...
+    This option selects the build-variant of Poplog. Poplog can be built
+    without X-windows (nox), with the X-Toolkit (xt) or with Motif (xm).
+    This mainly affects the availability of xved and its look and feel.
+    
+    If this option is not specified then the default depends on whether 
+    poplog is being run interactively (--dev) or as a script (--run).
+    In interactive mode, the environment variable $POPLOG_USE_BUILD is checked, 
+    which should have one of the three values nox, xt or xm. Otherwise it 
+    falls back to xm (Motif).
+
+    When poplog is being run as a script (--run) then the default is nox
+    (run without X-windows).
 
 
 UTILITY ACTIONS
