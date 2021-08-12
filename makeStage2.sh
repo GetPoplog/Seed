@@ -44,7 +44,12 @@ cd $usepop/pop/x/src/
 
 mkdir -p "${BUILD_HOME}/environments"
 
-# We need to capture the Poplog environment for each build variant.
+# We need to capture the Poplog environment for each build variant. This is
+# required for the poplog command tool, which needs to bind the appropriate 
+# environment variables. Each build variant has slightly different variables
+# and values. So we capture these and later on will synthesise them into 
+# C-code functions. This is the best point at which to capture the variables.
+
 # We run the popenv.sh script inside a clean environment to capture the 
 # set of environment variables needed. We then need to replace any matches
 # of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
