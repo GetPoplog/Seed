@@ -675,12 +675,13 @@ do
     echo "            break;"
 done
 
+# We have to default to 'xt' at the moment because the 'xm' build has issues.
 cat << \****
         default:
             if ( inherit_env ) {
                 char * use_build = getenv( "POPLOG_USE_BUILD" );
                 if ( use_build == NULL ) {
-                    use_build = "xm";
+                    use_build = "xt"; 
                 }
                 if ( 0 ) {
                     // Skip
@@ -694,7 +695,7 @@ done
 
 cat << \****
                 } else {
-                    xm_setUpEnvVars( base, inherit_env );
+                    xt_setUpEnvVars( base, inherit_env );
                 }
             } else {
                 nox_setUpEnvVars( base, inherit_env );
