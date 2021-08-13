@@ -39,5 +39,6 @@ cd $usepop/pop/x/src/
 # ways to construct the Poplog system.
 # $usepop/pop/src/newpop -link -nox -norsv
 # $usepop/pop/src/newpop -link -x=-xm -norsv
-$usepop/pop/src/newpop -link -x=-xt -norsv
+# $usepop/pop/src/newpop -link -x=-xt -norsv
+$usepop/pop/src/newpop -link -x=-xm -norsv
 

@@ -38,6 +38,7 @@ Requires: glibc(x86-32)
 # libXt-devel is needed for some reason, without it libXt.so load errors occur.
 Requires: libXt-devel
 Requires: openmotif
+Requires: openmotif-devel
 # See comments on conditional BuildRequires for information on
 # which packages are selected for different distributions
 %if 0%{?rhel} && 0%{?rhel} < 8
