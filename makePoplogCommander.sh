@@ -705,7 +705,7 @@ cat << \****
             if ( inherit_env ) {
                 char * use_build = getenv( "POPLOG_USE_BUILD" );
                 if ( use_build == NULL ) {
-                    use_build = "xt"; 
+                    use_build = "xm"; 
                 }
                 if ( 0 ) {
                     // Skip
@@ -719,7 +719,7 @@ done
 
 cat << \****
                 } else {
-                    xt_setUpEnvVars( base, inherit_env );
+                    xm_setUpEnvVars( base, inherit_env );
                 }
             } else {
                 nox_setUpEnvVars( base, inherit_env );
