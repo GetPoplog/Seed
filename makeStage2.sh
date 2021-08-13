@@ -50,6 +50,12 @@ mkdir -p "${BUILD_HOME}/environments"
 # and values. So we capture these and later on will synthesise them into 
 # C-code functions. This is the best point at which to capture the variables.
 
+# Note that we do not wish to capture the values of variables automatically
+# introduced by running a shell SHLVL and PWD. Nor do we want to capture
+# the folder location variables poplib, poplocalauto, poplocalbin. That is
+# because GetPoplog has different defaults for those and the old values are
+# irrelevant.
+
 # We run the popenv.sh script inside a clean environment to capture the 
 # set of environment variables needed. We then need to replace any matches
 # of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
