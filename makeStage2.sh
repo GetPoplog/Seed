@@ -71,6 +71,11 @@ echo_env() {
     sort
 }
 
+# Utility to copy contents from one existing folder to another existing folder.
+tar_fromdir_todir() {
+    ( cd "$1"; tar cf - . ) | ( cd "$2"; tar xf - )
+}
+
 ### nox ########################################################################
 
 # Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
@@ -90,8 +95,8 @@ echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/nox-base-cmp"
 
 mkdir -p "$usepop"/pop/pop-nox
 mkdir -p "$usepop"/pop/lib/psv-nox
-( cd "$usepop"/pop/pop; tar cf - . ) | ( cd "$usepop"/pop/pop-nox; tar xf - )
-( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-nox; tar xf - )
+tar_fromdir_todir "$usepop"/pop/pop{,-nox}
+tar_fromdir_todir "$usepop"/pop/lib/psv{,-nox}
 
 ### motif ######################################################################
 
@@ -109,8 +114,8 @@ echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-base-cmp"
 
 mkdir -p "$usepop"/pop/pop-xm
 mkdir -p "$usepop"/pop/lib/psv-xm
-( cd "$usepop"/pop/pop; tar cf - . ) | ( cd "$usepop"/pop/pop-xm; tar xf - )
-( cd "$usepop"/pop/lib/psv; tar cf - . ) | ( cd "$usepop"/pop/lib/psv-xm; tar xf - )
+tar_fromdir_todir "$usepop"/pop/pop{,-xm}
+tar_fromdir_todir "$usepop"/pop/lib/psv{,-xm}
 
 
 ### Xt #########################################################################
@@ -129,7 +134,7 @@ echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-base-cmp"
 
 # Rename rather than copy.
 mv "$usepop/pop"/pop{,-xt}
-mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-xt
+mv "$usepop"/pop/lib/psv{,-xt}
 
 
 ################################################################################
