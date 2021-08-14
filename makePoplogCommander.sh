@@ -629,8 +629,10 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 # Here we create three functions for setting the environment variables that
 # are unique to the build variants: nox, xm, xt. These will be called
 # nox_setUpEnvVars, xm_setUpEnvVars, xt_setUpEnvVars.
-VARIANTS='nox xt xm'
-for variant in $VARIANTS
+VARIANTS=(nox xt xm)
+DEFAULT_DEV_VARIANT=xm
+DEFAULT_RUN_VARIANT=nox
+for variant in "${VARIANTS[@]}"
 do
     echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
     cat _build/environments/$variant.env \
@@ -652,36 +654,36 @@ void setUpEnvironment( char * base, int flags, Vector envv ) {
     switch ( vflags ) {
 ****
 
-for variant in $VARIANTS
+for variant in "${VARIANTS[@]}"
 do
     echo "        case VARIANT_${variant^^}:"
     echo "            ${variant}_setUpEnvVars( base, inherit_env );"
     echo "            break;"
 done
 
-cat << \****
+cat << ****
         default:
             if ( inherit_env ) {
                 char * use_build = getenv( "POPLOG_USE_BUILD" );
                 if ( use_build == NULL ) {
-                    use_build = "xm"; 
+                    use_build = "${DEFAULT_DEV_VARIANT}"; 
                 }
                 if ( 0 ) {
                     // Skip
 ****
 
-for variant in $VARIANTS
+for variant in "${VARIANTS[@]}"
 do
     echo '                } else if ( strEquals( "'$variant'", use_build ) ) {'
     echo "                    ${variant}_setUpEnvVars( base, inherit_env );"
 done
 
-cat << \****
+cat << ****
                 } else {
-                    xm_setUpEnvVars( base, inherit_env );
+                    mishap( "POPLOG_USE_BUILD is '%s' but must be one of: %s", use_build, "${VARIANTS[@]}" );
                 }
             } else {
-                nox_setUpEnvVars( base, inherit_env );
+                ${DEFAULT_RUN_VARIANT}_setUpEnvVars( base, inherit_env );
             }
             break;
     }
@@ -824,7 +826,7 @@ cat << \****
             if ( 0 ) {
                 // Never taken - a trick to regularise the following cases.
 ****
-for variant in $VARIANTS
+for variant in "${VARIANTS[@]}"
 do
     echo "            } else if ( strEquals( build, \"${variant}\" ) ) {"
     echo "                flags = ( VARIANT_${variant^^} | ( flags & ~VARIANT_FLAGS ) );"
