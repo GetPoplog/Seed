@@ -12,7 +12,8 @@ set -euo pipefail
 # DEFAULT_RUN_VARIANT is the default for scripts.
 ################################################################################
 
-VARIANTS=(nox xt xm)
+VARIANT_BUILDS=(nox xt xm)
+VARIANT_OPTIONS=(--no-gui --gui=xt --gui=motif)
 DEFAULT_DEV_VARIANT=xm
 DEFAULT_RUN_VARIANT=nox
 
@@ -35,7 +36,7 @@ fi
 )
 
 # Remove common lines from each.
-for build_type in "${VARIANTS[@]}"
+for build_type in "${VARIANT_BUILDS[@]}"
 do 
     ( cd _build/environments && comm -23 "${build_type}-new" shared.env > ${build_type}.env )
 done
@@ -427,18 +428,30 @@ poplog --dev [OPTION]...
     normal mode for programming in Poplog. It is not normally necessary to
     supply this option.
 
-poplog --use-build=(nox|xt|xm) [OPTION]...
-    This option selects the build-variant of Poplog. Poplog can be built
-    without X-windows (nox), with the X-Toolkit (xt) or with Motif (xm).
-    This mainly affects the availability of xved and its look and feel.
-    
-    If this option is not specified then the default depends on whether 
-    poplog is being run interactively (--dev) or as a script (--run).
-    In interactive mode, the environment variable $POPLOG_USE_BUILD is checked, 
-    which should have one of the three values nox, xt or xm. Otherwise it 
-    falls back to xm (Motif).
+poplog --gui=(motif|xt) [OPTION]...
+poplog --no-gui [OPTION]...
+    Poplog can be used with an X-windows graphical user interface (GUI)
+    or simply inside a terminal (`--no-gui`). The GUI look-and-feel can either 
+    use the Motif toolkit (--gui=motif) or a much plainer X-toolkit style 
+    (`--gui=xt`). This completely changes the appearance of VED, the built-in
+    editor, for example.
 
-    When poplog is being run as a script (--run) then the default is nox
+    Because Poplog's saved-images are always made relative to a base 
+    executable, experienced programmers do need to be aware that these options 
+    select between different 'editions' of Poplog, which share the vast majority 
+    of files but have their own $popsys folder, where their specialised 
+    executables are kept.
+
+    As a consequence, if you make a saved image with one 'edition' of Poplog
+    you have to restore it with the same edition. 
+    
+    If neither `--gui` nor `--no-gui` are specified then the default depends 
+    on whether poplog is being run interactively (--dev) or as a script (--run).
+    In interactive mode, the environment variable $POPLOG_GUI_OPTION is checked, 
+    which should have one of the options as its value: `--no-gui`, `--gui=xt` 
+    or `--gui=motif`. Otherwise it falls back to `gui=motif`.
+
+    When poplog is being run as a script (--run) then the default is `--no-gui`
     (run without X-windows).
 
 
@@ -640,7 +653,7 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 # Here we create three functions for setting the environment variables that
 # are unique to the build variants: nox, xm, xt. These will be called
 # nox_setUpEnvVars, xm_setUpEnvVars, xt_setUpEnvVars.
-for variant in "${VARIANTS[@]}"
+for variant in "${VARIANT_BUILDS[@]}"
 do
     echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
     cat _build/environments/$variant.env \
@@ -662,7 +675,7 @@ void setUpEnvironment( char * base, int flags, Vector envv ) {
     switch ( vflags ) {
 ****
 
-for variant in "${VARIANTS[@]}"
+for variant in "${VARIANT_BUILDS[@]}"
 do
     echo "        case VARIANT_${variant^^}:"
     echo "            ${variant}_setUpEnvVars( base, inherit_env );"
@@ -672,7 +685,7 @@ done
 cat << ****
         default:
             if ( inherit_env ) {
-                char * use_build = getenv( "POPLOG_USE_BUILD" );
+                char * use_build = getenv( "POPLOG_GUI_OPTION" );
                 if ( use_build == NULL ) {
                     use_build = "${DEFAULT_DEV_VARIANT}"; 
                 }
@@ -680,15 +693,15 @@ cat << ****
                     // Skip
 ****
 
-for variant in "${VARIANTS[@]}"
+for build in "${VARIANT_BUILDS[@]}"
 do
-    echo '                } else if ( strEquals( "'$variant'", use_build ) ) {'
-    echo "                    ${variant}_setUpEnvVars( base, inherit_env );"
+    echo '                } else if ( strEquals( "'$build'", use_build ) ) {'
+    echo "                    ${build}_setUpEnvVars( base, inherit_env );"
 done
 
 cat << ****
                 } else {
-                    mishap( "POPLOG_USE_BUILD is '%s' but must be one of: %s", use_build, "${VARIANTS[@]}" );
+                    mishap( "POPLOG_GUI_OPTION is '%s' but must be one of: %s", use_build, "${VARIANT_OPTIONS[@]}" );
                 }
             } else {
                 ${DEFAULT_RUN_VARIANT}_setUpEnvVars( base, inherit_env );
@@ -828,20 +841,27 @@ cat << \****
             //  We want to force overwrites.
             flags = ( PREFER_FLEXIBILITY | ( flags & ~RUN_FLAGS ) );
             deque_pop_front( argd );
+            return processArgs( argd, base, flags, envv );          
+        } else if ( strEquals( arg0, "--no-gui" ) ) {
+            flags = ( VARIANT_NOX | ( flags & ~VARIANT_FLAGS ) );
+            deque_pop_front( argd );
             return processArgs( argd, base, flags, envv );
-        } else if ( startsWith( arg0, "--use-build" ) ) {
-            char * build = strchr( arg0, '=' ) + 1;
+        } else if ( startsWith( arg0, "--gui=" ) ) {
             if ( 0 ) {
                 // Never taken - a trick to regularise the following cases.
 ****
-for variant in "${VARIANTS[@]}"
+for n in {0..2}
 do
-    echo "            } else if ( strEquals( build, \"${variant}\" ) ) {"
-    echo "                flags = ( VARIANT_${variant^^} | ( flags & ~VARIANT_FLAGS ) );"
+    option="${VARIANT_OPTIONS[n]}"
+    build="${VARIANT_BUILDS[n]}"
+    if [ "$build" != 'nox' ]; then
+        echo "            } else if ( strEquals( arg0, \"${option}\" ) ) {"
+        echo "                flags = ( VARIANT_${build^^} | ( flags & ~VARIANT_FLAGS ) );"
+    fi
 done
 cat << \****
             } else {
-                mishap( "Unrecognised --use-build option: %s", arg0 );
+                mishap( "Unrecognised GUI option: %s", arg0 );
             }
             deque_pop_front( argd );
             return processArgs( argd, base, flags, envv );
