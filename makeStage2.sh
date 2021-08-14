@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
 BUILD_HOME=`pwd`/_build
 usepop=`pwd`/_build/poplog_base
