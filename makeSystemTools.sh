@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 set -e
+
 SEED_DIR=`pwd`
 
 # Run the initialisation files to set up additional environment
