@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 # This is a script that will output the C source for a poplog-shell 
 # program. Sections of C-code and shell script are interleaved which
 # makes it harder to pick out comments - so a more emphatic style is
@@ -96,12 +98,14 @@ bool strEquals(const char * subject, const char * prefix ) {
 
 //  Mishap - Error reporting using printf-like functionality. ------------------
 
+// The msg is a printf like format-string, except that you do not have 
+// to supply a \n, as that is automatically added for you.
 void mishap( const char *msg, ... ) {
     va_list args;
     va_start( args, msg );
     fprintf( stderr, "Mishap: " );
     vfprintf( stderr, msg, args );
-    fprintf( stderr, "\n" );            // You do not have to supply the \n.
+    fprintf( stderr, "\n" );
     va_end( args );
     exit( EXIT_FAILURE );
 }
@@ -191,7 +195,7 @@ Ref vector_set( Vector r, int n, Ref x ) {
     return r->data[ n ] = x;
 }
 
-Ref * vector_nc_nt_array( Vector v ) {
+Ref * vector_as_array( Vector v ) {
     vector_bump( v, 1 );
     v->data[ v->used ] = NULL;
     return v->data;
@@ -278,8 +282,8 @@ Ref deque_set( Deque d, int n, Ref r ) {
     return vector_set( d->vector, n + d->offset, r );
 }
 
-char * const * deque_nc_nt_array( Deque d ) {
-    return (char * const *)( vector_nc_nt_array( d->vector ) + d->offset );
+char * const * deque_as_array( Deque d ) {
+    return (char * const *)( vector_as_array( d->vector ) + d->offset );
 }
 
 void deque_pop_front( Deque d ) {
@@ -482,42 +486,6 @@ cat << \****
 
 cat << \****
 
-//	http://sourceforge.net/p/predef/wiki/OperatingSystems/
-// 
-//	Type	Macro	Description
-//	Identification	macintosh	Mac OS 9
-//	Identification	Macintosh	Mac OS 9
-//	Identification	__APPLE__ && __MACH__	Mac OS X
-
-#ifdef __APPLE__
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <libproc.h>
-#include <unistd.h>
-
-char * selfHome() {
-    static char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
-    const pid_t pid = getpid();
-    const int ret = proc_pidpath( pid, pathbuf, sizeof pathbuf );
-    if ( ret <= 0 ) {
-    	return NULL;
-    } else {
-    	//	Replace the trailing '/' with a null.
-    	char * s = strrchr( pathbuf, '/' );
-    	if ( s != NULL ) {
-    		*s = '\0';
-    		return pathbuf;
-    	} else {
-            return NULL;
-    	}
-    }
-}
-
-#elif __linux__
-
 #include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
@@ -548,14 +516,6 @@ void * safe_malloc( size_t n ) {
     }
     return ptr;
 }
-
-
-
-#else
-
-static_assert( false, "Not defined for operating systems other than Darwin nor Linux." );
-
-#endif
 
 void setEnvSpec( const char * envspec ) {
     // envspec is a string of the form "name=val"
@@ -699,7 +659,6 @@ do
     echo "            break;"
 done
 
-# We have to default to 'xt' at the moment because the 'xm' build has issues.
 cat << \****
         default:
             if ( inherit_env ) {
@@ -821,7 +780,7 @@ done
 cat << \****
     ) {
         setUpEnvironment( base, flags, envv );
-        execvp( arg0, deque_nc_nt_array( argd ) );
+        execvp( arg0, deque_as_array( argd ) );
     } else if (
         ( arg0[0] == ':' )    // :[EXPRESSION]
 ****
@@ -836,7 +795,7 @@ cat << \****
     ) {
         setUpEnvironment( base, flags, envv );
         deque_push_front( argd, "pop11" );
-        execvp( "pop11", deque_nc_nt_array( argd ) );
+        execvp( "pop11", deque_as_array( argd ) );
     } else if ( startsWith( arg0, "--" ) ) {
         if ( strEquals( "--help", arg0 ) ) {
             printUsage();
@@ -883,7 +842,7 @@ cat << \****
         if ( deque_length( argd ) >= 2 ) {
             deque_pop_front( argd );
             setUpEnvironment( base, flags, envv );
-            execvp( deque_get( argd, 0 ), deque_nc_nt_array( argd ) );
+            execvp( deque_get( argd, 0 ), deque_as_array( argd ) );
         } else {
             fprintf( stderr, "Too few arguments for exec action\n" );
             return EXIT_FAILURE;
@@ -897,7 +856,7 @@ cat << \****
             setUpEnvironment( base, flags, envv );
             deque_pop_front( argd );
             deque_push_front( argd, shell_path );
-            execvp( shell_path, deque_nc_nt_array( argd ) );
+            execvp( shell_path, deque_as_array( argd ) );
         }
     } else if ( strchr( arg0, '=' ) != NULL ) {
         //  If there is an '=' sign in the argument it is an environment variable.

@@ -1,5 +1,5 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+set -euo pipefail
 
 BUILD_HOME=`pwd`/_build
 usepop=`pwd`/_build/poplog_base
@@ -62,29 +62,26 @@ mkdir -p "${BUILD_HOME}/environments"
 # This will allow us to dynamically substitute with the selfHome'd value
 # at run-time. 
 #
-# This is inherently a weak strategy because it relies on being able to 
-# identify substitutions of $usepop. We improve its robustness by doing the
-# process twice with different values of $usepop - using the '..' trick.
-# If the resultant code is not identical we have a problem and we halt.
-# (N.B It is probably not necessary to run the variables through sort but I 
-# couldn't find a clear guarantee that env generates a sorted list.)
-#
+
 echo_env() {
     cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env)'
-    env -i sh -c "$cmd" | sort | \
+    env -i sh -c "$cmd" | \
     grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
     sed -e 's!'"$1"'![//USEPOP//]!g' | \
     sort
 }
 
-
 ### nox ########################################################################
 
 # Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
 # -nox specifies basepop11 should not be linked against X-windows.
 $usepop/pop/src/newpop -link -nox -norsv
 
+# echo_env has weak strategy because it relies on being able to identify 
+# substitutions of $usepop. So we do it twice with a tiny variation and check
+# the results are the same in order to improve robustness.
 echo_env "$usepop" > "${BUILD_HOME}/environments/nox-base"
 echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/nox-base-cmp"
 ( cd "${BUILD_HOME}/environments" && \
@@ -100,6 +97,7 @@ mkdir -p "$usepop"/pop/lib/psv-nox
 
 # Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
 # -x=xm specifies basepop11 should be linked against the Motif-toolkit.
 $usepop/pop/src/newpop -link -x=-xm -norsv
 
@@ -119,6 +117,7 @@ mkdir -p "$usepop"/pop/lib/psv-xm
 
 # Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
 # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+# -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
 # -x=xt specifies basepop11 should be linked against the X-toolkit.
 $usepop/pop/src/newpop -link -x=-xt -norsv
 
@@ -129,7 +128,7 @@ echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-base-cmp"
   sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xt/!g' > xt-new )
 
 # Rename rather than copy.
-mv "$usepop"/pop/pop "$usepop"/pop/pop-xt
+mv "$usepop/pop"/pop{,-xt}
 mv "$usepop"/pop/lib/psv "$usepop"/pop/lib/psv-xt
 
 

@@ -407,8 +407,7 @@ _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/poplog_base/pop/bin
 	( GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh ) > _build/commander/poplog.c
 	( cd _build/commander && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c )
-	rm -f _build/poplog_base/pop/pop/poplog
-	cp _build/commander/poplog _build/poplog_base/pop/bin/
+	cp -f _build/commander/poplog _build/poplog_base/pop/bin/
 	touch $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy

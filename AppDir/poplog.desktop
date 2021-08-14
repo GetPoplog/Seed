@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Poplog
-Exec=opt/poplog/pop/pop/poplog
+Exec=opt/poplog/pop/bin/poplog
 Icon=poplog
 Type=Application
 Terminal=true
