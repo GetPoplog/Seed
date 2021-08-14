@@ -7,14 +7,26 @@ set -euo pipefail
 # used.
 
 ################################################################################
+# We bundle the three build variants and defaults into some environment
+# variables. DEFAULT_DEV_VARIANT is the right default for interactive work.
+# DEFAULT_RUN_VARIANT is the default for scripts.
+################################################################################
+
+VARIANTS=(nox xt xm)
+DEFAULT_DEV_VARIANT=xm
+DEFAULT_RUN_VARIANT=nox
+
+
+################################################################################
 # Refine the files containing env bindings for the 3 variants of Poplog.
 # We start from nox-new, xt-new and xm-new, all inside _build/environments.
 ################################################################################
 
 # Verify that the base files are valid.
-if !( cd _build/environments && cmp nox-base nox-base-cmp && cmp xt-base xt-base-cmp && cmp xm-base xm-base-cmp ); then \;
-    echo "GetPoplog - cannot determine environment variables for Poplog" >&2 \;
-    exit 1 \;
+if !( cd _build/environments && cmp nox-base nox-base-cmp && cmp xt-base xt-base-cmp && cmp xm-base xm-base-cmp )
+then
+    echo "GetPoplog - cannot determine environment variables for Poplog" >&2
+    exit 1
 fi
 
 # Find lines that are common to all three.
@@ -23,11 +35,10 @@ fi
 )
 
 # Remove common lines from each.
-( cd _build/environments && \
-    comm -23 nox-new shared.env > nox.env && \
-    comm -23 xt-new shared.env > xt.env && \
-    comm -23 xm-new shared.env > xm.env \
-)
+for build_type in "${VARIANTS[@]}"
+do 
+    ( cd _build/environments && comm -23 "${build_type}-new" shared.env > ${build_type}.env )
+done
 
 
 ################################################################################
@@ -629,9 +640,6 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 # Here we create three functions for setting the environment variables that
 # are unique to the build variants: nox, xm, xt. These will be called
 # nox_setUpEnvVars, xm_setUpEnvVars, xt_setUpEnvVars.
-VARIANTS=(nox xt xm)
-DEFAULT_DEV_VARIANT=xm
-DEFAULT_RUN_VARIANT=nox
 for variant in "${VARIANTS[@]}"
 do
     echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
