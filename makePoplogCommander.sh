@@ -18,6 +18,8 @@ set -euo pipefail
 # implicitly defined by matching position in the two (congruent) arrays.
 VARIANT_OPTIONS=(--no-gui --gui=xt --gui=motif)
 VARIANT_BUILDS=(nox xt xm)
+# Sanity check
+[[ ${#VARIANT_OPTIONS[@]} -eq ${#VARIANT_BUILDS[@]} ]] || { echo "VARIANT_OPTIONS should have the same number of items as VARIANT_BUILDS but did not"; exit 1; }
 
 # And the defaults are defined in terms of builds rather than options. That is
 # because they are entirely internal constants.
@@ -857,7 +859,7 @@ cat << \****
             if ( 0 ) {
                 // Never taken - a trick to regularise the following cases.
 ****
-for n in {0..2}
+for ((n=0; n<${#VARIANT_OPTIONS[@]}; n++)) do
 do
     option="${VARIANT_OPTIONS[n]}"
     build="${VARIANT_BUILDS[n]}"
