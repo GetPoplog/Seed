@@ -859,7 +859,7 @@ cat << \****
             if ( 0 ) {
                 // Never taken - a trick to regularise the following cases.
 ****
-for ((n=0; n<${#VARIANT_OPTIONS[@]}; n++)) do
+for ((n=0; n<${#VARIANT_OPTIONS[@]}; n++))
 do
     option="${VARIANT_OPTIONS[n]}"
     build="${VARIANT_BUILDS[n]}"
