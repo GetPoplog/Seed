@@ -12,8 +12,15 @@ set -euo pipefail
 # DEFAULT_RUN_VARIANT is the default for scripts.
 ################################################################################
 
-VARIANT_BUILDS=(nox xt xm)
+# The options are what the user types. They have to be translated into builds.
+# e.g. --gui=xt has to become xt. The reason for that is that the 'editions'
+# of Poplog relate to the mutually exclusive build options. The mapping is 
+# implicitly defined by matching position in the two (congruent) arrays.
 VARIANT_OPTIONS=(--no-gui --gui=xt --gui=motif)
+VARIANT_BUILDS=(nox xt xm)
+
+# And the defaults are defined in terms of builds rather than options. That is
+# because they are entirely internal constants.
 DEFAULT_DEV_VARIANT=xm
 DEFAULT_RUN_VARIANT=nox
 
