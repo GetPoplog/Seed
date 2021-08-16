@@ -71,6 +71,25 @@ echo_env() {
     sort
 }
 
+link_and_create_env() {
+    build="$1"
+
+    # Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
+    # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
+    # -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
+    # -${build} specifies basepop11 should not be linked with/without X-windows.
+    $usepop/pop/src/newpop -link -${build} -norsv
+    
+    # echo_env has weak strategy because it relies on being able to identify 
+    # substitutions of $usepop. So we do it twice with a tiny variation and check
+    # the results are the same in order to improve robustness.
+    echo_env "$usepop" > "${BUILD_HOME}/environments/${build}-base"
+    echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/${build}-base-cmp"
+    ( cd "${BUILD_HOME}/environments" && \
+    sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-'${build}'!g' < ${build}-base | \
+    sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-'${build}'/!g' > ${build}-new )
+}
+
 # Utility to copy contents from one existing folder to another existing folder.
 tar_fromdir_todir() {
     ( cd "$1"; tar cf - . ) | ( cd "$2"; tar xf - )
@@ -78,20 +97,7 @@ tar_fromdir_todir() {
 
 ### nox ########################################################################
 
-# Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
-# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
-# -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
-# -nox specifies basepop11 should not be linked against X-windows.
-$usepop/pop/src/newpop -link -nox -norsv
-
-# echo_env has weak strategy because it relies on being able to identify 
-# substitutions of $usepop. So we do it twice with a tiny variation and check
-# the results are the same in order to improve robustness.
-echo_env "$usepop" > "${BUILD_HOME}/environments/nox-base"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/nox-base-cmp"
-( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-nox!g' < nox-base | \
-  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-nox/!g' > nox-new )
+link_and_create_env 'nox'
 
 mkdir -p "$usepop"/pop/pop-nox
 mkdir -p "$usepop"/pop/lib/psv-nox
@@ -100,17 +106,7 @@ tar_fromdir_todir "$usepop"/pop/lib/psv{,-nox}
 
 ### motif ######################################################################
 
-# Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
-# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
-# -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
-# -x=xm specifies basepop11 should be linked against the Motif-toolkit.
-$usepop/pop/src/newpop -link -x=-xm -norsv
-
-echo_env "$usepop" > "${BUILD_HOME}/environments/xm-base"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xm-base-cmp"
-( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xm!g' < xm-base | \
-  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xm/!g' > xm-new )
+link_and_create_env 'xm'
 
 mkdir -p "$usepop"/pop/pop-xm
 mkdir -p "$usepop"/pop/lib/psv-xm
@@ -120,17 +116,7 @@ tar_fromdir_todir "$usepop"/pop/lib/psv{,-xm}
 
 ### Xt #########################################################################
 
-# Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
-# Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
-# -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
-# -x=xt specifies basepop11 should be linked against the X-toolkit.
-$usepop/pop/src/newpop -link -x=-xt -norsv
-
-echo_env "$usepop" > "${BUILD_HOME}/environments/xt-base"
-echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/xt-base-cmp"
-( cd "${BUILD_HOME}/environments" && \
-  sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-xt!g' < xt-base | \
-  sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-xt/!g' > xt-new )
+link_and_create_env 'xt'
 
 # Rename rather than copy.
 mv "$usepop/pop"/pop{,-xt}
@@ -142,3 +128,5 @@ mv "$usepop"/pop/lib/psv{,-xt}
 # Choose our default build variant. 
 ln -sf pop-xt "$usepop/pop/pop"
 ln -sf psv-xt "$usepop/pop/lib/psv"
+
+### End of file ################################################################
