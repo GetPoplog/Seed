@@ -86,7 +86,7 @@ cat << \****
 #define PREFER_SECURITY     0x0
 #define PREFER_FLEXIBILITY  (RUN_INIT_P|INHERIT_ENV)
 //  Bit-flag sets for variants.
-#define VARIANT_FLAGS       0xC
+#define VARIANT_FLAGS       (VARIANT_X | VARIANT_MOTIF)
 #define VARIANT_NOX         0x0
 #define VARIANT_XT          (VARIANT_X)
 #define VARIANT_XM          (VARIANT_X | VARIANT_MOTIF)
@@ -667,7 +667,7 @@ do
     echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
     cat _build/environments/$variant.env \
     | sed -e 's/"/\\"/g' \
-    | sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
+    | sed -e 's/\([^=]+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
     echo "}"
     echo
 done
