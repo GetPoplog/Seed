@@ -659,15 +659,20 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 
 ****
 
+env_file_to_c_code() {
+    filename="$1"
+    cat "$filename" \
+    | sed -e 's/"/\\"/g' \
+    | sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'    
+}
+
 # Here we create three functions for setting the environment variables that
 # are unique to the build variants: nox, xm, xt. These will be called
 # nox_setUpEnvVars, xm_setUpEnvVars, xt_setUpEnvVars.
 for variant in "${VARIANT_BUILDS[@]}"
 do
     echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
-    cat _build/environments/$variant.env \
-    | sed -e 's/"/\\"/g' \
-    | sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
+    env_file_to_c_code "_build/environments/${variant}.env"
     echo "}"
     echo
 done
@@ -721,10 +726,7 @@ cat << ****
 ****
 
 # Now we squirt in the shared environment variables.
-cat _build/environments/shared.env \
-| sed -e 's/"/\\"/g' \
-| sed -e 's/\([^=]*\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
-
+env_file_to_c_code "_build/environments/shared.env"
 echo 
 
 ################################################################################
