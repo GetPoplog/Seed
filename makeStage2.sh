@@ -63,9 +63,17 @@ mkdir -p "${BUILD_HOME}/environments"
 # at run-time. 
 #
 
+# Note that we preserve newlines in the value of environment variables by
+# transforming them into C escape strings. We _also_ must escape backslashes
+# so that makePoplogCommander.sh can tell the difference between a newline
+# and a literal '\n'. Fortunately this is just enough. Any other C escaping
+# will be done on the makePoplogCommander.sh.
 echo_env() {
-    cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env)'
+    cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env -0)'
     env -i sh -c "$cmd" | \
+    sed -z -e 's/\\/\\\\/g' | \
+    sed -z -e 's/\n/\\n/g' | \
+    tr '\0' '\n' | \
     grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
     sed -e 's!'"$1"'![//USEPOP//]!g' | \
     sort
