@@ -32,8 +32,32 @@ DEFAULT_RUN_VARIANT=nox
 # We start from nox-new, xt-new and xm-new, all inside _build/environments.
 ################################################################################
 
+BUILD_HOME=`pwd`/_build
+
+# Note that we do not wish to capture the values of variables automatically
+# introduced by running a shell SHLVL and PWD. Nor do we want to capture
+# the folder location variables poplib, poplocalauto, poplocalbin. That is
+# because GetPoplog has different defaults for those and the old values are
+# irrelevant.
+
+process_env() {
+    build="$1"
+    suffix="$2"
+    cat "${BUILD_HOME}/environments/${build}-base0${suffix}" | \
+    sed -z -e 's/\\/\\\\/g' -e 's/\n/\\n/g' -e 's/"/\\"/g' | \
+    tr '\0' '\n' | \
+    grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
+    sort
+}
+
+for build in "${VARIANT_BUILDS[@]}"
+do
+    process_env "$build" '' > "${BUILD_HOME}/environments/${build}-new"
+    process_env "$build" '-cmp' > "${BUILD_HOME}/environments/${build}-new-cmp"
+done 
+
 # Verify that the base files are valid.
-if !( cd _build/environments && cmp nox-base nox-base-cmp && cmp xt-base xt-base-cmp && cmp xm-base xm-base-cmp )
+if !( cd _build/environments && cmp nox-new nox-new-cmp && cmp xt-new xt-new-cmp && cmp xm-new xm-new-cmp )
 then
     echo "GetPoplog - cannot determine environment variables for Poplog" >&2
     exit 1
@@ -663,6 +687,7 @@ env_file_to_c_code() {
     filename="$1"
     cat "$filename" \
     | sed -e 's/"/\\"/g' \
+    | sed -e 's/\\/\\\\/g' \
     | sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'    
 }
 

@@ -50,25 +50,24 @@ mkdir -p "${BUILD_HOME}/environments"
 # and values. So we capture these and later on will synthesise them into 
 # C-code functions. This is the best point at which to capture the variables.
 
-# Note that we do not wish to capture the values of variables automatically
-# introduced by running a shell SHLVL and PWD. Nor do we want to capture
-# the folder location variables poplib, poplocalauto, poplocalbin. That is
-# because GetPoplog has different defaults for those and the old values are
-# irrelevant.
-
 # We run the popenv.sh script inside a clean environment to capture the 
 # set of environment variables needed. We then need to replace any matches
 # of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
 # This will allow us to dynamically substitute with the selfHome'd value
 # at run-time. 
-#
+
+# We don't want the exact paths - we need to abstract over $usepop. And we
+# also need to modify $usepop/pop/pop and $usepop/pop/lib/psv to include the
+# $build.
 
 echo_env() {
-    cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env)'
+    build="$2"
+    cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env -0)'
     env -i sh -c "$cmd" | \
-    grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
-    sed -e 's!'"$1"'![//USEPOP//]!g' | \
-    sort
+    sed -z \
+    -e 's!'"$1"'![//USEPOP//]!g' \
+    -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-'${build}'!g' \
+    -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-'${build}'/!g'
 }
 
 link_and_create_env() {
@@ -83,11 +82,8 @@ link_and_create_env() {
     # echo_env has weak strategy because it relies on being able to identify 
     # substitutions of $usepop. So we do it twice with a tiny variation and check
     # the results are the same in order to improve robustness.
-    echo_env "$usepop" > "${BUILD_HOME}/environments/${build}-base"
-    echo_env "$usepop/pop/.." > "${BUILD_HOME}/environments/${build}-base-cmp"
-    ( cd "${BUILD_HOME}/environments" && \
-    sed -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-'${build}'!g' < ${build}-base | \
-    sed -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-'${build}'/!g' > ${build}-new )
+    echo_env "$usepop" "${build}" > "${BUILD_HOME}/environments/${build}-base0"
+    echo_env "$usepop/pop/.." "${build}" > "${BUILD_HOME}/environments/${build}-base0-cmp"
 }
 
 # Utility to copy contents from one existing folder to another existing folder.
