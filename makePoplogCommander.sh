@@ -667,7 +667,7 @@ do
     echo "void ${variant}_setUpEnvVars( char * base, bool inherit_env ) {"
     cat _build/environments/$variant.env \
     | sed -e 's/"/\\"/g' \
-    | sed -e 's/\([^=]+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
+    | sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'
     echo "}"
     echo
 done
