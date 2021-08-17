@@ -35,13 +35,16 @@ DEFAULT_RUN_VARIANT=nox
 BUILD_HOME=`pwd`/_build
 
 # In process_env we take lines of the form VAR=VALUE and escape the characters
-# of the RHS using the conventions of the C-strings.
+# of the RHS using the conventions of the C-strings. 
 
 # Note that we do not wish to capture the values of variables automatically
 # introduced by running a shell SHLVL and PWD. Nor do we want to capture
 # the folder location variables poplib, poplocalauto, poplocalbin. That is
 # because GetPoplog has different defaults for those and the old values are
 # irrelevant.
+
+# N.B. It is in this function that we change from null-separated back to
+# newline separated lines.
 
 process_env() {
     build="$1"

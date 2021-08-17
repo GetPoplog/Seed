@@ -58,7 +58,11 @@ mkdir -p "${BUILD_HOME}/environments"
 
 # We don't want the exact paths - we need to abstract over $usepop. And we
 # also need to modify $usepop/pop/pop and $usepop/pop/lib/psv to include the
-# $build.
+# $build. 
+
+# N.B. We work in null-separated lines here, giving us a much better chance
+# in converting newlines and other control characters to valid C-strings later 
+# on.
 
 echo_env() {
     build="$2"
