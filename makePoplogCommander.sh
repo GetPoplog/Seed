@@ -34,6 +34,9 @@ DEFAULT_RUN_VARIANT=nox
 
 BUILD_HOME=`pwd`/_build
 
+# In process_env we take lines of the form VAR=VALUE and escape the characters
+# of the RHS using the conventions of the C-strings.
+
 # Note that we do not wish to capture the values of variables automatically
 # introduced by running a shell SHLVL and PWD. Nor do we want to capture
 # the folder location variables poplib, poplocalauto, poplocalbin. That is
@@ -683,11 +686,10 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 
 ****
 
+# Transform the VAR=VALUE shape into the final C-code.
 env_file_to_c_code() {
     filename="$1"
     cat "$filename" \
-    | sed -e 's/"/\\"/g' \
-    | sed -e 's/\\/\\\\/g' \
     | sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'    
 }
 
