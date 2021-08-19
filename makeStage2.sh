@@ -81,7 +81,7 @@ link_and_create_env() {
     # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
     # -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
     # -${build} specifies basepop11 should not be linked with/without X-windows.
-    $usepop/pop/src/newpop -link -${build} -norsv
+    $usepop/pop/src/newpop -link -x=${build} -norsv
     
     # echo_env has weak strategy because it relies on being able to identify 
     # substitutions of $usepop. So we do it twice with a tiny variation and check
