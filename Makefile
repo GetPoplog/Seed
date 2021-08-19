@@ -17,6 +17,6 @@ clean:
 # find the most recent working version and leave a copy in the file
 # called corepop at top-level.
 corepop:
-	COREPOP=`/bin/sh ./find.sh 2>/dev/null` && [ ! -z "$$COREPOP" ] && cp -p "$$COREPOP" corepop
+	COREPOP=`/bin/sh ./find.sh` && [ ! -z "$$COREPOP" ] && cp -p "$$COREPOP" corepop
 	test -e corepop
 	
