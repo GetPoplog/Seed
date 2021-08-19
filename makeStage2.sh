@@ -82,11 +82,9 @@ link_and_create_env() {
     # -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
     # -nox specifies basepop11 should not be linked with X-windows.
     # -x=xt/xm specifies basepop11 should not be linked with Xt or Motif.
-    if [[ "$build" = nox ]]; then
-        $usepop/pop/src/newpop -link -${build} -norsv
-    else
-        $usepop/pop/src/newpop -link -x=-${build} -norsv
-    fi
+    declare -A build_options=( [xm]=-x=-xm [xt]=-x=-xt [nox]=-nox )
+
+    $usepop/pop/src/newpop -link "${build_options[$build]}" -norsv
 
     # echo_env has weak strategy because it relies on being able to identify 
     # substitutions of $usepop. So we do it twice with a tiny variation and check
