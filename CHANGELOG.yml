@@ -10,6 +10,15 @@
 #   description: <overview of changes since last releaes:str, required>
 #   changes: <list of changes:list[str], optional>
 #   bugfixes: <list of bugfixes:list[str], optional>
+"0.3.0":
+  author: Will Price
+  author_email: will.price94@gmail.com
+  datetime: 2021-08-19T19:16:00Z
+  description: |
+    Bundle Motif, Xt and no-X builds together accessible via --gui=motif (default), --gui=xt, and --no-gui respectively.
+  bugfixes:
+    - Include fix to memory corruption issues on bigint divides (#f2cce636027a42dca19a2e2af6b9da14bbf66c7c from Waldek Hebisch's repo)
+
 "0.2.2":
   author: Will Price
   author_email: will.price94@gmail.com
