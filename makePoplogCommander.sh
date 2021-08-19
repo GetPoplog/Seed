@@ -868,7 +868,7 @@ cat << \****
             setUpEnvironment( base, flags, envv );
 ****
 
-echo '            printf( "Poplog command tool v'${GET_POPLOG_VERSION:-Undefined}'\\n" );'
+echo '            printf( "Poplog command tool v'${GETPOPLOG_VERSION:-Undefined}'\\n" );'
 
 cat << \****
 
