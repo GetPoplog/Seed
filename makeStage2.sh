@@ -131,7 +131,7 @@ mv "$usepop"/pop/lib/psv{,-xt}
 ################################################################################
 
 # Choose our default build variant. 
-ln -sf pop-xt "$usepop/pop/pop"
-ln -sf psv-xt "$usepop/pop/lib/psv"
+ln -sf pop-xm "$usepop/pop/pop"
+ln -sf psv-xm "$usepop/pop/lib/psv"
 
 ### End of file ################################################################
