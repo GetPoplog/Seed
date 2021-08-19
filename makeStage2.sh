@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 BUILD_HOME=`pwd`/_build
 usepop=`pwd`/_build/poplog_base
@@ -80,9 +80,14 @@ link_and_create_env() {
     # Newpop - see https://raw.githubusercontent.com/GetPoplog/Base/main/pop/help/newpop
     # Rebuilds $popsys: re-links basepop11, rebuild saved images and generate scripts.
     # -norsv inhibits the building of rsvpop11 (an obsolete license-free distributable runtime)
-    # -${build} specifies basepop11 should not be linked with/without X-windows.
-    $usepop/pop/src/newpop -link -x=${build} -norsv
-    
+    # -nox specifies basepop11 should not be linked with X-windows.
+    # -x=xt/xm specifies basepop11 should not be linked with Xt or Motif.
+    if [[ "$build" = nox ]]; then
+        $usepop/pop/src/newpop -link -${build} -norsv
+    else
+        $usepop/pop/src/newpop -link -x=-${build} -norsv
+    fi
+
     # echo_env has weak strategy because it relies on being able to identify 
     # substitutions of $usepop. So we do it twice with a tiny variation and check
     # the results are the same in order to improve robustness.
