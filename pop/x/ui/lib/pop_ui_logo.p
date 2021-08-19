@@ -66,13 +66,16 @@ define vars default_poplog_strings;
     '    (editing ' sys_>< len sys_>< ' file',
     if len ==  1 then sys_>< ')    ' else sys_>< 's)    ' endif,
     '',
-    'Poplog is free software, for more info see:',
+    'Marketed under licence by:', 'Integral Solutions Ltd.',
+    'Berk House, Basing View',
+    'Basingstoke, Hants.',
+    'RG21 4RG, UK',
     '',
-    'https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html',
+    'Tel: +44 (0)1256 55899',
+    'Fax: +44 (0)1256 63467',
     '',
-    'Source repository:',
-    '',
-    'https://github.com/hebisch/poplog',
+    'Email: isl@isl.co.uk',
+    'URL: http://www.isl.co.uk',
     ''
     %]
 enddefine;
