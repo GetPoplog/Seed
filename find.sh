@@ -16,5 +16,8 @@ for corepop in supplied.corepop ${OSNAME}/${ARCH}/*.corepop; do
     fi
 done
 # If no good executable can be found, exit with an error code.
->&2 echo "No valid corepop found."
+>&2 echo "##################################"
+>&2 echo "# ERROR: No valid corepop found. #"
+>&2 echo "##################################"
+
 /bin/false
