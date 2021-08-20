@@ -57,12 +57,9 @@ all:
 .PHONY: help
 help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
-	# Poplog will be installed in $$(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
-	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), cloned
-	# from the git repo at https://github.com/GetPoplog/Seed.git and pulling updates to the
-	# script with git pull :).
+	# Poplog will be installed in $(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
 	#
-	# Within $$(POPLOG_HOME_DIR) there may be multiple versions of Poplog living
+	# Within $(POPLOG_HOME_DIR) there may be multiple versions of Poplog living
 	# side-by-side. The current version will be symlinked via a link called
 	# current_usepop. You must have write-access to this folder during the
 	# "make install" step. (And during all the steps if you keep the Makefile
