@@ -47,10 +47,8 @@ POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
 # Allow overriding of the branches used for the different repositories.
 DEFAULT_BRANCH:=main
-BASE_BRANCH:=$(DEFAULT_BRANCH)
 COREPOPS_BRANCH:=$(DEFAULT_BRANCH)
 
-BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.gz
 COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
 
 SRC_TARBALL_FILENAME:=poplog-$(GETPOPLOG_VERSION)
@@ -280,9 +278,9 @@ _download/Corepops:
 	mkdir -p "$@"
 	curl -LsS "$(COREPOPS_TARBALL_URL)" | ( cd _download/Corepops; tar zxf - --strip-components=1 )
 
-_download/Base:
-	mkdir -p "$@"
-	curl -LsS "$(BASE_TARBALL_URL)" | ( cd _download/Base; tar zxf - --strip-components=1)
+_download/Base: base
+	mkdir -p "$(@D)"
+	cp -pPr "$<" "$@"
 
 _download/packages-V$(MAJOR_VERSION).tar.bz2:
 	mkdir -p "$(@D)"
