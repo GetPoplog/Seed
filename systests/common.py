@@ -18,7 +18,7 @@ def run_poplog_commander(args: Union[str, List[str]], extra_env=None) -> str:
     if isinstance(args, str):
         args = shlex.split(args)
     completed_process = subprocess.run(
-        [POPLOG_BINARY_PATH] + args, capture_output=True, env=env
+        [POPLOG_BINARY_PATH] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
     )
     assert completed_process.returncode == 0
     return completed_process.stdout.decode("utf-8").strip()
