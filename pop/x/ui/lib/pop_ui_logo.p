@@ -68,7 +68,7 @@ define vars default_poplog_strings;
     '',
     'Poplog is free software, for more info see:',
     '',
-    'https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html''
+    'https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html',
     '',
     'Source repository:',
     '',
