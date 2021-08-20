@@ -44,13 +44,6 @@ POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 
 POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
-
-# Allow overriding of the branches used for the different repositories.
-DEFAULT_BRANCH:=main
-COREPOPS_BRANCH:=$(DEFAULT_BRANCH)
-
-COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
-
 SRC_TARBALL_FILENAME:=poplog-$(GETPOPLOG_VERSION)
 SRC_TARBALL:=_build/artifacts/$(SRC_TARBALL_FILENAME).tar.gz
 BINARY_TARBALL_FILENAME:=poplog-binary-$(GETPOPLOG_VERSION)
@@ -274,9 +267,9 @@ jumpstart-opensuse-leap:
 .PHONY: download
 download: _download/Corepops _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 
-_download/Corepops:
-	mkdir -p "$@"
-	curl -LsS "$(COREPOPS_TARBALL_URL)" | ( cd _download/Corepops; tar zxf - --strip-components=1 )
+_download/Corepops: corepops
+	mkdir -p "$(@D)"
+	cp -pPr "$<" "$@"
 
 _download/Base: base
 	mkdir -p "$(@D)"
