@@ -1,7 +1,8 @@
+import tempfile
 from common import run_poplog_commander
 
 
-class TestInterpreters:
+class TestCommands:
     def test_pop11(self):
         assert run_poplog_commander("pop11 :1 + 2=>") == "** 3"
 
@@ -14,11 +15,17 @@ class TestInterpreters:
     def test_prolog(self):
         assert run_poplog_commander("prolog :3 = 3.") == "yes"
 
-
-class TestExec:
-    def test_echo(self):
+    def test_exec(self):
         assert run_poplog_commander("exec echo hello") == "hello"
 
+    def test_shell(self):
+        with tempfile.NamedTemporaryFile(suffix='.sh') as f:
+            f.write("#!/bin/bash\necho hello\n".encode('utf-8'))
+            f.flush()
+            assert run_poplog_commander(f"shell {f.name}") == "hello"
+
+
+class TestVariables:
     def test_setting_variables_in_shell_environment(self):
         assert run_poplog_commander("HELLO=hi exec sh -c 'echo $HELLO'") == "hi"
 
@@ -38,7 +45,6 @@ class TestExec:
         assert run_poplog_commander(
             ["FOO=bar", "pop11", ":systranslate('FOO')=>"],
         ) == "** bar"
-
 
     def test_non_overwritten_environment_variables_are_visible_in_pop11_environment_in_run_mode(self):
         assert run_poplog_commander(
