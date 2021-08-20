@@ -1,3 +1,4 @@
+import re
 import tempfile
 from common import run_poplog_commander
 
@@ -27,6 +28,15 @@ class TestCommands:
     def test_pop11_is_default(self):
         assert run_poplog_commander(":1 + 2=>") == "** 3"
 
+
+class TestMiscFlags:
+    def test_version_flag(self):
+        assert re.match(r"Running base Poplog system \d+\.\d+", run_poplog_commander("--version"))
+
+    def test_help_flags(self):
+        help_msg = run_poplog_commander("--help")
+        assert help_msg.startswith("Usage:")
+        assert "UTILITY ACTIONS" in help_msg  # check that one of the section headings is present
 
 class TestVariables:
     def test_setting_variables_in_shell_environment(self):
