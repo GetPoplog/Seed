@@ -265,11 +265,8 @@ jumpstart-opensuse-leap:
 # Download targets
 ################################################################################
 .PHONY: download
-download: _download/Corepops _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
+download: _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 
-_download/Corepops: corepops
-	mkdir -p "$(@D)"
-	cp -pPr "$<" "$@"
 
 _download/Base: base
 	mkdir -p "$(@D)"
@@ -295,7 +292,7 @@ _download/appimagetool:
 .PHONY: srctarball
 srctarball: $(SRC_TARBALL)
 
-$(SRC_TARBALL): _download/Corepops _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
+$(SRC_TARBALL): _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 	mkdir -p "$(@D)"
 	rm -f "$@"; \
 	ASSEMBLY_DIR="$$(umask u=rwx,go=r && mktemp --directory --tmpdir="$(TMP_DIR)")"; \
@@ -319,9 +316,8 @@ $(SRC_TARBALL): _download/Corepops _download/Base _download/packages-V$(MAJOR_VE
 #         after its own Makefile has been successfully run.
 #
 #     _build/Corepops.proxy
-#         This file represents the download of the Corepops repo and the
-#         discovery of a viable executable. This should be sufficient to reconstruct working
-#         system tools.
+#         This file represents  the discovery of a viable corepop executable. This should
+#         be sufficient to reconstruct working system tools.
 #
 #     _build/Stage1.proxy
 #         This file represents that the system-tools (popc, poplink, poplibr) are now
@@ -448,11 +444,12 @@ _build/Stage1.proxy: _build/Corepops.proxy
 	touch $@
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
-_build/Corepops.proxy: _build/Base.proxy _download/Corepops
-	cp -rpP _download/Corepops _build/
-	cp -p _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
-	$(MAKE) -C _build/Corepops corepop
-	cp -p _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
+_build/Corepops.proxy: _build/Base.proxy
+	mkdir -p "$(@D)"
+	cp -rpP corepops _build/corepops
+	cp -p _build/poplog_base/pop/pop/corepop _build/corepops/supplied.corepop
+	$(MAKE) -C _build/corepops corepop
+	cp -p _build/corepops/corepop _build/poplog_base/pop/pop/corepop
 	touch $@
 
 _build/Base.proxy: _download/Base
