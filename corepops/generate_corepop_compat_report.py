@@ -7,11 +7,15 @@ import docker
 from typing import Iterable, NamedTuple, List
 from pathlib import Path
 from concurrent import futures
+import os
 
-
+HERE = Path(__file__).absolute().parent
 DOCKER_CLIENT = docker.from_env()
 OS_NAME = subprocess.check_output(["uname", "-s"]).decode("utf-8").lower().strip()
 ARCH = subprocess.check_output(["uname", "-m"]).decode("utf-8").strip()
+
+# All paths are done relative to the same directory this script is in.
+os.chdir(HERE)
 
 CONTAINERS = [
     # (container_name, tag)
