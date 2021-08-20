@@ -24,6 +24,9 @@ class TestCommands:
             f.flush()
             assert run_poplog_commander(f"shell {f.name}") == "hello"
 
+    def test_pop11_is_default(self):
+        assert run_poplog_commander(":1 + 2=>") == "** 3"
+
 
 class TestVariables:
     def test_setting_variables_in_shell_environment(self):
