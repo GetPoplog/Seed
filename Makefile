@@ -265,12 +265,7 @@ jumpstart-opensuse-leap:
 # Download targets
 ################################################################################
 .PHONY: download
-download: _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
-
-
-_download/Base: base
-	mkdir -p "$(@D)"
-	cp -pPr "$<" "$@"
+download: _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 
 _download/packages-V$(MAJOR_VERSION).tar.bz2:
 	mkdir -p "$(@D)"
@@ -292,7 +287,7 @@ _download/appimagetool:
 .PHONY: srctarball
 srctarball: $(SRC_TARBALL)
 
-$(SRC_TARBALL): _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
+$(SRC_TARBALL): _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 	mkdir -p "$(@D)"
 	rm -f "$@"; \
 	ASSEMBLY_DIR="$$(umask u=rwx,go=r && mktemp --directory --tmpdir="$(TMP_DIR)")"; \
@@ -404,7 +399,7 @@ _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	touch $@
 
 # It is not clear that these scripts should be included or not. If they are it makes
-# more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
+# more sense to include them in the repo. TODO: TO BE CONFIRMED - until then these
 # will be omitted.
 _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
 	touch $@
@@ -452,12 +447,12 @@ _build/Corepops.proxy: _build/Base.proxy
 	cp -p _build/corepops/corepop _build/poplog_base/pop/pop/corepop
 	touch $@
 
-_build/Base.proxy: _download/Base
+_build/Base.proxy: base
 	mkdir -p "$(@D)"
-	cp -rpP _download/Base/ _build/
-	$(MAKE) -C _build/Base build
+	cp -rpP base _build/
+	$(MAKE) -C _build/base build
 	mkdir -p _build/poplog_base
-	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	( cd _build/base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
 	touch $@ # Create the proxy file to signal that we are done.
 
 _build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
