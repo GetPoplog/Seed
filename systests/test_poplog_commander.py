@@ -23,7 +23,7 @@ class TestCommands:
         with tempfile.NamedTemporaryFile(suffix='.sh') as f:
             f.write("#!/bin/bash\necho hello\n".encode('utf-8'))
             f.flush()
-            assert run_poplog_commander(f"shell {f.name}") == "hello"
+            assert run_poplog_commander(f"shell {f.name}", extra_env={'SHELL': '/bin/bash'}) == "hello"
 
     def test_pop11_is_default(self):
         assert run_poplog_commander(":1 + 2=>") == "** 3"
