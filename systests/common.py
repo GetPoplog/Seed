@@ -20,8 +20,14 @@ def run_poplog_commander(args: Union[str, List[str]], extra_env=None) -> str:
     completed_process = subprocess.run(
         [POPLOG_BINARY_PATH] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
     )
-    assert completed_process.returncode == 0
-    return completed_process.stdout.decode("utf-8").strip()
+    stderr = completed_process.stderr.decode("utf-8")
+    stdout = completed_process.stdout.decode("utf-8")
+    err_msg = (
+        f"Process failed with exit-code {completed_process.returncode}" +
+        f"\nSTDOUT:\n\n{stdout}\nSTDERR:\n\n{stderr}\n"
+    )
+    assert completed_process.returncode == 0, err_msg
+    return stdout.strip()
 
 
 def run_pop11_program(src: str) -> str:
