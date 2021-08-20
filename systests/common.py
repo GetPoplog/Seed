@@ -14,7 +14,7 @@ HERE = Path(__file__).absolute().parent
 def run_poplog_commander(args: Union[str, List[str]], extra_env=None) -> str:
     if extra_env is None:
         extra_env = dict()
-    env = dict(**os.environ, **extra_env)
+    env = {**os.environ, **extra_env}
     if isinstance(args, str):
         args = shlex.split(args)
     completed_process = subprocess.run(
