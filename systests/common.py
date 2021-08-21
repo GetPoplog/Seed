@@ -12,6 +12,7 @@ HERE = Path(__file__).absolute().parent
 
 
 def run_poplog_commander(args: Union[str, List[str]], extra_env=None) -> subprocess.CompletedProcess:
+    """Run poplog command without any error checking"""
     if extra_env is None:
         extra_env = dict()
     env = {**os.environ, **extra_env}
@@ -23,6 +24,8 @@ def run_poplog_commander(args: Union[str, List[str]], extra_env=None) -> subproc
 
 
 def check_poplog_commander(args: Union[str, List[str]], extra_env=None) -> str:
+    """Run poplog command, check the exit code is 0, then return stdout after
+    whitespace stripping"""
     completed_process = run_poplog_commander(args, extra_env=extra_env)
     stderr = completed_process.stderr.decode("utf-8")
     stdout = completed_process.stdout.decode("utf-8")
@@ -35,6 +38,8 @@ def check_poplog_commander(args: Union[str, List[str]], extra_env=None) -> str:
 
 
 def run_pop11_program(src: str) -> str:
+    """Run pop11 program, check it executes with 0 exit code and return stdout after
+    whitespace stripping"""
     with tempfile.NamedTemporaryFile(suffix=".p") as src_file:
         src_file.write(src.encode("utf-8"))
         src_file.flush()
