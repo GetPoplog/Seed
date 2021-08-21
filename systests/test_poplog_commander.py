@@ -1,4 +1,5 @@
 import re
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -7,11 +8,7 @@ from typing import Optional
 import pytest
 
 
-LDD: Optional[str]
-try:
-    LDD = subprocess.check_output(["/bin/bash", "-c", "command -v ldd"]).strip().decode('utf-8')
-except subprocess.CalledProcessError:
-    LDD = None
+LDD: Optional[str] = shutil.which("ldd")
 
 
 class TestCommands:
