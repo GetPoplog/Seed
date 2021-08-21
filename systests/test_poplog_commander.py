@@ -9,7 +9,7 @@ import pytest
 
 LDD: Optional[str]
 try:
-    LDD = subprocess.check_output(["which", "ldd"]).strip().decode('utf-8')
+    LDD = subprocess.check_output(["/bin/bash", "-c", "command -v ldd"]).strip().decode('utf-8')
 except subprocess.CalledProcessError:
     LDD = None
 
