@@ -2,7 +2,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from common import run_poplog_commander
+from common import check_poplog_commander, run_poplog_commander
 from typing import Optional
 import pytest
 
@@ -16,89 +16,101 @@ except subprocess.CalledProcessError:
 
 class TestCommands:
     def test_pop11(self):
-        assert run_poplog_commander("pop11 :1 + 2=>") == "** 3"
+        assert check_poplog_commander("pop11 :1 + 2=>") == "** 3"
 
     def test_clisp(self):
-        assert run_poplog_commander("clisp :(+ 1 2) ") == "3"
+        assert check_poplog_commander("clisp :(+ 1 2) ") == "3"
 
     def test_ml(self):
-        assert run_poplog_commander("pml :print(1+2)") == "3"
+        assert check_poplog_commander("pml :print(1+2)") == "3"
 
     def test_prolog(self):
-        assert run_poplog_commander("prolog :3 = 3.") == "yes"
+        assert check_poplog_commander("prolog :3 = 3.") == "yes"
 
     def test_exec(self):
-        assert run_poplog_commander("exec echo hello") == "hello"
+        assert check_poplog_commander("exec echo hello") == "hello"
 
     def test_shell(self):
         with tempfile.NamedTemporaryFile(suffix='.sh') as f:
             f.write("#!/bin/bash\necho hello\n".encode('utf-8'))
             f.flush()
-            assert run_poplog_commander(f"shell {f.name}", extra_env={'SHELL': '/bin/bash'}) == "hello"
+            assert check_poplog_commander(f"shell {f.name}", extra_env={'SHELL': '/bin/bash'}) == "hello"
 
     def test_pop11_is_default(self):
-        assert run_poplog_commander(":1 + 2=>") == "** 3"
+        assert check_poplog_commander(":1 + 2=>") == "** 3"
 
 
 class TestMiscFlags:
     def test_version_flag(self):
-        assert re.match(r"Running base Poplog system \d+\.\d+", run_poplog_commander("--version"))
+        assert re.match(r"Running base Poplog system \d+\.\d+", check_poplog_commander("--version"))
 
     def test_help_flags(self):
-        help_msg = run_poplog_commander("--help")
+        help_msg = check_poplog_commander("--help")
         assert help_msg.startswith("Usage:")
         assert "UTILITY ACTIONS" in help_msg  # check that one of the section headings is present
 
 
 class TestVariables:
     def test_setting_variables_in_shell_environment(self):
-        assert run_poplog_commander("HELLO=hi exec sh -c 'echo $HELLO'") == "hi"
+        assert check_poplog_commander("HELLO=hi exec sh -c 'echo $HELLO'") == "hi"
 
     def test_conflicting_environment_variable_are_overwritten_in_pop11_environment_in_run_mode(self):
-        assert run_poplog_commander(
+        assert check_poplog_commander(
             ["--run", "pop11", ":systranslate('popcom')=>"],
             extra_env={"popcom": "/nosuchfile"},
         ).endswith("poplog/V16/pop/com")
 
     def test_conflicting_environment_variables_are_not_overwritten_in_pop11_environment_in_dev_mode(self):
-        assert run_poplog_commander(
+        assert check_poplog_commander(
             ["pop11", ":maplist([%'popcom', 'FOO'%], systranslate)=>"],
             extra_env={"popcom": "/nosuchfile", "FOO": "BAR"},
         ) == "** [/nosuchfile BAR]"
 
     def test_non_conflicting_environment_variables_are_visible_in_pop11_environment_in_run_mode(self):
-        assert run_poplog_commander(
+        assert check_poplog_commander(
             ["--run", "pop11", ":systranslate('FOO')=>"],
             extra_env={"FOO": "BAR"}
         ).endswith("BAR")
 
     def test_non_conflicting_environment_variables_are_visible_in_pop11_environment_in_dev_mode(self):
-        assert run_poplog_commander(
+        assert check_poplog_commander(
             ["pop11", ":systranslate('FOO')=>"],
             extra_env={"FOO": "BAR"}
         ).endswith("BAR")
 
     def test_conflicting_cli_variables_are_not_overwritten_in_pop11_environment_in_run_mode(self):
         # In run mode, a variable definition specified within the CLI args should be honoured.
-        assert run_poplog_commander(
+        assert check_poplog_commander(
                 ["--run", "popcom=/nosuchfile", "pop11", ":systranslate('popcom')=>"]
         ) == "** /nosuchfile"
 
     def test_conflicting_cli_variables_are_not_overwritten_in_pop11_environment_in_dev_mode(self):
         # In run mode, a variable definition specified within the CLI args should be honoured.
-        assert run_poplog_commander(
+        assert check_poplog_commander(
                 ["popcom=/nosuchfile", "pop11", ":systranslate('popcom')=>"]
         ) == "** /nosuchfile"
 
     def test_non_conflicting_cli_variables_are_visible_in_pop11_environment_in_run_mode(self):
-        assert run_poplog_commander(
+        assert check_poplog_commander(
             ["--run", "FOO=bar", "pop11", ":systranslate('FOO')=>"],
         ) == "** bar"
 
     def test_non_conflicting_cli_variables_are_visible_in_pop11_environment_in_dev_mode(self):
-        assert run_poplog_commander(
+        assert check_poplog_commander(
             ["FOO=bar", "pop11", ":systranslate('FOO')=>"],
         ) == "** bar"
+
+    def test_error_message_on_invalid_var_spec(self):
+        completed_process = run_poplog_commander(["FOO", "exec", "echo" "hello"])
+        assert completed_process.returncode == 1
+        # TODO: Add test of error message once
+        # https://github.com/GetPoplog/Seed/issues/103 is resolved.
+
+    def test_error_message_on_command(self):
+        completed_process = run_poplog_commander(["asdf"])
+        assert completed_process.returncode == 1
+        # TODO: Add test of error message once
+        # https://github.com/GetPoplog/Seed/issues/103 is resolved.
 
 
 class TestBuilds:
@@ -130,13 +142,13 @@ class TestBuilds:
         assert 'libXm.so' not in ldd_output
 
     def get_default_popsys(self) -> Path:
-        return Path(run_poplog_commander(["exec", "sh", "-c", "echo $popsys"]))
+        return Path(check_poplog_commander(["exec", "sh", "-c", "echo $popsys"]))
 
     def get_nox_popsys(self) -> Path:
-        return Path(run_poplog_commander(["--no-gui", "exec", "sh", "-c", "echo $popsys"]))
+        return Path(check_poplog_commander(["--no-gui", "exec", "sh", "-c", "echo $popsys"]))
 
     def get_xt_popsys(self) -> Path:
-        return Path(run_poplog_commander(["--gui=xt", "exec", "sh", "-c", "echo $popsys"]))
+        return Path(check_poplog_commander(["--gui=xt", "exec", "sh", "-c", "echo $popsys"]))
 
     def get_motif_popsys(self) -> Path:
-        return Path(run_poplog_commander(["--gui=motif", "exec", "sh", "-c", "echo $popsys"]))
+        return Path(check_poplog_commander(["--gui=motif", "exec", "sh", "-c", "echo $popsys"]))
