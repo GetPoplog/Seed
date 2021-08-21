@@ -1,6 +1,17 @@
 import re
+import subprocess
 import tempfile
+from pathlib import Path
 from common import run_poplog_commander
+from typing import Optional
+import pytest
+
+
+LDD: Optional[str]
+try:
+    LDD = subprocess.check_output(["which", "ldd"]).strip().decode('utf-8')
+except subprocess.CalledProcessError:
+    LDD = None
 
 
 class TestCommands:
@@ -88,3 +99,44 @@ class TestVariables:
         assert run_poplog_commander(
             ["FOO=bar", "pop11", ":systranslate('FOO')=>"],
         ) == "** bar"
+
+
+class TestBuilds:
+    def test_nox_build_path(self):
+        assert self.get_nox_popsys().name == "pop-nox"
+
+    def test_motif_build_path(self):
+        assert self.get_motif_popsys().name == "pop-xm"
+
+    def test_xt_build_path(self):
+        assert self.get_xt_popsys().name == "pop-xt"
+
+    def test_default_build_is_motif(self):
+        assert self.get_default_popsys().name == "pop-xm"
+
+    def test_nox_build_has_no_xved_binary(self):
+        assert len([p for p in self.get_nox_popsys().iterdir() if p.name == 'xved']) == 0
+
+    @pytest.mark.skipif(LDD is None, reason="requires ldd to test")
+    def test_motif_build_has_xved_linked_to_motif(self):
+        xved = self.get_motif_popsys() / 'xved'
+        ldd_output = subprocess.check_output([LDD, xved]).strip().decode('utf-8')
+        assert 'libXm.so' in ldd_output
+
+    @pytest.mark.skipif(LDD is None, reason="requires ldd to test")
+    def test_xt_build_has_xved_not_linked_to_motif(self):
+        xved = self.get_xt_popsys() / 'xved'
+        ldd_output = subprocess.check_output([LDD, xved]).strip().decode('utf-8')
+        assert 'libXm.so' not in ldd_output
+
+    def get_default_popsys(self) -> Path:
+        return Path(run_poplog_commander(["exec", "sh", "-c", "echo $popsys"]))
+
+    def get_nox_popsys(self) -> Path:
+        return Path(run_poplog_commander(["--no-gui", "exec", "sh", "-c", "echo $popsys"]))
+
+    def get_xt_popsys(self) -> Path:
+        return Path(run_poplog_commander(["--gui=xt", "exec", "sh", "-c", "echo $popsys"]))
+
+    def get_motif_popsys(self) -> Path:
+        return Path(run_poplog_commander(["--gui=motif", "exec", "sh", "-c", "echo $popsys"]))
