@@ -7,7 +7,7 @@ SEED_DIR="$(pwd)"
 # variables.
 usepop="$(pwd)/_build/poplog_base"
 export usepop
-# shellcheck disable=SC1091
+# shellcheck source=/dev/null disable=SC1091
 . "$usepop/pop/com/popinit.sh"
 : "${popsrc:?}"
 : "${popsys:?}"

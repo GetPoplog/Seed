@@ -5,7 +5,7 @@ BUILD_HOME="$(pwd)/_build"
 usepop="$(pwd)/_build/poplog_base"
 POP_arch=x86_64
 export usepop
-# shellcheck disable=SC1091
+# shellcheck source=/dev/null disable=SC1091
 . "$usepop/pop/com/popinit.sh"
 : "${popexternlib:?}"
 : "${popcom:?}"
