@@ -428,7 +428,7 @@ _build/poplog_base/pop/com/poplogout.%: _download/poplogout.%
 
 _build/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 _build/Base.proxy
 	(cd _build/poplog_base/pop; tar jxf "../../../$<")
-	cd _build/poplog_base/pop/packages/popvision/; mkdir -p bin/linux; for f in lib/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
+	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	cd _build/poplog_base/pop/packages/neural/; mkdir -p bin/linux; for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
