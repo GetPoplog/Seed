@@ -1,3 +1,4 @@
+#!/bin/bash
 # --- Copyright University of Sussex 2005.  All rights reserved. ---------
 # File:            C.unix/com/popenv.sh
 # Purpose:         Set up environment variables for POPLOG
