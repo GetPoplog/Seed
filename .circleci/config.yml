@@ -13,7 +13,7 @@ jobs:
       - run:
           name: Shellcheck scripts
           command: |
-            find . -path ./_build -prune -o -path ./_download -prune -o -iname '*.sh' -exec shellcheck {} \+
+            ./.circleci/scripts/shellcheck.sh
   one_line_install:
     machine:
       image: ubuntu-1604:202104-01
