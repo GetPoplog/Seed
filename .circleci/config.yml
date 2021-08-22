@@ -13,7 +13,7 @@ jobs:
       - run:
           name: "Check *.sh and *.csh files have shebangs"
           command: |
-            ./circleci/scripts/check_shebang_on_shellscripts.sh
+            ./.circleci/scripts/check_shebang_on_shellscripts.sh
       - run:
           name: Shellcheck scripts
           command: |
