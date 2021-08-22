@@ -1,0 +1,10 @@
+--- packages/popvision/lib/mlp.p	2000-03-02 10:50:55.000000000 +0000
++++ packages/popvision/lib/mlp.p.old	2021-08-22 23:08:29.126257659 +0100
+@@ -89,7 +89,6 @@
+     (seed >> shift) /* -> s3 */;
+ enddefine;
+ 
+-defclass lconstant ushortvec :ushort;
+ lconstant seedvec = initushortvec(3),
+     shortbits = 2**SIZEOFTYPE(:ushort,:1) - 1;
+ 
