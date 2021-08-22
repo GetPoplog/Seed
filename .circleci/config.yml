@@ -11,6 +11,10 @@ jobs:
       - checkout
       - shellcheck/install
       - run:
+          name: "Check *.sh and *.csh files have shebangs"
+          command: |
+            ./circleci/scripts/check_shebang_on_shellscripts.sh
+      - run:
           name: Shellcheck scripts
           command: |
             ./.circleci/scripts/shellcheck.sh
