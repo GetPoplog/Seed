@@ -87,7 +87,7 @@ help:
 	#   install [^] - installs Poplog into $(POPLOG_HOME) folder as V16.
 	#   install-poplocal - installs a 'skeleton' folder for $$poplocal. Optional.
 	#   uninstall [^] - removes Poplog entirely, leaving a backup in /tmp/POPLOG_HOME_DIR.tgz.
-	#   systests - runs self-checks on an installed Poplog system
+	#   test - runs self-checks on an installed Poplog system
 	#   really-uninstall-poplog [^] - removes Poplog and does not create a backup.
 	#   relink-and-build - a more complex build process that can relink the
 	#       corepop executable and is useful for O/S upgrades.
