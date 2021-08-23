@@ -1,39 +1,44 @@
-#!/bin/sh
+#!/bin/bash
 # --- Copyright University of Sussex 1993. All rights reserved. ----------
 # File:             C.unix/src/mksyscomp
 # Purpose:          Build saved images for POPC, POPLINK and POPLIBR
 # Author:           John Gibson, Jun 24 1988 (see revisions)
 
 # Usage:
-#		mksyscomp [-d] [image ...]
+#        mksyscomp [-d] [image ...]
 # where 'image' is popc, poplink or poplibr
 
 
 # Stop on error.
 set -e
 
+: "${usepop:?}"
+# shellcheck disable=SC2154
 if [ "$popautolib" = "" ]; then
-	echo "mksyscomp: doing pop/com/popenv to set environment vars"
-	. $usepop/pop/com/popenv.sh
+    echo "mksyscomp: doing pop/com/popenv to set environment vars"
+    # shellcheck disable=SC1091
+    . "$usepop/pop/com/popenv.sh"
 fi
+: "${popautolib:?}"
+: "${popsys:?}"
 
 DEBUG=false
 POP_ARCH=""
 while true ; do
-    opt=$1
+    opt="$1"
     echo "opt=$opt"
     case "$opt" in
-
         -a=*)
-                POP_ARCH=`echo ${opt} | sed 's,-a=,,'`
-                shift
-                ;;
-	-d)	DEBUG=true
-		shift
-		;;
+            POP_ARCH="${opt/-a=/}"
+            shift
+            ;;
+        -d)
+            DEBUG=true
+            shift
+            ;;
         *)
-                break
-                ;;
+            break
+            ;;
     esac
 done
 
@@ -42,18 +47,18 @@ do
 
 echo "IMAGE=$IMAGE"
 
-$popsys/corepop %nort %noinit << ****
-	lvars savedir = current_directory;
+"$popsys/corepop" %nort %noinit << ****
+    lvars savedir = current_directory;
         vars pop_architecture = '$POP_ARCH';
         printf(pop_architecture, 'pop_architecture = %p\n');
-	'./syscomp' -> current_directory;
-	$DEBUG -> pop_debugging;
+    './syscomp' -> current_directory;
+    $DEBUG -> pop_debugging;
         printf('calling pop11_compile\n');
-	pop11_compile("make_$IMAGE");
+    pop11_compile("make_$IMAGE");
         printf('pop11_compile done\n');
-	savedir -> current_directory;
-	make_saved_image('../pop/$IMAGE.psv');
-	sysexit();
+    savedir -> current_directory;
+    make_saved_image('../pop/$IMAGE.psv');
+    sysexit();
 ****
 
 done

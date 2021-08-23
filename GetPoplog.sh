@@ -4,22 +4,22 @@
 set -e
 
 SEED_BRANCH=main
-SEED_TARBALL_URL=https://github.com/GetPoplog/Seed/archive/${SEED_BRANCH}.tar.gz
+SEED_TARBALL_URL="https://github.com/GetPoplog/Seed/archive/${SEED_BRANCH}.tar.gz"
 
 # Get minimum dependencies.
 sudo apt update && sudo apt install -y make curl
 
 # Retrieve our Makefile in a temporary directory
-TMP_DIR=`mktemp -d -t ci-XXXXXXXXXX`
-mkdir -p $TMP_DIR
-cd $TMP_DIR
-echo "Using temporary directory $TMP_DIR as a build folder"
-curl -LsS ${SEED_TARBALL_URL} | tar zxf - --strip-components=1
+TMP_DIR="$(mktemp -d -t ci-XXXXXXXXXX)"
+mkdir -p "$TMP_DIR"
+cd "$TMP_DIR"
+echo "Using temporary directory '$TMP_DIR' as a build folder"
+curl -LsS "${SEED_TARBALL_URL}" | tar zxf - --strip-components=1
 
 sudo make jumpstart-ubuntu      # fetch dependencies (Debian based systems only)
 make build
 make add-uninstall-instructions # specific for the 1-line installer
-sudo make install 
+sudo make install
 
 echo "-----------------------------------------------------------"
 echo "Poplog has been successfully installed in /usr/local/poplog"

@@ -1,14 +1,14 @@
 # Seed
 
-This is a repository of scripts for installing Poplog onto your local machine. 
-When it runs, it will download all the other files it needs from several other 
-repositories in this organisation plus contributory packages from the 
-[FreePoplog](https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html) 
+This is repository contains the source code to build a functioning Poplog system.
+The build scripts will download all needed third party dependencies, including
+the needed contributory packages from the
+[FreePoplog](https://www.cs.bham.ac.uk/research/projects/poplog/freepoplog.html)
 site.
 
 At the moment we only support installing Poplog onto Linux x86_64 systems i.e.
 64-bit Linux on Intel. We expect to extend this to include 32-bit and other Unix
-systems that Poplog has run on. 
+systems that Poplog has run on.
 
 [![CircleCI](https://circleci.com/gh/GetPoplog/Seed/tree/main.svg?style=svg)](https://circleci.com/gh/GetPoplog/Seed/tree/main)
 
@@ -26,7 +26,7 @@ Linux commands sudo and apt are typically available by default however curl may 
 sudo apt install curl
 ```
 
-Now you can run the single-line Install Poplog command. 
+Now you can run the single-line Install Poplog command.
 
 ```sh
 curl -LsS https://raw.githubusercontent.com/GetPoplog/Seed/main/GetPoplog.sh | sh
@@ -44,14 +44,14 @@ sh GetPoplog.sh
 
 When the script finishes successfully, it will install Poplog into `/usr/local/poplog`.
 
-Although this 1-line script is easy to use, it does not give you much chance to see 
-what is going on or make any changes. If you know a bit about Linux commands and 
+Although this 1-line script is easy to use, it does not give you much chance to see
+what is going on or make any changes. If you know a bit about Linux commands and
 want more control over what it does (e.g. change where it installs the software)
 then try the next "make" based installation method.
 
 ### More flexible install using make
 
-If you have a desktop system with `apt`, `sudo`, `make` and `git` installed then 
+If you have a desktop system with `apt`, `sudo`, `make` and `git` installed then
 a flexible approach is to clone this repo to a new local folder as follows:
 
 ```
@@ -61,12 +61,12 @@ cd Seed
 
 This will create a folder called `Seed` in your current directory, which can
 be renamed or moved to any location you like. This folder contains a Makefile
-and some helper-shell scripts that you can use to install Poplog in a 
+and some helper-shell scripts that you can use to install Poplog in a
 controlled fashion.
 
 The first thing you will need to do is install the packages that Poplog depends
 on. You only need to do this once. There are shortcuts for doing this on Debian,
-Ubuntu, Fedora and OpenSUSE. You can list these 'jumpstarts' with 
+Ubuntu, Fedora and OpenSUSE. You can list these 'jumpstarts' with
 `make help-jumpstart`. They are all named in an obvious way. You need to pick
 the one that is appropriate for your system. Here's how you would do it for
 an Ubuntu system.
@@ -77,7 +77,7 @@ make jumpstart-ubuntu     # fetch all dependencies for Ubuntu
 
 After this you build and install in the usual way. The following commands
 will build a new Poplog system in the temporary `_build` folder and then
-install it into the default location, which is `/usr/local/poplog`. 
+install it into the default location, which is `/usr/local/poplog`.
 
 ```sh
 make build         # this takes a while
@@ -91,7 +91,7 @@ POPLOG_HOME_DIR variable during the install phase like this:
 sudo make install POPLOG_HOME_DIR=/opt/poplog
 ```
 
-When you have finished installing Poplog, you can tidy up afterwards with the 
+When you have finished installing Poplog, you can tidy up afterwards with the
 following:
 ```sh
 make clean
@@ -110,13 +110,13 @@ Sussex Poplog (Version 16.0001 Mon May 17 13:04:57 EDT 2021)
 Copyright (c) 1982-1999 University of Sussex. All rights reserved.
 
 Setpop
-: 
+:
 ```
 
 To find out all the features that this 'commander' makes available please type
 `poplog --help`, as shown below:
 ```sh
-$ poplog --help 
+$ poplog --help
 Usage: poplog [command-word] [options] [file(s)]
 
 The poplog "commander" runs various Poplog commands (pop11, prolog, etc) with
@@ -135,22 +135,22 @@ poplog (pop11|prolog|clisp|pml) [options] [file]
 ## How to Set-up your Login Account to use Poplog
 
 Before the new poplog executable, the standard way to use Poplog was to 'source'
-a set-up script into your login shell. If you prefer that more long-standing 
+a set-up script into your login shell. If you prefer that more long-standing
 way to use Poplog, follow these instructions.
 
-Poplog's features requires your $PATH to be extended so that the commands are 
-available and also available to each other. And they also requires many environment 
-variables to be added. 
+Poplog's features requires your $PATH to be extended so that the commands are
+available and also available to each other. And they also requires many environment
+variables to be added.
 
-The setup is slightly different depending on what shell you are using, so we 
-provide setup procedures for bash, zsh, csh and tcsh users. And if you don't know 
-what shell you are using try the command `echo $SHELL`, which works under several 
+The setup is slightly different depending on what shell you are using, so we
+provide setup procedures for bash, zsh, csh and tcsh users. And if you don't know
+what shell you are using try the command `echo $SHELL`, which works under several
 different shells - or you can take a look in `/etc/passwd` and find your login
 there.
 
 ### Set-up for /bin/bash Users
 
-Depending on how your system administrator has set up users on the system, 
+Depending on how your system administrator has set up users on the system,
 start up commands go into one of `.bash_profile`, `.profile` or `.bash_login`.
 Just check to see which one of these you have got in your home directory. The
 commonest is `.bash_profile`, so that's what we use in this example.
@@ -177,7 +177,7 @@ export usepop
 . $usepop/pop/com/poplog.sh > /dev/null
 ```
 
-Try this out with the command `. ~/.poplog/setup.sh` and then 
+Try this out with the command `. ~/.poplog/setup.sh` and then
 `pop11`. The latter will drop you into the Pop-11 REPL. Which will look
 something like this:
 ```
@@ -193,7 +193,7 @@ Setpop
 ### Set-up for /bin/csh and /bin/tcsh Users
 
 Edit your `~/.login` file and insert the following at the end of
-the file, which will include the setup from a separate file. 
+the file, which will include the setup from a separate file.
 
 ```shell
 source ~/.poplog/setup.csh
@@ -212,7 +212,7 @@ setenv usepop=/usr/local/poplog/current_usepop
 . $usepop/pop/com/poplog.csh > /dev/null
 ```
 
-Try this out with the command `source ~/.poplog/setup.sh` and then 
+Try this out with the command `source ~/.poplog/setup.sh` and then
 `pop11`. The latter will drop you into the Pop-11 REPL. Which will look
 something like this:
 ```shell
@@ -227,14 +227,14 @@ Setpop
 
 ### Set-up for /bin/sh and /bin/dash Users
 
-Follow the instructions for /bin/bash users but edit your `~/.profile` 
-file rather than `~/.bash_profile`. We have deliberately kept the 
+Follow the instructions for /bin/bash users but edit your `~/.profile`
+file rather than `~/.bash_profile`. We have deliberately kept the
 initial scripts compatible across these very closely related shells.
 
 ### Set-up for /bin/zsh
 
-Follow the instructions for /bin/bash users but edit your `~/.zshenv` 
-file rather than `~/.bash_profile`. We have deliberately kept the 
+Follow the instructions for /bin/bash users but edit your `~/.zshenv`
+file rather than `~/.bash_profile`. We have deliberately kept the
 initial scripts compatible across these very closely related shells.
 
 ## Our Aims
