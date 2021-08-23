@@ -8,7 +8,7 @@ has_shebang() {
 }
 missing_shebang=()
 for f in **/*.sh **/*.csh; do
-    has_shebang "$f" || missing_shebang+=("$f")
+    [ -x "$f" ] && { has_shebang "$f" || missing_shebang+=("$f"); }
 done
 for f in "${missing_shebang[@]}"; do
     >&2 echo "Missing shebang: $f"
