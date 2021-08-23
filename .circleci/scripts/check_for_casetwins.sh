@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-shopt -s globstar nullglob
 
 # We scan the Poplog tree looking for ordinary files whose paths differ
 # only by case e.g. 
