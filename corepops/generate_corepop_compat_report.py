@@ -55,7 +55,7 @@ def main() -> None:
         for container, tag in CONTAINERS
     ]
     with futures.ThreadPoolExecutor(max_workers=20) as executor:
-        results = executor.map(unpack_tuple_args(run_corepop_in_container), configs)
+        results = executor.map(lambda args: run_corepop_in_container(*args), configs)
     table = generate_markdown_results_table(results)
     print(table)
 
@@ -108,13 +108,6 @@ def generate_markdown_results_table(results: Iterable[DistroTestResult]) -> str:
 
     return report
 
-
-def unpack_tuple_args(fn):
-    @functools.wraps(fn)
-    def wrapped(args):
-        return fn(*args)
-
-    return wrapped
 
 
 if __name__ == "__main__":
