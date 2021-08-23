@@ -39,7 +39,7 @@ CONTAINERS = [
 
 
 class DistroTestResult(NamedTuple):
-    container: str
+    image: str
     tag: str
     corepop: Path
     exit_code: int
@@ -78,7 +78,7 @@ def run_corepop_in_container(image: str, tag: str, corepop: Path) -> DistroTestR
     logs = container.logs(stdout=True, stderr=True).decode("utf-8")
     passed = len(logs.strip()) == 0
     return DistroTestResult(
-        container=container,
+        image=image,
         tag=tag,
         corepop=corepop,
         exit_code=exit_code,
@@ -102,7 +102,7 @@ def generate_markdown_results_table(results: Iterable[DistroTestResult]) -> str:
                 f"<details><summary>details</summary><pre>{logs_line}</pre></details>"
             )
         report += (
-            f"| {result.corepop} | {result.container} | {result.tag} "
+            f"| {result.corepop} | {result.image} | {result.tag} "
             + f"| {pass_str} | {result.exit_code} | {logs_str} |\n"
         )
 
