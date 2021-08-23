@@ -1,1 +1,0 @@
-poplog exec echo hello

@@ -1,0 +1,3 @@
+# asmout.p is a symlink that will get altered by the build process. We do not want to 
+# see those changes in the git repo, so we mute it using .gitignore.
+asmout.p

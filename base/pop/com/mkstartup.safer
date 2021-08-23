@@ -1,0 +1,47 @@
+#!/bin/sh
+### --- Copyright University of Birmingham 2005. All rights reserved. ------
+### --- Copyright University of Sussex 1995. All rights reserved. ----------
+# File:             C.unix/com/mkstartup
+# Purpose:          Build the Poplog Startup saved image
+# Author:           Robert John Duncan, May 21 1991 (see revisions)
+#					Modified by A.Sloman for AMD64 poplog
+#						the mkstartup.bham does not work properly
+## 						Don't pre-compile rc_control_panel
+# Documentation:
+# Related Files:    C.vms/com/mkstartup.com, LIB * STARTUP
+
+packages=$usepop/pop/packages
+export packages
+
+$popsys/basepop11 %nort %noinit \
+	$popliblib/mkimage.p \
+	-nodebug -nonwriteable -install $popsavelib/startup.psv \
+				popuseslist \
+				startup \
+				ved_autosave \
+				poppackagelist \
+				objectclass \
+    $packages/teaching/teaching.p \
+	$packages/bhamlib/bhamlib.p \
+	$packages/vedutils/vedutils.p \
+	$packages/vedutils/lib/newvederror.p\
+	$usepop/pop/lib/lib/prwarning.p \
+	$usepop/pop/lib/lib/emacsreadline.p \
+	$packages/vedutils/lib/vedscreendown.p \
+	$packages/bhamlib/auto/vedsetwindow.p \
+	$packages/rclib/rclib.p
+
+
+rm -f $popsavelib/startup.psv-
+
+# --- Revision History ---------------------------------------------------
+# --- John Gibson, Aug 22 1995  Added %noinit
+# --- John Gibson, Apr 21 1993	Added -nodebug
+# --- John Gibson, Aug  8 1992	Put -nonwriteable back
+# --- Robert John Duncan, Jul  7 1992 - took out -nonwriteable again until
+#			we can be sure it's safe
+# --- John Gibson, Mar 21 1992 Added -nonwriteable
+# --- Robert John Duncan, Oct 24 1991 - changed to use basepop11
+# --- Robert John Duncan, Aug 28 1991 - added lib startup
+# --- Robert John Duncan, May 29 1991 - added -install
+# --- John Gibson, May 24 1991		Added %nort arg

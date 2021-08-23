@@ -1,36 +1,40 @@
 #!/bin/bash
 set -ex
 
-BUILD_HOME=`pwd`/_build
-usepop=`pwd`/_build/poplog_base
+BUILD_HOME="$(pwd)/_build"
+usepop="$(pwd)/_build/poplog_base"
+POP_arch=x86_64
 export usepop
-. $usepop/pop/com/popinit.sh
+# shellcheck source=/dev/null disable=SC1091
+. "$usepop/pop/com/popinit.sh"
+: "${popexternlib:?}"
+: "${popcom:?}"
 
 # echo "mklibpop"
-cd $popexternlib
+cd "$popexternlib"
     ./mklibpop
 
 # mkXpw"
-cd $popcom
+cd "$popcom"
     ./mkXpw -I/usr/include/X11
 
-cd $usepop/pop/obj
+cd "$usepop/pop/obj"
     # saving library files in old
     mkdir -p old
-    mv *.* old || true # *.* might match nothing so '|| true' is required.
+    mv ./*.* old || true # *.* might match nothing so '|| true' is required.
 
 # Recompiling base system
-cd $usepop/pop/src
-    popc -c -nosys $POP_arch/*.[ps] *.p || true
-    poplibr -c ../obj/src.wlb *.w || true
+cd "$usepop/pop/src"
+    popc -c -nosys "$POP_arch"/*.[ps] ./*.p || true
+    poplibr -c ../obj/src.wlb ./*.w || true
 
-cd $usepop/pop/ved/src/
-    popc -c -nosys -wlib \( ../../src/ \) *.p || true
-    poplibr -c ../../obj/vedsrc.wlb *.w || true
+cd "$usepop/pop/ved/src/"
+    popc -c -nosys -wlib \( ../../src/ \) ./*.p || true
+    poplibr -c ../../obj/vedsrc.wlb ./*.w || true
 
-cd $usepop/pop/x/src/
-    popc -c -nosys -wlib \( ../../src/ \) *.p
-    poplibr -c ../../obj/xsrc.wlb *.w
+cd "$usepop/pop/x/src/"
+    popc -c -nosys -wlib \( ../../src/ \) ./*.p
+    poplibr -c ../../obj/xsrc.wlb ./*.w
 
 # TODO: The rebuilding of newpop.psv should be a pre-req.
 #cd $popsys
@@ -66,12 +70,13 @@ mkdir -p "${BUILD_HOME}/environments"
 
 echo_env() {
     build="$2"
+    # shellcheck disable=SC2016
     cmd='(usepop="'"$1"'" && . $usepop/pop/com/popenv.sh && env -0)'
     env -i sh -c "$cmd" | \
     sed -z \
     -e 's!'"$1"'![//USEPOP//]!g' \
-    -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-'${build}'!g' \
-    -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-'${build}'/!g'
+    -e 's!\[//USEPOP//]/pop/pop![//USEPOP//]/pop/pop-'"${build}"'!g' \
+    -e 's!\[//USEPOP//]/pop/lib/psv/![//USEPOP//]/pop/lib/psv-'"${build}"'/!g'
 }
 
 link_and_create_env() {
@@ -84,7 +89,7 @@ link_and_create_env() {
     # -x=xt/xm specifies basepop11 should not be linked with Xt or Motif.
     declare -A build_options=( [xm]=-x=-xm [xt]=-x=-xt [nox]=-nox )
 
-    $usepop/pop/src/newpop -link "${build_options[$build]}" -norsv
+    "$usepop/pop/src/newpop" -link "${build_options[$build]}" -norsv
 
     # echo_env has weak strategy because it relies on being able to identify 
     # substitutions of $usepop. So we do it twice with a tiny variation and check

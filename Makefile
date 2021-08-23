@@ -44,15 +44,6 @@ POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
 
 POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
-
-# Allow overriding of the branches used for the different repositories.
-DEFAULT_BRANCH:=main
-BASE_BRANCH:=$(DEFAULT_BRANCH)
-COREPOPS_BRANCH:=$(DEFAULT_BRANCH)
-
-BASE_TARBALL_URL:=https://github.com/GetPoplog/Base/archive/$(BASE_BRANCH).tar.gz
-COREPOPS_TARBALL_URL:=https://github.com/GetPoplog/Corepops/archive/$(COREPOPS_BRANCH).tar.gz
-
 SRC_TARBALL_FILENAME:=poplog-$(GETPOPLOG_VERSION)
 SRC_TARBALL:=_build/artifacts/$(SRC_TARBALL_FILENAME).tar.gz
 BINARY_TARBALL_FILENAME:=poplog-binary-$(GETPOPLOG_VERSION)
@@ -66,12 +57,9 @@ all:
 .PHONY: help
 help:
 	# This is a makefile that can be used to acquire Poplog, build and install it locally.
-	# Poplog will be installed in $$(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
-	# A supported use-case is keeping this Makefile in $(POPLOG_HOME_DIR), cloned
-	# from the git repo at https://github.com/GetPoplog/Seed.git and pulling updates to the
-	# script with git pull :).
+	# Poplog will be installed in $(POPLOG_HOME_DIR) which is typically /usr/local/poplog.
 	#
-	# Within $$(POPLOG_HOME_DIR) there may be multiple versions of Poplog living
+	# Within $(POPLOG_HOME_DIR) there may be multiple versions of Poplog living
 	# side-by-side. The current version will be symlinked via a link called
 	# current_usepop. You must have write-access to this folder during the
 	# "make install" step. (And during all the steps if you keep the Makefile
@@ -197,6 +185,7 @@ verify-install:
 .PHONY: clean
 clean:
 	rm -rf ./_build
+	rm -f ./systests/report.xml
 	# Target "clean" completed
 
 .PHONY: deepclean
@@ -209,7 +198,7 @@ test:
 	if [ -e venv ]; then \
 	    . venv/bin/activate; \
 	fi; \
-	pytest
+	pytest --junit-xml=report.xml
 
 ################################################################################
 # Jump-start targets
@@ -274,15 +263,7 @@ jumpstart-opensuse-leap:
 # Download targets
 ################################################################################
 .PHONY: download
-download: _download/Corepops _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
-
-_download/Corepops:
-	mkdir -p "$@"
-	curl -LsS "$(COREPOPS_TARBALL_URL)" | ( cd _download/Corepops; tar zxf - --strip-components=1 )
-
-_download/Base:
-	mkdir -p "$@"
-	curl -LsS "$(BASE_TARBALL_URL)" | ( cd _download/Base; tar zxf - --strip-components=1)
+download: _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 
 _download/packages-V$(MAJOR_VERSION).tar.bz2:
 	mkdir -p "$(@D)"
@@ -304,7 +285,7 @@ _download/appimagetool:
 .PHONY: srctarball
 srctarball: $(SRC_TARBALL)
 
-$(SRC_TARBALL): _download/Corepops _download/Base _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
+$(SRC_TARBALL): _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
 	mkdir -p "$(@D)"
 	rm -f "$@"; \
 	ASSEMBLY_DIR="$$(umask u=rwx,go=r && mktemp --directory --tmpdir="$(TMP_DIR)")"; \
@@ -328,9 +309,8 @@ $(SRC_TARBALL): _download/Corepops _download/Base _download/packages-V$(MAJOR_VE
 #         after its own Makefile has been successfully run.
 #
 #     _build/Corepops.proxy
-#         This file represents the download of the Corepops repo and the
-#         discovery of a viable executable. This should be sufficient to reconstruct working
-#         system tools.
+#         This file represents  the discovery of a viable corepop executable. This should
+#         be sufficient to reconstruct working system tools.
 #
 #     _build/Stage1.proxy
 #         This file represents that the system-tools (popc, poplink, poplibr) are now
@@ -417,7 +397,7 @@ _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	touch $@
 
 # It is not clear that these scripts should be included or not. If they are it makes
-# more sense to include them in the Base repo. TODO: TO BE CONFIRMED - until then these
+# more sense to include them in the repo. TODO: TO BE CONFIRMED - until then these
 # will be omitted.
 _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
 	touch $@
@@ -459,19 +439,20 @@ _build/Stage1.proxy: _build/Corepops.proxy
 	touch $@
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
-_build/Corepops.proxy: _build/Base.proxy _download/Corepops
-	cp -rpP _download/Corepops _build/
-	cp -p _build/poplog_base/pop/pop/corepop _build/Corepops/supplied.corepop
-	$(MAKE) -C _build/Corepops corepop
-	cp -p _build/Corepops/corepop _build/poplog_base/pop/pop/corepop
+_build/Corepops.proxy: _build/Base.proxy
+	mkdir -p "$(@D)"
+	cp -rpP corepops _build/corepops
+	cp -p _build/poplog_base/pop/pop/corepop _build/corepops/supplied.corepop
+	$(MAKE) -C _build/corepops corepop
+	cp -p _build/corepops/corepop _build/poplog_base/pop/pop/corepop
 	touch $@
 
-_build/Base.proxy: _download/Base
+_build/Base.proxy: base
 	mkdir -p "$(@D)"
-	cp -rpP _download/Base/ _build/
-	$(MAKE) -C _build/Base build
+	cp -rpP base _build/
+	$(MAKE) -C _build/base build
 	mkdir -p _build/poplog_base
-	( cd _build/Base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	( cd _build/base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
 	touch $@ # Create the proxy file to signal that we are done.
 
 _build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
