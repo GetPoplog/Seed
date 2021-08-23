@@ -102,6 +102,7 @@ class TestVariables:
         assert completed_process.returncode == 1
         assert completed_process.stderr.decode('utf-8').strip() == "Unexpected arguments: FOO exec echo hello"
 
+
     def test_error_message_on_command(self):
         completed_process = run_poplog_commander(["asdf"])
         assert completed_process.returncode == 1

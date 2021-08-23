@@ -32,7 +32,7 @@ DEFAULT_RUN_VARIANT=nox
 # We start from nox-new, xt-new and xm-new, all inside _build/environments.
 ################################################################################
 
-BUILD_HOME=`pwd`/_build
+BUILD_HOME="$(pwd)/_build"
 
 # In process_env we take lines of the form VAR=VALUE and escape the characters
 # of the RHS using the conventions of the C-strings. 
@@ -49,8 +49,8 @@ BUILD_HOME=`pwd`/_build
 process_env() {
     build="$1"
     suffix="$2"
-    cat "${BUILD_HOME}/environments/${build}-base0${suffix}" | \
-    sed -z -e 's/\\/\\\\/g' -e 's/\n/\\n/g' -e 's/"/\\"/g' | \
+    sed -z -e 's/\\/\\\\/g' -e 's/\n/\\n/g' -e 's/"/\\"/g' \
+    < "${BUILD_HOME}/environments/${build}-base0${suffix}" | \
     tr '\0' '\n' | \
     grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
     sort
@@ -63,7 +63,7 @@ do
 done 
 
 # Verify that the base files are valid.
-if !( cd _build/environments && cmp nox-new nox-new-cmp && cmp xt-new xt-new-cmp && cmp xm-new xm-new-cmp )
+if ! ( cd _build/environments && cmp nox-new nox-new-cmp && cmp xt-new xt-new-cmp && cmp xm-new xm-new-cmp )
 then
     echo "GetPoplog - cannot determine environment variables for Poplog" >&2
     exit 1
@@ -77,7 +77,7 @@ fi
 # Remove common lines from each.
 for build_type in "${VARIANT_BUILDS[@]}"
 do 
-    ( cd _build/environments && comm -23 "${build_type}-new" shared.env > ${build_type}.env )
+    ( cd _build/environments && comm -23 "${build_type}-new" shared.env > "${build_type}.env" )
 done
 
 
@@ -692,8 +692,7 @@ void extendPath( char * prefix, char * path, char * suffix ) {
 # Transform the VAR=VALUE shape into the final C-code.
 env_file_to_c_code() {
     filename="$1"
-    cat "$filename" \
-    | sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/'    
+    sed -e 's/\([^=]\+\)=\(.*\)/    setEnvReplacingUSEPOP( "\1", "\2", base, inherit_env );/' < "$filename"
 }
 
 # Here we create three functions for setting the environment variables that
@@ -739,6 +738,7 @@ cat << ****
 
 for build in "${VARIANT_BUILDS[@]}"
 do
+    # shellcheck disable=SC2086
     echo '                } else if ( strEquals( "'$build'", use_build ) ) {'
     echo "                    ${build}_setUpEnvVars( base, inherit_env );"
 done
@@ -868,7 +868,8 @@ cat << \****
             setUpEnvironment( base, flags, envv );
 ****
 
-echo '            printf( "Poplog command tool v'${GETPOPLOG_VERSION:-Undefined}'\\n" );'
+# shellcheck disable=SC2028
+echo '            printf( "Poplog command tool v'"${GETPOPLOG_VERSION:-Undefined}"'\\n" );'
 
 cat << \****
 
