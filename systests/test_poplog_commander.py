@@ -98,16 +98,15 @@ class TestVariables:
         ) == "** bar"
 
     def test_error_message_on_invalid_var_spec(self):
-        completed_process = run_poplog_commander(["FOO", "exec", "echo" "hello"])
+        completed_process = run_poplog_commander(["FOO", "exec", "echo", "hello"])
         assert completed_process.returncode == 1
-        # TODO: Add test of error message once
-        # https://github.com/GetPoplog/Seed/issues/103 is resolved.
+        assert completed_process.stderr.decode('utf-8').strip() == "Unexpected arguments: FOO exec echo hello"
+
 
     def test_error_message_on_command(self):
         completed_process = run_poplog_commander(["asdf"])
         assert completed_process.returncode == 1
-        # TODO: Add test of error message once
-        # https://github.com/GetPoplog/Seed/issues/103 is resolved.
+        assert completed_process.stderr.decode('utf-8').strip() == "Unexpected arguments: asdf"
 
 
 class TestBuilds:

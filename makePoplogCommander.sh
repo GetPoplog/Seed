@@ -937,7 +937,7 @@ cat << \****
         return processArgs( argd, base, flags, envv );
     } else {
         fprintf( stderr, "Unexpected arguments:" );
-        for ( int i = 1; i < deque_length( argd ); i++ ) {
+        for ( int i = 0; i < deque_length( argd ); i++ ) {
             fprintf( stderr, " %s", (char *)deque_get( argd, i ) );
         }
         fprintf( stderr, "\n" );

@@ -290,9 +290,9 @@ jobs:
           name: Test contributor tools
           command: |
             cd contributor_tools
-            pytest
+            pytest --junit-xml=report.xml
       - store_test_results:
-          path: contributor_tools/tests
+          path: contributor_tools
 
   build_changelog:
     docker:
@@ -401,6 +401,37 @@ jobs:
               -delete \
               "${CIRCLE_TAG}" ./_build/artifacts/
 
+  test_corepops:
+    machine:
+      image: ubuntu-2004:202107-02
+    steps:
+      - checkout
+      - run:
+          name: Test corepops
+          command: |
+            python3 -m pip install docker
+            mkdir /tmp/artifacts
+            python3 corepops/generate_corepop_compat_report.py > /tmp/artifacts/report.md
+      - store_artifacts:
+          path: /tmp/artifacts
+      - add_ssh_keys:
+          fingerprints:
+            0b:65:fa:b5:a8:41:64:61:e8:de:c7:66:0f:4b:37:01
+      - run:
+          name: Update README.md with corepop results
+          command: |
+            ./corepops/.circleci/scripts/update-readme.sh README.md /tmp/artifacts/report.md README-updated.md
+            mv README-updated.md README.md
+      - run:
+          name: Push updated README.md
+          command: |
+            git config --global user.email "circleci@example.com"
+            git config --global user.name "CircleCI"
+            git config --global push.default simple
+            CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+            git diff --quiet || { git commit -am "[skip ci] Update corepop results"; git push -u origin "$CURRENT_BRANCH"; }
+
+
 default_filters: &default_filters
   # required to run on tagged releases.
   tags:
@@ -482,3 +513,5 @@ workflows:
             - build_appimage
             - build_snap
           filters: *release_filters 
+      - test_corepops:
+          filters:  *default_filters
