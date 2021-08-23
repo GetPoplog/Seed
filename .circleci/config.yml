@@ -275,7 +275,7 @@ jobs:
             cd contributor_tools
             pytest --junit-xml=report.xml
       - store_test_results:
-          path: contributor_tools/tests
+          path: contributor_tools
 
   build_changelog:
     docker:
