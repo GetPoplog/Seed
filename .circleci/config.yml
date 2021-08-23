@@ -420,8 +420,8 @@ jobs:
       - run:
           name: Update README.md with corepop results
           command: |
-            ./corepops/.circleci/scripts/update-readme.sh README.md /tmp/artifacts/report.md README-updated.md
-            mv README-updated.md README.md
+            ./corepops/.circleci/scripts/update-readme.sh corepops/README.md /tmp/artifacts/report.md corepops/README-updated.md
+            mv corepops/README{-updated,}.md
       - run:
           name: Push updated README.md
           command: |
