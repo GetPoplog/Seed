@@ -13,6 +13,6 @@ shopt -s globstar nullglob
 # We have a list of known problems and we want to be warned if we find
 # that list is expanded.
 
-mkdir -p _build/poplog_base/
-(cd _build/poplog_base && find . -type f | tr '[:upper:]' '[:lower:]' | sort | uniq --repeated) > _build/casetwins.txt
-cmp _build/casetwins.txt .circleci/scripts/known_casetwins.txt
+cmp \
+  .circleci/scripts/known_casetwins.txt \
+  <(cd _build/poplog_base && find . -type f | tr '[:upper:]' '[:lower:]' | sort | uniq --repeated)
