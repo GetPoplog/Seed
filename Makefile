@@ -201,7 +201,7 @@ test:
 	if [ -e venv ]; then \
 	    . venv/bin/activate; \
 	fi; \
-	pytest
+	pytest --junit-xml=report.xml
 
 ################################################################################
 # Jump-start targets
