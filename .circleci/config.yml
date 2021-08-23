@@ -273,7 +273,7 @@ jobs:
           name: Test contributor tools
           command: |
             cd contributor_tools
-            pytest
+            pytest --junit-xml=report.xml
       - store_test_results:
           path: contributor_tools/tests
 
