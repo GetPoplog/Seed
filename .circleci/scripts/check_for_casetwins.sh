@@ -14,5 +14,5 @@ shopt -s globstar nullglob
 # that list is expanded.
 
 mkdir -p _build/poplog_base/
-(cd _build/poplog_base && find . -type f | tr 'A-Z' 'a-z' | sort | uniq --repeated) > _build/casetwins.txt
+(cd _build/poplog_base && find . -type f | tr '[:upper:]' '[:lower:]' | sort | uniq --repeated) > _build/casetwins.txt
 cmp _build/casetwins.txt .circleci/scripts/known_casetwins.txt
