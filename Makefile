@@ -188,6 +188,7 @@ verify-install:
 .PHONY: clean
 clean:
 	rm -rf ./_build
+	rm -f ./systests/report.xml
 	# Target "clean" completed
 
 .PHONY: deepclean
