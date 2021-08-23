@@ -18,3 +18,8 @@ For example, `010-05_11_12-2021_07_07.corepop` has:
 - `<nnn>` = `010`
 - `<kk_kk_kk>` = `05_11_12`
 - `<yyyy_mm_dd>` = `2012-07-07`
+
+## Corepop test results
+
+<!--BEGIN COREPOP_TEST_RESULTS-->
+<!--END COREPOP_TEST_RESULTS-->
