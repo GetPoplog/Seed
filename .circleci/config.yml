@@ -28,6 +28,7 @@ jobs:
       - run:
           name: "Check: have new case-twin files been added?"
           command: |
+            mkdir -p _build/poplog_base
             tar -xf _build/artifacts/poplog-binary*.tar.gz -C _build/poplog_base
             ./.circleci/scripts/check_for_casetwins.sh
   one_line_install:
