@@ -18,6 +18,17 @@ jobs:
           name: Shellcheck scripts
           command: |
             ./.circleci/scripts/shellcheck.sh
+  regression_checks:
+    docker: 
+    - image: 'cimg/base:stable'
+    steps:
+      - checkout
+      - run:
+          name: "Check: have new case-twin files been added?"
+          command: |
+            echo 'Checking the state of _build/poplog_base'
+            ls _build/poplog_base
+            ./.circleci/scripts/check_for_casetwins.sh
   one_line_install:
     machine:
       image: ubuntu-1604:202104-01
@@ -448,6 +459,10 @@ workflows:
   mainflow:
     jobs:
       - shellcheck_scripts:
+          filters:  *default_filters
+      - regression_checks:
+          requires:
+            - build_tree
           filters:  *default_filters
       - one_line_install:
           filters:  *default_filters
