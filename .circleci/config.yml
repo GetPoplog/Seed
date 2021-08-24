@@ -28,8 +28,11 @@ jobs:
       - run:
           name: "Check: have new case-twin files been added?"
           command: |
+            tar --strip-components=1 -xvf _build/artifacts/poplog-binary*.tar.gz
+            echo 'What does our top level look like after this?'
+            ls -al
             echo 'Checking the state of _build/'
-            ls _build/
+            ls -al _build/
             ./.circleci/scripts/check_for_casetwins.sh
   one_line_install:
     machine:
