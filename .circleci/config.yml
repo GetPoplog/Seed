@@ -23,6 +23,8 @@ jobs:
     - image: 'cimg/base:stable'
     steps:
       - checkout
+      - attach_workspace:
+          at: _build
       - run:
           name: "Check: have new case-twin files been added?"
           command: |
@@ -42,8 +44,6 @@ jobs:
       - image: cimg/base:2021.04
     steps:
       - checkout
-      - attach_workspace:
-          at: _build
       - run:
           name: Build poplog src tarball
           command: |
