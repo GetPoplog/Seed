@@ -26,8 +26,8 @@ jobs:
       - run:
           name: "Check: have new case-twin files been added?"
           command: |
-            echo 'Checking the state of _build/poplog_base'
-            ls _build/poplog_base
+            echo 'Checking the state of _build/'
+            ls _build/
             ./.circleci/scripts/check_for_casetwins.sh
   one_line_install:
     machine:
