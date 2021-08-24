@@ -42,6 +42,8 @@ jobs:
       - image: cimg/base:2021.04
     steps:
       - checkout
+      - attach_workspace:
+          at: _build
       - run:
           name: Build poplog src tarball
           command: |
