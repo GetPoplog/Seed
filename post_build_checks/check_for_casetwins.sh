@@ -14,7 +14,7 @@ set -euo pipefail
 
 # Make the script agnostic about whether it is run from top level or
 # its own folder.
-SCRIPT_DIR=$(dirname "$0")
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 cmp \
   "${SCRIPT_DIR}/known_casetwins.txt" \
