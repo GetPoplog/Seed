@@ -12,6 +12,10 @@ set -euo pipefail
 # We have a list of known problems and we want to be warned if we find
 # that list is expanded.
 
+# Make the script agnostic about whether it is run from top level or
+# its own folder.
+SCRIPT_DIR=$(dirname "$0")
+
 cmp \
-  .circleci/scripts/known_casetwins.txt \
-  <(cd _build/poplog_base && find . -type f | tr '[:upper:]' '[:lower:]' | sort | uniq --repeated)
+  "${SCRIPT_DIR}/known_casetwins.txt" \
+  <(cd "${SCRIPT_DIR}/../_build/poplog_base" && find . -type f | tr '[:upper:]' '[:lower:]' | sort | uniq --repeated)
