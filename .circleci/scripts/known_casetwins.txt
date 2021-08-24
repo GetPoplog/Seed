@@ -1,4 +1,4 @@
-x/pop/packages/contrib/pml/smllib/library/poplog/core/array.sml
+./pop/packages/contrib/pml/smllib/library/poplog/core/array.sml
 ./pop/packages/contrib/pml/smllib/library/poplog/core/utils.sml
 ./pop/packages/contrib/pml/smllib/library/poplog/core/vector.sml
 ./pop/packages/contrib/pml/smllib/library/poplog.dist/core/vector.sml
