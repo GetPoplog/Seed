@@ -1,36 +1,29 @@
+.SHELL :=/bin/bash
+.ONESHELL:
+
+CFLAGS=-v -Wl,-export-dynamic -Wl,-no-as-needed
+
+.PHONEY: all
+all: pop/src/syscomp/x86_64/asmout.p
+
 .PHONEY: help
 help:
 	# Valid targets include:
 	#
-	#   build - instantiates any templated files (only pop/src/syscomp/x86_64/asmout.p at present)
+	#   all - instantiates any templated files (only pop/src/syscomp/x86_64/asmout.p at present)
 	#   clean - removed any instantiated files
-	#
 
 .PHONEY: clean
 clean:
 	rm -f pop/src/syscomp/x86_64/asmout.p
-	rm -rf _build
 
-
-.PHONEY: build
-build: 
-	mkdir -p _build
-	echo 'void test(){}' > _build/test.c
-	if `(cd _build; /usr/bin/gcc -no-pie -c test.c 2>&1)`; then make buildNoPie; else make buildWithoutNoPie; fi
-
-.PHONEY: buildWithoutNoPie
-buildWithoutNoPie: POP__CC_OPTIONS=-v -Wl,-export-dynamic -Wl,-no-as-needed
-buildWithoutNoPie: pop/src/syscomp/x86_64/asmout.p
-	true
-
-.PHONEY: buildNoPie
-buildNoPie: POP__CC_OPTIONS=-v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed
-buildNoPie: pop/src/syscomp/x86_64/asmout.p
-	true
-
-# Must be called without buildWithoutNoPie or buildNoPie. The sed command
-# is used to replace a template-parameter that looks like {{{POP__CC_OPTIONS:_random_text_}}}.
 pop/src/syscomp/x86_64/asmout.p: pop/src/syscomp/x86_64/asmout.p.template
-	test ! -z "$(POP__CC_OPTIONS)" # Protect against being called from the wrong context.
-	sed -e 's/{{{POP__CC_OPTIONS:[^}]*}}}/$(POP__CC_OPTIONS)/' < $< > $@
-
+	src_filepath=$$(mktemp -p .)
+	echo 'int main(){ return 0; }' > $$src_filepath
+	NO_PIE_FLAG=""
+	# check to see if compiler supports -no-pie
+	if $(CC) $(CFLAGS) -no-pie -c $$src_filepath >/dev/null; then
+		NO_PIE_FLAG=" -no-pie"
+	fi
+	sed -e "s/{{{POP__CC_OPTIONS:[^}]*}}}/$(CFLAGS)$$NO_PIE_FLAG/" < $< > $@
+	rm $$src_filepath
