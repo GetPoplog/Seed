@@ -56,11 +56,14 @@ MAJOR_VERSION?=16
 #         _build/poplog_base folder. This can be moved to the appropriate
 #         place.
 #
+NOINIT_FILES:=$(addprefix _build/poplog_base/pop/com/noinit/,vedinit.p init.pl init.lsp init.ml) _build/poplog_base/pop/com/noinit/init.p
+
 .PHONY: build
 build: _build/Done.proxy
 	# Target "build" completed
 
-_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy _build/NoInit.proxy _build/POPLOG_VERSION
+
+_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy $(NOINIT_FILES) _build/POPLOG_VERSION
 	find _build/poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
 	find _build/poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
@@ -76,17 +79,16 @@ $(BINARY_TARBALL): _build/Done.proxy
 	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
-_build/NoInit.proxy: _build/Base.proxy
-	# Add the noinit files for poplog --run.
-	mkdir -p _build/poplog_base/pop/com/noinit
-	cd _build/poplog_base/pop/com/noinit; \
-	  touch init.p; \
-	  ln -sf init.p vedinit.p; \
-	  ln -sf init.p init.pl; \
-	  ln -sf init.p init.lsp; \
-	  ln -sf init.p init.ml
-	chmod a-w _build/poplog_base/pop/com/noinit/*.*
+
+_build/poplog_base/pop/com/noinit/init.p:
+	mkdir $(@D)
 	touch $@
+	chmod a-w $@
+
+$(addprefix _build/poplog_base/pop/com/noinit/,vedinit.p,init.pl,init.lsp,init.ml): _build/poplog_base/pop/com/noinit/init.p
+	ln -sf $< $@
+	chmod a-w $@
+
 
 _build/PoplogCommander.proxy: _build/Stage2.proxy
 	mkdir -p _build/commander
