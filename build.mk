@@ -85,8 +85,9 @@ _build/poplog_base/pop/com/noinit/init.p:
 	touch $@
 	chmod a-w $@
 
-$(addprefix _build/poplog_base/pop/com/noinit/,vedinit.p,init.pl,init.lsp,init.ml): _build/poplog_base/pop/com/noinit/init.p
-	ln -sf $< $@
+$(filter-out _build/poplog_base/pop/com/noinit/init.p,$(NOINIT_FILES)): _build/poplog_base/pop/com/noinit/init.p
+	[ -f $(@D)/init.p ]
+	cd $(@D) && ln -sf init.p $(notdir $@)
 	chmod a-w $@
 
 
