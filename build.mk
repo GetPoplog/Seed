@@ -94,7 +94,7 @@ _build/commander/poplog: _build/commander/poplog.c
 
 $(POPLOG_COMMANDER): _build/commander/poplog
 	mkdir -p $(@D)
-	cp --force $< $@
+	cp --preserve=mode,ownership --force $< $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
@@ -110,7 +110,7 @@ _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog
 
 _build/poplog_base/pop/com/poplogout.%: _download/poplogout.%
 	mkdir -p "$(@D)"
-	cp "$<" "$@"
+	cp --preserve=mode,ownership "$<" "$@"
 
 _build/ExtractPackages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 
 	mkdir -p _build/poplog_base/pop
@@ -158,7 +158,7 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
 _build/Stage1.proxy: _build/poplog_base/pop/pop/corepop
 	bash makeSystemTools.sh
 	bash relinkCorepop.sh
-	cp _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
+	cp --preserve=mode,ownership _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
 	touch $@
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
@@ -166,11 +166,11 @@ _build/poplog_base/pop/pop/corepop: _build/Base.proxy
 	mkdir -p $(@D)
 	cp -rpP corepops _build/corepops
 	$(MAKE) -C _build/corepops corepop
-	cp -p _build/corepops/corepop $@
+	cp --preserve=mode,ownership _build/corepops/corepop $@
 
 _build/Base.proxy: $(BASE_FILES)
 	mkdir -p "$(@D)"
 	-rm -rf _build/poplog_base
-	cp -rpP base _build/poplog_base
+	cp --preserve=mode,ownership -rP base _build/poplog_base
 	$(MAKE) -C _build/poplog_base
 	touch $@ # Create the proxy file to signal that we are done.
