@@ -55,6 +55,7 @@ MAJOR_VERSION?=16
 NOINIT_FILES:=$(addprefix _build/poplog_base/pop/com/noinit/,vedinit.p init.pl init.lsp init.ml) _build/poplog_base/pop/com/noinit/init.p
 POPLOG_COMMANDER:=_build/poplog_base/pop/bin/poplog
 
+
 .PHONY: build
 build: _build/Done.proxy
 	# Target "build" completed
@@ -65,7 +66,7 @@ _build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) $(NOINIT_FILES) 
 	find _build/poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
 
-_build/POPLOG_VERSION: _build/Base.proxy
+_build/POPLOG_VERSION: _build/Corepops.proxy
 	_build/poplog_base/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
 
 binarytarball: $(BINARY_TARBALL)
