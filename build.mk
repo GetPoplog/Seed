@@ -14,10 +14,6 @@ MAJOR_VERSION?=16
 #         This file is a script that represents the successful copying of the Base system
 #         after its own Makefile has been successfully run.
 #
-#     _build/Corepops.proxy
-#         This file represents  the discovery of a viable corepop executable. This should
-#         be sufficient to reconstruct working system tools.
-#
 #     _build/Stage1.proxy
 #         This file represents that the system-tools (popc, poplink, poplibr) are now
 #         working and have been used to build a fresh corepop, which is in
@@ -66,7 +62,7 @@ _build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) $(NOINIT_FILES) 
 	find _build/poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
 
-_build/POPLOG_VERSION: _build/Corepops.proxy
+_build/POPLOG_VERSION: _build/poplog_base/pop/pop/corepop
 	_build/poplog_base/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
 
 binarytarball: $(BINARY_TARBALL)
@@ -158,19 +154,18 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
 
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop
 # in newpop11. It is the equivalent of Waldek's build_pop0 script.
-_build/Stage1.proxy: _build/Corepops.proxy
+_build/Stage1.proxy: _build/poplog_base/pop/pop/corepop
 	bash makeSystemTools.sh
 	bash relinkCorepop.sh
 	cp _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
 	touch $@
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
-_build/Corepops.proxy: _build/Base.proxy
-	mkdir -p "$(@D)"
+_build/poplog_base/pop/pop/corepop: _build/Base.proxy
+	mkdir -p $(@D)
 	cp -rpP corepops _build/corepops
-	cp -p _build/poplog_base/pop/pop/corepop _build/corepops/supplied.corepop
 	$(MAKE) -C _build/corepops corepop
-	cp -p _build/corepops/corepop _build/poplog_base/pop/pop/corepop
+	cp -p _build/corepops/corepop $@
 	touch $@
 
 _build/Base.proxy: base
