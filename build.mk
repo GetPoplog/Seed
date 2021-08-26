@@ -47,23 +47,20 @@ MAJOR_VERSION?=16
 #         dynamic system so that user libraries automatically get added into
 #         the search.
 #
-#     _build/PoplogCommander.proxy
-#         This represents the successful compilation of the commander-tool
-#         and its insertion into the Poplog-tree.
-#
 #     _build/Done.proxy
 #         This file represents the completion of the build-tree in the
 #         _build/poplog_base folder. This can be moved to the appropriate
 #         place.
 #
 NOINIT_FILES:=$(addprefix _build/poplog_base/pop/com/noinit/,vedinit.p init.pl init.lsp init.ml) _build/poplog_base/pop/com/noinit/init.p
+POPLOG_COMMANDER:=_build/poplog_base/pop/bin/poplog
 
 .PHONY: build
 build: _build/Done.proxy
 	# Target "build" completed
 
 
-_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy $(NOINIT_FILES) _build/POPLOG_VERSION
+_build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) $(NOINIT_FILES) _build/POPLOG_VERSION
 	find _build/poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
 	find _build/poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
@@ -90,14 +87,16 @@ $(filter-out _build/poplog_base/pop/com/noinit/init.p,$(NOINIT_FILES)): _build/p
 	cd $(@D) && ln -sf init.p $(notdir $@)
 	chmod a-w $@
 
-
-_build/PoplogCommander.proxy: _build/Stage2.proxy
-	mkdir -p _build/commander
-	mkdir -p _build/poplog_base/pop/bin
+_build/commander/poplog.c: makePoplogCommander.sh _build/Stage2.proxy
+	mkdir $(@D)
 	GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh > _build/commander/poplog.c
-	cd _build/commander && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c
-	cp -f _build/commander/poplog _build/poplog_base/pop/bin/
-	touch $@
+
+_build/commander/poplog: _build/commander/poplog.c
+	$(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o $@ $<
+
+$(POPLOG_COMMANDER): _build/commander/poplog
+	mkdir $(@D)
+	cp --force $< $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
