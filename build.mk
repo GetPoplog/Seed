@@ -78,7 +78,7 @@ $(BINARY_TARBALL): _build/Done.proxy
 
 
 _build/poplog_base/pop/com/noinit/init.p:
-	mkdir $(@D)
+	mkdir -p $(@D)
 	touch $@
 	chmod a-w $@
 
@@ -88,14 +88,14 @@ $(filter-out _build/poplog_base/pop/com/noinit/init.p,$(NOINIT_FILES)): _build/p
 	chmod a-w $@
 
 _build/commander/poplog.c: makePoplogCommander.sh _build/Stage2.proxy
-	mkdir $(@D)
+	mkdir -p $(@D)
 	GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh > _build/commander/poplog.c
 
 _build/commander/poplog: _build/commander/poplog.c
 	$(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o $@ $<
 
 $(POPLOG_COMMANDER): _build/commander/poplog
-	mkdir $(@D)
+	mkdir -p $(@D)
 	cp --force $< $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
@@ -114,11 +114,28 @@ _build/poplog_base/pop/com/poplogout.%: _download/poplogout.%
 	mkdir -p "$(@D)"
 	cp "$<" "$@"
 
-_build/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 _build/Base.proxy
+_build/ExtractPackages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 
+	mkdir -p _build/poplog_base/pop
 	(cd _build/poplog_base/pop; tar jxf "../../../$<")
+	touch $@
+
+_build/PatchPackages.proxy: _build/ExtractPackages.proxy
 	./patchPackages.sh
-	cd _build/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
-	cd _build/poplog_base/pop/packages/neural/; mkdir -p bin/linux; for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
+	touch $@
+
+VISION_DIR:=_build/poplog_base/pop/packages/popvision
+VISION_LIBS:=$(addprefix $(VISION_DIR)/lib/bin/linux/,$(notdir $(patsubst %.c,%.so,$(wildcard $(VISION_DIR)/lib/*.c))))
+$(VISION_LIBS): $(VISION_DIR)/lib/bin/linux/%.so: $(VISION_DIR)/lib/%.c _build/PatchPackages.proxy
+	mkdir -p $(@D)
+	$(CC) -o $@ -O3 -fpic -I$(VISION_DIR)/lib -shared $<
+
+NEURAL_DIR:=_build/poplog_base/pop/packages/neural
+NEURAL_LIBS:=$(addprefix $(NEURAL_DIR)/bin/linux/,$(notdir $(patsubst %.c,%.so,$(wildcard $(NEURAL_DIR)/src/c/*.c))))
+$(NEURAL_LIBS): $(NEURAL_DIR)/bin/linux/%.so: $(NEURAL_DIR)/src/c/%.c _build/PatchPackages.proxy
+	mkdir -p $(@D)
+	$(CC) -o $@ -O3 -fpic -I$(NEURAL_DIR)/src/c -shared $<
+
+_build/Packages.proxy: _build/Base.proxy $(VISION_LIBS) $(NEURAL_LIBS) _build/ExtractPackages.proxy
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
