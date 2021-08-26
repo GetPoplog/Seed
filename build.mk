@@ -48,6 +48,7 @@ MAJOR_VERSION?=16
 #         _build/poplog_base folder. This can be moved to the appropriate
 #         place.
 #
+BASE_FILES:=$(shell find base -type f)
 NOINIT_FILES:=$(addprefix _build/poplog_base/pop/com/noinit/,vedinit.p init.pl init.lsp init.ml) _build/poplog_base/pop/com/noinit/init.p
 POPLOG_COMMANDER:=_build/poplog_base/pop/bin/poplog
 
@@ -168,11 +169,9 @@ _build/poplog_base/pop/pop/corepop: _build/Base.proxy
 	cp -p _build/corepops/corepop $@
 	touch $@
 
-_build/Base.proxy: base
+_build/Base.proxy: $(BASE_FILES)
 	mkdir -p "$(@D)"
-	cp -rpP base _build/
-	$(MAKE) -C _build/base
-	mkdir -p _build/poplog_base
-	( cd _build/base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	-rm -rf _build/poplog_base
+	cp -rpP base _build/poplog_base
+	$(MAKE) -C _build/poplog_base
 	touch $@ # Create the proxy file to signal that we are done.
-
