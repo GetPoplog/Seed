@@ -167,7 +167,6 @@ _build/poplog_base/pop/pop/corepop: _build/Base.proxy
 	cp -rpP corepops _build/corepops
 	$(MAKE) -C _build/corepops corepop
 	cp -p _build/corepops/corepop $@
-	touch $@
 
 _build/Base.proxy: $(BASE_FILES)
 	mkdir -p "$(@D)"
