@@ -153,9 +153,23 @@ _build/poplog_base/pop/pop/newpop.psv: _build/Stage1.proxy
         && . ./_build/poplog_base/pop/com/popinit.sh \
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
+POP_SYSTOOLS:=$(addprefix _build/poplog_base/pop/pop/,popc poplibr poplink)
+_build/poplog_base/pop/pop/%: _build/poplog_base/pop/pop/corepop _build/poplog_base/pop/pop/%.psv
+	cd $(@D) && [ -f corepop ] && ln -sf corepop $(notdir $@)
+
+POP_SYSTOOLS_IMAGES:=$(addsuffix .psv,$(addprefix _build/poplog_base/pop/pop/,popc poplibr poplink))
+$(POP_SYSTOOLS_IMAGES): mk_cross _build/Base.proxy _build/poplog_base/pop/pop/corepop
+	top_level="$$(pwd)"; \
+	export usepop="$$(pwd)/_build/poplog_base"; \
+	export POP_arch=x86_64; \
+	export POP__as=$$(which as); \
+	source _build/poplog_base/pop/com/popinit.sh; \
+	cd $$popsrc && "$$top_level/mk_cross" -d -a="$$POP_arch" $(basename $(notdir $@))
+
+
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop
 # in newpop11. It is the equivalent of Waldek's build_pop0 script.
-_build/Stage1.proxy: _build/poplog_base/pop/pop/corepop
+_build/Stage1.proxy: _build/poplog_base/pop/pop/corepop $(POP_SYSTOOLS)
 	bash makeSystemTools.sh
 	bash relinkCorepop.sh
 	cp --preserve=mode,ownership _build/poplog_base/pop/pop/newpop11 _build/poplog_base/pop/pop/corepop
