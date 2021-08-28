@@ -10,7 +10,7 @@
 # For help on how to use this Makefile please try "make help". The rest of this intro explains
 # the strategy used for the fairly elaborate build process.
 #
-
+SHELL:=/bin/bash
 # CONVENTION: If we want to allow the user of the Makefile to set via the CLI
 # then we use ?= to bind it. If it's an internal variables then we use :=
 CC?=gcc
