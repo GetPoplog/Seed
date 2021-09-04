@@ -25,4 +25,3 @@ cd "$popsys"
     ln -sf corepop popc
     ln -sf corepop poplibr
     ln -sf corepop poplink
-

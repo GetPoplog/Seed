@@ -26,6 +26,8 @@ bindir:=$(prefix)/bin
 
 TMP_DIR?=/tmp
 
+BUILD_DIR?=_build
+
 # This is the folder in which the new Poplog build will be installed. To install Poplog
 # somewhere different, such as /opt/poplog either edit this line or try:
 #     make install POPLOG_HOME_DIR=/opt/poplog
