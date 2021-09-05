@@ -5,7 +5,7 @@ section;
 ;;; WARNING!
 procedure();
     dlocal cucharout = cucharerr;
-    pr( ';;; EXPERIMENTAL LIBRARY WARNING - named_arguments' )
+    npr( ';;; EXPERIMENTAL LIBRARY WARNING - named_arguments' )
 endprocedure();
 
 uses frozval_names;
@@ -15,7 +15,7 @@ define recalculate_offsets( fn, data );
     until names.null do
         lvars name = names.dest -> names;
         lvars ref = refs.dest -> refs;
-        lvars index = frozval_slot( name, fn );
+        lvars index = frozval_stack_slot( name, fn );
         index -> cont( ref );
     enduntil;
     fn -> cont( detect_dirty );

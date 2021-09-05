@@ -16,9 +16,7 @@ define lconstant lookup( item );
         if wid then
             wid.valof
         else
-            [try to autoload ^w] =>
             if sys_autoload( w ) then
-                [succeeded] =>
                 word_identifier( w, pop_section, true ).valof
             else
                 false

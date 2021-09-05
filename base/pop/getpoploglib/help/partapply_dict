@@ -1,0 +1,30 @@
+HELP PARTAPPLY_DICT                              Stephen Leach, Sep 2021
+
+    partapply_dict( <procedure>, <dict> ) -> closure
+
+This procedure produces a closure of an existing procedure (which may
+itself be a closure). It takes two arguments - a procedure and a dict;
+its result is a new procedure based upon the given procedure, but
+requiring fewer arguments, the rightmost of the arguments of the new
+procedure being supplied by the ordered values of the dict at the time
+PARTAPPLY_DICT is called. e.g.
+
+    vars Q =
+        partapply_dict(
+            procedure( x, a, b, c ) with_props quadratic;
+                ( a * x  + b ) * x + c
+            endprocedure,
+            ${ a = 1, b = 2, c = 1 }
+        );
+
+    Q( 4 ) =>
+    ** 25
+
+The closure will have N named frozen values, where N is the size of the dict.
+Named frozen values can be overridden (see HELP * PARTAPPLY_OVERRIDE)
+
+    vars R = partapply_override( Q, ${ b = 0, c = -4 } );
+    R( 4 ) =>
+    ** 12
+
+--- Copyright (c) GetPoplog Sep 2021 -------------------------------------------

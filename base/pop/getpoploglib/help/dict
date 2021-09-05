@@ -93,5 +93,9 @@ nulldict -> dict
 partapply_dict(procedure, dict) -> closure
         Returns a closure with named frozval-slots. See HELP * PARTAPPLY_DICT.
 
+partapply_override(closure, list|dict) -> closure
+        Copies a closure and updates the frozvals from the list or dict.
+        See HELP * PARTAPPLY_OVERRIDE.
+
 
 --- Copyright (c) GetPoplog Sep 2021 -------------------------------------------

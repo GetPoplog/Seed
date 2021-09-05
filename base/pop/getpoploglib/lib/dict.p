@@ -2,7 +2,7 @@ compile_mode :pop11 +strict;
  
 section $-dict =>
     dict_key isdict dict_length 
-    subscrdict appdict;
+    subscrdict appdict is_null_dict;
 
 #_IF not( isdefined( "dict_key" ) )
 
@@ -102,9 +102,13 @@ define global constant procedure appdict( dict, procedure p );
     endfor;
 enddefine;
 
+define global constant procedure is_null_dict( dict );
+    dict.dict_values.datalength == 0
+enddefine;
+
 define prdict( dict );
     pr( '${' );
-    unless dict.is_empty_dict do pr( ' ' ) endunless;
+    unless dict.is_null_dict do pr( ' ' ) endunless;
     dlvars first = true;
     appdict(
         dict,
@@ -118,7 +122,7 @@ define prdict( dict );
             false -> first;
         endprocedure
     );
-    unless dict.is_empty_dict do pr( ' ' ) endunless;
+    unless dict.is_null_dict do pr( ' ' ) endunless;
     pr( '}' );
 enddefine;
 
