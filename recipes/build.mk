@@ -12,6 +12,7 @@ USEPOP:=$(BUILD)/poplog_base
 POPSYS:=$(USEPOP)/pop/pop
 POPSRC:=$(USEPOP)/pop/src
 POPCOM:=$(USEPOP)/pop/com
+POPPACKAGES:=$(USEPOP)/pop/packages
 # $usepop is used by the `popinit.sh` script to set up environment and
 # needs to be an absolute path
 usepop:=$(abspath $(USEPOP))
@@ -147,10 +148,10 @@ $(BUILD)/PoplogCommander.proxy: $(BUILD)/Stage2.proxy
 	touch $@
 
 $(BUILD)/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 $(BUILD)/Base.proxy
-	(cd $(BUILD)/poplog_base/pop; tar jxf "../../../$<")
+	(cd $(USEPOP)/pop; tar jxf "../../../$<")
 	./patchPackages.sh
-	cd $(BUILD)/poplog_base/pop/packages/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
-	cd $(BUILD)/poplog_base/pop/packages/neural/; mkdir -p bin/linux; for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
+	cd $(POPPACKAGES)/popvision/lib; mkdir -p bin/linux; for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
+	cd $(POPPACKAGES)/neural/; mkdir -p bin/linux; for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
 $(BUILD)/MakeIndexes.proxy: $(BUILD)/Stage2.proxy $(BUILD)/Packages.proxy
