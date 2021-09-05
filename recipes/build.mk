@@ -17,6 +17,8 @@ POPCOM:=$(USEPOP)/pop/com
 usepop:=$(abspath $(USEPOP))
 # exporting the variable makes it available to all
 export usepop
+
+COREPOP:=$(POPSYS)/corepop
 ################################################################################
 # Phony targets
 ################################################################################
@@ -106,9 +108,9 @@ $(BUILD)/Base.proxy: base
 $(BUILD)/Corepops.proxy: $(BUILD)/Base.proxy
 	mkdir -p "$(@D)"
 	cp -rpP corepops $(BUILD)/corepops
-	cp -p $(POPSYS)/corepop $(BUILD)/corepops/supplied.corepop
+	cp -p $(COREPOP) $(BUILD)/corepops/supplied.corepop
 	$(MAKE) -C $(BUILD)/corepops corepop
-	cp -p $(BUILD)/corepops/corepop $(POPSYS)/corepop
+	cp -p $(BUILD)/corepops/corepop $(COREPOP)
 	touch $@
 
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop
@@ -116,7 +118,7 @@ $(BUILD)/Corepops.proxy: $(BUILD)/Base.proxy
 $(BUILD)/Stage1.proxy: $(BUILD)/Corepops.proxy
 	bash makeSystemTools.sh
 	bash relinkCorepop.sh
-	cp $(POPSYS)/newpop11 $(POPSYS)/corepop
+	cp $(POPSYS)/newpop11 $(COREPOP)
 	touch $@
 
 # N.B. This target needs the freshly built corepop from relinkCorepop.sh, hence the dependency
@@ -157,7 +159,7 @@ $(BUILD)/MakeIndexes.proxy: $(BUILD)/Stage2.proxy $(BUILD)/Packages.proxy
 	touch $@
 
 $(BUILD)/POPLOG_VERSION: $(BUILD)/Base.proxy
-	$(POPSYS)/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
+	$(COREPOP) ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
 
 $(BUILD)/NoInit.proxy: $(BUILD)/Base.proxy
 	# Add the noinit files for poplog --run.
