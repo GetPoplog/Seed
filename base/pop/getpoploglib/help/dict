@@ -1,4 +1,4 @@
-HELP DICT                                         Stephen Leach Aug 2021
+HELP DICT                                         Stephen Leach Sep 2021
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 <<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
@@ -6,6 +6,51 @@ HELP DICT                                         Stephen Leach Aug 2021
 <<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-newdict
+--------------
+1  Recognisers
+--------------
 
-+
+is_null_dict(dict) -> bool
+
+isdict(item) -> bool
+
+---------------
+2  Constructors
+---------------
+
+
+newdict_from_assoclist(assoc_list) -> dict
+
+newdict_from_twinlists(keys_list, values_list) -> dict
+
+
+ 
+------------
+3  Accessors
+------------
+
+dict_destkeys( dict ) -> ( key1, key2, ..., keyN, N )
+
+dist_destvalues( dict ) -> ( value1, value2, ..., valueN, N )
+
+subscrdict( key, dict ) -> item 
+dict -> subscrdict( key, dict )
+
+----------------
+4  Miscellaneous
+----------------
+
+appdict(dict, procedure )         
+        Applies the  procedure  p  to  each  entry  in  the  dict.  The
+        procedure p is applied as:
+ 
+            p(key, value)
+ 
+        for each key/value association in dict.
+
+dict_length(dict) -> N
+
+nulldict -> dict
+
+dict_key -> key
+
