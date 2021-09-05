@@ -1,0 +1,56 @@
+HELP new_char_accumlator                            Steve Leach, Nov 99
+
+    new_string_builder( reusable ) -> <procedure>
+
+The procedure -new_string_builder- is used for generating accumulators,
+a special type of consumer.  An accumulator secretly stores all the elements
+that it is applied to.  Finally, it can be persuaded to disgorge a string
+of all the accumulated characters by applying it to the special item
+<termin>.
+
+A boolean flag "reusable" is used to indicate whether or not the
+accumulator can be reused after being applied to <termin> more than
+once.   <true> means it is reusable and <false> means it is disposable.
+This defaults to <false> which means the accumulator dies after its
+first result.  When an accumulator "dies" it immediately drops all
+references to its secret store.  This means that these potentially large
+internal objects will be garbage collected at the next opportunity,
+which is a kind thing to do.  So disposable accumulators are more
+efficient than reusable ones.
+
+A good use for a character accumulator is to assign it to cucharout.  Now
+all printing goes into the accumulator's buffer.  It is retrieved by
+applying to <termin>.  Here's an example :-
+
+    define get_print_string( x );
+        dlocal cucharout = new_string_builder( false );
+        pr( x );
+        cucharout( termin )     ;;; returns string!
+    enddefine;
+
+    : get_print_string( identfn ).lowertoupper =>
+    ** <PROCEDURE IDENTFN>
+
+The accumulator returned by new_string_builder( true ) will still
+works, even after it has been applied to <termin>.  You can carry on
+adding in more characters and extracting them afterwards.
+
+    : vars acc = new_string_builder( true );
+    : appdata( 'foo', acc );
+    : acc( termin ) =>
+    ** foo
+    : appdata( 'foo', acc );
+    : acc( termin ) =>
+    ** foofoo
+
+
+-- Note for expert programmers ----------------------------
+
+The strings returned by an accumulator are guaranteed to be unshared.
+This is a deliberate design decision, incidentally, to bring it into
+line with -new_item_accumulator-.
+
+
+-- See also -----------------------------------------------
+
+HELP * new_item_accumulator,    an accumulator that can store any item

@@ -1,0 +1,59 @@
+HELP new_args_builder                               Stephen Leach, Nov 99
+                                                           Revised Sep 21
+
+    new_args_builder( constructor ) -> <procedure>
+    new_args_builder( constructor, reusable: bool ) -> <procedure>
+
+The procedure -new_args_builder- is used for accumulating arguments
+and is a special type of consumer.  It secretly stores all the items that
+it is applied to.  Finally, it can be persuaded to disgorge a pile of all
+the accumulated items by applying it to the special item <termin>.  The
+results are collected together by the optional constructor which should
+take its inputs in this form.
+
+    constructor( x1, ..., xN, N )
+
+The constructor defaults to -conslist-.
+
+An optional boolean flag "reusable" is used to indicate whether or not the
+accumulator can be reused after being applied to <termin> more than once.
+<true> means it is reusable and <false> means it is disposable.
+
+It defaults to <false> which means the accumulator dies after its
+first result.  When an accumulator "dies" it immediately drops all
+references to its secret store.  This means that these potentially large
+internal objects will be garbage collected at the next opportunity. Hence
+disposable accumulators are more efficient than reusable ones.
+
+A good use for an item accumulator is to collect values in a loop.
+Here's an example :-
+
+    : vars words = new_args_builder( conslist );
+    : vars numbers = new_args_builder( conslist );
+    : lvars i;
+    : for i in [ [ a 1 ] [ b 2 ] [ c 3 ] [ d 4 ] ] do
+    :     words( i(1) );
+    :     numbers( i(2) );
+    : endfor;
+    : words( termin ) -> words;
+    : numbers( termin ) -> numbers;
+    : words =>
+    ** [a b c d]
+    : numbers =>
+    ** [1 2 3 4]
+
+The accumulator returned by, say,
+    new_args_builder( consvector, true )
+still works, even after it has been applied to <termin>.  You can
+carry on adding in more items and extracting them afterwards.
+
+    : vars acc = new_args_builder( consvector, true );
+    : applist( [ alpha beta gamma ], acc );
+    ** {alpha beta gamma}
+    : applist( [ alpha beta gamma ], acc );
+    :  acc( termin ) =>
+    ** {alpha beta gamma alpha beta gamma}
+
+-- See also -----------------------------------------------
+
+HELP * new_string_builder,    a builder specialised for characters
