@@ -93,7 +93,7 @@ $(SRC_TARBALL): _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout
 #
 #     $(BUILD)/Done.proxy
 #         This file represents the completion of the build-tree in the
-#         $(BUILD)/poplog_base folder. This can be moved to the appropriate
+#         $(USEPOP) folder. This can be moved to the appropriate
 #         place.
 #
 
@@ -101,8 +101,8 @@ $(BUILD)/Base.proxy: base
 	mkdir -p "$(@D)"
 	cp -rpP base $(BUILD)/
 	$(MAKE) -C $(BUILD)/base build
-	mkdir -p $(BUILD)/poplog_base
-	( cd $(BUILD)/base; tar cf - pop ) | ( cd $(BUILD)/poplog_base; tar xf - )
+	mkdir -p $(USEPOP)
+	( cd $(BUILD)/base; tar cf - pop ) | ( cd $(USEPOP); tar xf - )
 	touch $@ # Create the proxy file to signal that we are done.
 
 # This target ensures that we have an unpacked base system with a valid corepop file.
@@ -125,7 +125,7 @@ $(BUILD)/Stage1.proxy: $(BUILD)/Corepops.proxy
 # N.B. This target needs the freshly built corepop from relinkCorepop.sh, hence the dependency
 # on Stage1.
 $(POPSYS)/newpop.psv: $(BUILD)/Stage1.proxy
-	export usepop=$(abspath ./$(BUILD)/poplog_base) \
+	export usepop=$(abspath ./$(USEPOP)) \
         && . $(POPCOM)/popinit.sh \
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
@@ -141,10 +141,10 @@ $(BUILD)/Stage2.proxy: $(BUILD)/Stage1.proxy $(BUILD)/Newpop.proxy
 
 $(BUILD)/PoplogCommander.proxy: $(BUILD)/Stage2.proxy
 	mkdir -p $(BUILD)/commander
-	mkdir -p $(BUILD)/poplog_base/pop/bin
+	mkdir -p $(USEPOP)/pop/bin
 	GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh > $(BUILD)/commander/poplog.c
 	cd $(BUILD)/commander && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c
-	cp -f $(BUILD)/commander/poplog $(BUILD)/poplog_base/pop/bin/
+	cp -f $(BUILD)/commander/poplog $(USEPOP)/pop/bin/
 	touch $@
 
 $(BUILD)/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 $(BUILD)/Base.proxy
@@ -184,19 +184,19 @@ $(POPCOM)/poplogout.%: _download/poplogout.%
 	mkdir -p "$(@D)"
 	cp "$<" "$@"
 
-$(BUILD)/poplog_base/UNINSTALL_INSTRUCTIONS.md:
+$(USEPOP)/UNINSTALL_INSTRUCTIONS.md:
 	mkdir -p "$(@D)"
-	bindir="$(bindir)" POPLOG_HOME_DIR="$(POPLOG_HOME_DIR)" sh writeUninstallInstructions.sh > $(BUILD)/poplog_base/UNINSTALL_INSTRUCTIONS.md
+	bindir="$(bindir)" POPLOG_HOME_DIR="$(POPLOG_HOME_DIR)" sh writeUninstallInstructions.sh > $(USEPOP)/UNINSTALL_INSTRUCTIONS.md
 
 binarytarball: $(BINARY_TARBALL)
 # Pop-tree: can be untarred and used directly (as an alternative to
 # installing via a poplog package e.g. deb/rpm etc)
 $(BINARY_TARBALL): $(BUILD)/Done.proxy
 	mkdir -p "$(@D)"
-	( cd $(BUILD)/poplog_base/; tar cf - pop ) | gzip > $@
+	( cd $(USEPOP)/; tar cf - pop ) | gzip > $@
 	[ -f $@ ] # Sanity check that we built the target
 
 $(BUILD)/Done.proxy: $(BUILD)/MakeIndexes.proxy $(BUILD)/PoplogCommander.proxy $(BUILD)/NoInit.proxy $(BUILD)/POPLOG_VERSION
-	find $(BUILD)/poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
-	find $(BUILD)/poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
+	find $(USEPOP) -name '*-' -exec rm -f {} \; # Remove the backup files
+	find $(USEPOP) -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
