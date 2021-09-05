@@ -1,7 +1,7 @@
 compile_mode :pop11 +strict;
  
 section $-dict =>
-    dict_key isdict empty_dict dict_length is_empty_dict 
+    dict_key isdict dict_length 
     subscrdict appdict;
 
 #_IF not( isdefined( "dict_key" ) )
@@ -53,14 +53,8 @@ constant procedure dict_keys = class_access( 1, dict_key );
 constant procedure dict_values = class_access( 2, dict_key );
 "dict_values" -> dict_values.pdprops;
 
-global constant empty_dict = consdict( {}.dup );
-
 define global constant procedure dict_length( dict );
     dict.dict_values.datalength
-enddefine;
-
-define global constant procedure is_empty_dict( dict );
-    dict.dict_values.datalength == 0
 enddefine;
 
 define lconstant find( w, dict );
