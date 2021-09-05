@@ -49,6 +49,8 @@ SRC_TARBALL:=_build/artifacts/$(SRC_TARBALL_FILENAME).tar.gz
 BINARY_TARBALL_FILENAME:=poplog-binary-$(GETPOPLOG_VERSION)
 BINARY_TARBALL:=_build/artifacts/$(BINARY_TARBALL_FILENAME).tar.gz
 
+BUILD:=_build
+
 .PHONY: all
 all:
 	$(MAKE) build

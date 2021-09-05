@@ -26,7 +26,7 @@
 #      we obliterate the V16.prev and continue as case 4.
 .PHONY: install
 install:
-	[ -f _build/Done.proxy ] # We have successfully built the new distro? Else fail!
+	[ -f $(BUILD)/Done.proxy ] # We have successfully built the new distro? Else fail!
 	if [ -d $(DESTDIR)$(POPLOG_VERSION_DIR) ] \
 	&& [ -d $(DESTDIR)$(POPLOG_VERSION_DIR).orig ] \
 	&& [ -d $(DESTDIR)$(POPLOG_VERSION_DIR).prev ]; then \
@@ -40,7 +40,7 @@ install:
 	    mv $(DESTDIR)$(POPLOG_VERSION_DIR) $(DESTDIR)$(POPLOG_VERSION_DIR).orig; \
 	fi
 	mkdir -p $(DESTDIR)$(POPLOG_VERSION_DIR)
-	( cd _build/poplog_base; tar cf - . ) | ( cd $(DESTDIR)$(POPLOG_VERSION_DIR); tar xf - )
+	( cd $(BUILD)/poplog_base; tar cf - . ) | ( cd $(DESTDIR)$(POPLOG_VERSION_DIR); tar xf - )
 	cd $(DESTDIR)$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
 	mkdir -p $(DESTDIR)$(bindir)
 	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/bin/poplog $(DESTDIR)$(bindir)/
@@ -53,7 +53,7 @@ install-poplocal:
 	# Target "install-poplocal" completed.
 
 .PHONY: add-uninstall-instructions
-add-uninstall-instructions: _build/poplog_base/UNINSTALL_INSTRUCTIONS.md
+add-uninstall-instructions: $(BUILD)/poplog_base/UNINSTALL_INSTRUCTIONS.md
 
 # No messing around - this is not a version change (we don't have a target for that)
 # but a complete removal of all installed Poplogs. This is potentially disasterous,

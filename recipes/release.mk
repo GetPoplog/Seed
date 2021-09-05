@@ -1,10 +1,10 @@
 ################################################################################
 # Changelogs
 ################################################################################
-_build/changelogs/CHANGELOG.debian: CHANGELOG.yml
+$(BUILD)/changelogs/CHANGELOG.debian: CHANGELOG.yml
 	python3 contributor_tools/make_changelog.py --format debian "$<" "$@"
 
-_build/changelogs/CHANGELOG.md: CHANGELOG.yml
+$(BUILD)/changelogs/CHANGELOG.md: CHANGELOG.yml
 	python3 contributor_tools/make_changelog.py --latest "$<" "$@"
 
 
