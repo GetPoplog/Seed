@@ -58,7 +58,7 @@ $(SRC_TARBALL): _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout
 #     $(BUILD)/Stage1.proxy
 #         This file represents that the system-tools (popc, poplink, poplibr) are now
 #         working and have been used to build a fresh corepop, which is in
-#         $(BUILD)/poplog_base/pop/pop/newpop11 and moved to corepop.
+#         $(POPSYS)/newpop11 and moved to corepop.
 #
 #     $(BUILD)/Newpop.proxy
 #         After Stage1, we need to get the critical newpop command working on top of
@@ -106,9 +106,9 @@ $(BUILD)/Base.proxy: base
 $(BUILD)/Corepops.proxy: $(BUILD)/Base.proxy
 	mkdir -p "$(@D)"
 	cp -rpP corepops $(BUILD)/corepops
-	cp -p $(BUILD)/poplog_base/pop/pop/corepop $(BUILD)/corepops/supplied.corepop
+	cp -p $(POPSYS)/corepop $(BUILD)/corepops/supplied.corepop
 	$(MAKE) -C $(BUILD)/corepops corepop
-	cp -p $(BUILD)/corepops/corepop $(BUILD)/poplog_base/pop/pop/corepop
+	cp -p $(BUILD)/corepops/corepop $(POPSYS)/corepop
 	touch $@
 
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop
@@ -116,17 +116,17 @@ $(BUILD)/Corepops.proxy: $(BUILD)/Base.proxy
 $(BUILD)/Stage1.proxy: $(BUILD)/Corepops.proxy
 	bash makeSystemTools.sh
 	bash relinkCorepop.sh
-	cp $(BUILD)/poplog_base/pop/pop/newpop11 $(BUILD)/poplog_base/pop/pop/corepop
+	cp $(POPSYS)/newpop11 $(POPSYS)/corepop
 	touch $@
 
 # N.B. This target needs the freshly built corepop from relinkCorepop.sh, hence the dependency
 # on Stage1.
-$(BUILD)/poplog_base/pop/pop/newpop.psv: $(BUILD)/Stage1.proxy
+$(POPSYS)/newpop.psv: $(BUILD)/Stage1.proxy
 	export usepop=$(abspath ./$(BUILD)/poplog_base) \
         && . $(POPCOM)/popinit.sh \
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
-$(BUILD)/Newpop.proxy: $(BUILD)/poplog_base/pop/pop/newpop.psv
+$(BUILD)/Newpop.proxy: $(POPSYS)/newpop.psv
 	touch $@
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
@@ -157,7 +157,7 @@ $(BUILD)/MakeIndexes.proxy: $(BUILD)/Stage2.proxy $(BUILD)/Packages.proxy
 	touch $@
 
 $(BUILD)/POPLOG_VERSION: $(BUILD)/Base.proxy
-	$(BUILD)/poplog_base/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
+	$(POPSYS)/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
 
 $(BUILD)/NoInit.proxy: $(BUILD)/Base.proxy
 	# Add the noinit files for poplog --run.
