@@ -13,6 +13,7 @@
 
 # CONVENTION: If we want to allow the user of the Makefile to set via the CLI
 # then we use ?= to bind it. If it's an internal variables then we use :=
+SHELL:=/bin/bash
 CC?=gcc
 CFLAGS?=-g -Wall -std=c11 -D_POSIX_C_SOURCE=200809L
 

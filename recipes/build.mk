@@ -8,6 +8,15 @@
 # - bindir
 # - BUILD
 
+USEPOP:=$(BUILD)/poplog_base
+POPSYS:=$(USEPOP)/pop/pop
+POPSRC:=$(USEPOP)/pop/src
+POPCOM:=$(USEPOP)/pop/com
+# $usepop is used by the `popinit.sh` script to set up environment and
+# needs to be an absolute path
+usepop:=$(abspath $(USEPOP))
+# exporting the variable makes it available to all
+export usepop
 ################################################################################
 # Phony targets
 ################################################################################
@@ -114,7 +123,7 @@ $(BUILD)/Stage1.proxy: $(BUILD)/Corepops.proxy
 # on Stage1.
 $(BUILD)/poplog_base/pop/pop/newpop.psv: $(BUILD)/Stage1.proxy
 	export usepop=$(abspath ./$(BUILD)/poplog_base) \
-        && . ./$(BUILD)/poplog_base/pop/com/popinit.sh \
+        && . $(POPCOM)/popinit.sh \
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
 $(BUILD)/Newpop.proxy: $(BUILD)/poplog_base/pop/pop/newpop.psv
@@ -143,9 +152,8 @@ $(BUILD)/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 $(BUILD)/B
 	touch $@
 
 $(BUILD)/MakeIndexes.proxy: $(BUILD)/Stage2.proxy $(BUILD)/Packages.proxy
-	export usepop=$(abspath ./$(BUILD)/poplog_base) \
-        && . ./$(BUILD)/poplog_base/pop/com/popinit.sh \
-        && $$usepop/pop/com/makeindexes > $(BUILD)/makeindexes.log
+	. $(POPCOM)/popinit.sh && \
+		$(POPCOM)/makeindexes > $(BUILD)/makeindexes.log
 	touch $@
 
 $(BUILD)/POPLOG_VERSION: $(BUILD)/Base.proxy
@@ -153,23 +161,23 @@ $(BUILD)/POPLOG_VERSION: $(BUILD)/Base.proxy
 
 $(BUILD)/NoInit.proxy: $(BUILD)/Base.proxy
 	# Add the noinit files for poplog --run.
-	mkdir -p $(BUILD)/poplog_base/pop/com/noinit
-	cd $(BUILD)/poplog_base/pop/com/noinit; \
+	mkdir -p $(POPCOM)/noinit
+	cd $(POPCOM)/noinit; \
 	  touch init.p; \
 	  ln -sf init.p vedinit.p; \
 	  ln -sf init.p init.pl; \
 	  ln -sf init.p init.lsp; \
 	  ln -sf init.p init.ml
-	chmod a-w $(BUILD)/poplog_base/pop/com/noinit/*.*
+	chmod a-w $(POPCOM)/noinit/*.*
 	touch $@
 
 # It is not clear that these scripts should be included or not. If they are it makes
 # more sense to include them in the repo. TODO: TO BE CONFIRMED - until then these
 # will be omitted.
-$(BUILD)/ExtraScripts.proxy: $(BUILD)/poplog_base/pop/com/poplogout.sh $(BUILD)/poplog_base/pop/com/poplogout.csh
+$(BUILD)/ExtraScripts.proxy: $(POPCOM)/poplogout.sh $(POPCOM)/poplogout.csh
 	touch $@
 
-$(BUILD)/poplog_base/pop/com/poplogout.%: _download/poplogout.%
+$(POPCOM)/poplogout.%: _download/poplogout.%
 	mkdir -p "$(@D)"
 	cp "$<" "$@"
 
