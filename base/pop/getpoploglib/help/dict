@@ -12,14 +12,16 @@ HELP DICT                                         Stephen Leach Sep 2021
 
 is_null_dict(dict) -> bool
 
+
 isdict(item) -> bool
+        Returns true if item is a dict, false otherwise.
 
 ---------------
 2  Constructors
 ---------------
 
-
 newdict_from_assoclist(assoc_list) -> dict
+
 
 newdict_from_twinlists(keys_list, values_list) -> dict
 
@@ -31,10 +33,13 @@ newdict_from_twinlists(keys_list, values_list) -> dict
 
 dict_destkeys( dict ) -> ( key1, key2, ..., keyN, N )
 
+
 dist_destvalues( dict ) -> ( value1, value2, ..., valueN, N )
+
 
 subscrdict( key, dict ) -> item 
 dict -> subscrdict( key, dict )
+
 
 ----------------
 4  Miscellaneous
@@ -48,9 +53,16 @@ appdict(dict, procedure )
  
         for each key/value association in dict.
 
+
 dict_length(dict) -> N
+        Returns the number N of key/values pairs in dict.
+
 
 nulldict -> dict
+        An instance of an empty dict object
+
 
 dict_key -> key
+        Constant holding key structure for dict
 
+--- Copyright (c) GetPoplog Sep 2021 -------------------------------------------
