@@ -2,7 +2,7 @@ compile_mode :pop11 +strict;
  
 section $-dict =>
     dict_key isdict dict_length 
-    subscrdict appdict is_null_dict;
+    subscr_dict appdict is_null_dict;
 
 #_IF not( isdefined( "dict_key" ) )
 
@@ -29,7 +29,7 @@ enddefine;
 constant procedure dict_table =
     newanyproperty(
         [], 8, 1, 8,
-        nonop =, syshash, "tmpval",
+        syshash, nonop =, "tmpval",
         false,
         procedure( key, prop );
             ;;; Have we grown too big?
@@ -43,7 +43,8 @@ constant procedure dict_table =
 global constant dict_key = conskey( "dict", [ full full ] );
 global constant procedure isdict = dict_key.class_recognise;
 
-lconstant procedure consdict = dict_key.class_cons;
+constant procedure destdict = dict_key.class_dest;
+constant procedure consdict = dict_key.class_cons;
 
 ;;; Not exported but retained for autoloading.
 constant procedure dict_keys = class_access( 1, dict_key );
@@ -82,15 +83,15 @@ define lconstant find( w, dict );
     endrepeat
 enddefine;
 
-define global constant procedure subscrdict( w, dict );
+define global constant procedure subscr_dict( w, dict );
     subscrv( find( w, dict ), dict.dict_values )
 enddefine;
 
-define updaterof subscrdict( item, w, dict );
+define updaterof subscr_dict( item, w, dict );
     item -> subscrv( find( w, dict ), dict.dict_values )
 enddefine;
 
-subscrdict -> class_apply( dict_key );
+subscr_dict -> class_apply( dict_key );
 
 define global constant procedure appdict( dict, procedure p );
     lvars i, n = dict.dict_length;
@@ -128,6 +129,18 @@ enddefine;
 
 prdict -> class_print( dict_key );
 
+
+define lconstant procedure check_duplicates( key_index_list );
+    lvars tail;
+    for tail on key_index_list do
+        if fast_back( tail ).ispair then
+            if fast_front( fast_front( tail ) ) == fast_front( fast_front( fast_back( tail ) ) ) then
+                mishap( 'Trying to construct dict with non-unique key', [% front(front(tail)) %] )
+            endif
+        endif
+    endfor;
+enddefine;
+
 ;;;
 ;;; This is a helper function for building dict objects. It takes a list
 ;;; of unsorted pairs (key, position) and a vector of values and
@@ -142,6 +155,7 @@ define lconstant newdict_internal( key_index_list, values_vector );
         key_index_list,
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> key_index_list;
+    check_duplicates( key_index_list );
     lvars sorted_keys_vector = {% applist( key_index_list, front ) %};
     lvars sorted_values_vector = fill(
         lblock
@@ -157,7 +171,7 @@ define lconstant newdict_internal( key_index_list, values_vector );
         ( key_index_list.sys_grbg_destpair -> key_index_list ).sys_grbg_destpair -> _ -> _;
     endwhile;
     ;;; And deliver the result.
-    consdict( sorted_keys_vector, sorted_values_vector )
+    consdict( sorted_keys_vector.dict_table, sorted_values_vector )
 enddefine;
 
 ;;; This is a non-exported helper function for writing syntax words.
@@ -184,6 +198,7 @@ define compile_newdict_to( closing_keyword ) -> actual_closer;
         keys,
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> keys;
+    check_duplicates( keys );
     sysPUSHQ( {% applist( keys, front ) %} );
     lvars p;
     for p in keys do
