@@ -10,10 +10,6 @@ export usepop
 : "${popexternlib:?}"
 : "${popcom:?}"
 
-# mkXpw"
-cd "$popcom"
-    ./mkXpw -I/usr/include/X11
-
 cd "$usepop/pop/obj"
     # saving library files in old
     mkdir -p old
