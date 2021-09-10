@@ -1,0 +1,10 @@
+HELP PARTAPPLY_OVERRIDE                          Stephen Leach, Sep 2021
+
+    partapply_override( <closure>, <args> ) -> closure
+
+This procedure takes a closure and creates a copy with updated frozvals. 
+The <args> may be a list or a dict. If args are a list of length N then
+the frozvals from 1 to N are replaced by the elements of args.
+
+If the args are a dict then the closure must have named frozvals and the
+dict is used to update the corresponding frozvals.
