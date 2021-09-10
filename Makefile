@@ -413,17 +413,40 @@ _build/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 _build/Base.
 	cd _build/poplog_base/pop/packages/neural/; mkdir -p bin/linux; for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
-LIBPOP_SRC:=$(wildcard base/pop/extern/lib/*.[ch])
-LIBPOP_OBJ:=$(filter %.o,$(LIBPOP_SRC:base/%.c=_build/poplog_base/%.o))
+LIBPOP_SRC:=$(wildcard base/pop/extern/lib/*.c)
+LIBPOP_HEADERS:=$(wildcard base/pop/extern/lib/*.h)
+LIBPOP_OBJ:=$(LIBPOP_SRC:base/%.c=_build/poplog_base/%.o)
 LIBPOP:=_build/poplog_base/pop/extern/libpop.a
-$(LIBPOP_OBJ): _build/poplog_base/%.o: base/%.c
+
+$(LIBPOP_OBJ): _build/poplog_base/%.o: base/%.c $(LIBPOP_HEADERS)
+	mkdir -p $(@D)
 	$(CC) -c -O $(CFLAGS) -o $@ $<
+
 $(LIBPOP): $(LIBPOP_OBJ)
+	mkdir -p $(@D)
 	$(AR) rc $@ $^
+
+X11_CFLAGS:=$(shell pkg-config --cflags x11) -I/usr/include/X11
+X11_LDFLAGS:=$(shell pkg-config --libs x11)
+
+LIBXPW_SRC:=$(wildcard base/pop/x/Xpw/*.c)
+LIBXPW_HEADERS:=$(wildcard base/pop/x/Xpw/*.h)
+LIBXPW_OBJ:=$(LIBXPW_SRC:base/%.c=_build/poplog_base/%.o)
+LIBXPW:=_build/poplog_base/pop/extern/lib/libXpw.so
+
+$(LIBXPW_OBJ): CFLAGS=$(X11_CFLAGS) -Ibase/pop/x/Xpw/ -fpic -g
+$(LIBXPW_OBJ): _build/poplog_base/%.o: base/%.c $(LIBXPW_HEADERS)
+	mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(LIBXPW): LDFLAGS+=$(X11_LDFLAGS)
+$(LIBXPW): $(LIBXPW_OBJ)
+	mkdir -p $(@D)
+	$(CC) -shared $(LDFLAGS) -o $@ $^
 
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
 # It is effectively Waldek's build_pop2 script.
-_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy $(LIBPOP)
+_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy $(LIBPOP) $(LIBXPW)
 	bash makeSystemTools.sh
 	bash makeStage2.sh
 	touch $@
