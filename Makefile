@@ -413,9 +413,17 @@ _build/Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2 _build/Base.
 	cd _build/poplog_base/pop/packages/neural/; mkdir -p bin/linux; for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
 	touch $@
 
+LIBPOP_SRC:=$(wildcard base/pop/extern/lib/*.[ch])
+LIBPOP_OBJ:=$(filter %.o,$(LIBPOP_SRC:base/%.c=_build/poplog_base/%.o))
+LIBPOP:=_build/poplog_base/pop/extern/libpop.a
+$(LIBPOP_OBJ): _build/poplog_base/%.o: base/%.c
+	$(CC) -c -O $(CFLAGS) -o $@ $<
+$(LIBPOP): $(LIBPOP_OBJ)
+	$(AR) rc $@ $^
+
 # This target ensures that we rebuild popc, poplink, poplibr on top of the fresh corepop.
 # It is effectively Waldek's build_pop2 script.
-_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy
+_build/Stage2.proxy: _build/Stage1.proxy _build/Newpop.proxy $(LIBPOP)
 	bash makeSystemTools.sh
 	bash makeStage2.sh
 	touch $@
