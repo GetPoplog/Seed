@@ -10,10 +10,6 @@ export usepop
 : "${popexternlib:?}"
 : "${popcom:?}"
 
-# echo "mklibpop"
-cd "$popexternlib"
-    ./mklibpop
-
 # mkXpw"
 cd "$popcom"
     ./mkXpw -I/usr/include/X11
