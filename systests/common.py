@@ -7,8 +7,13 @@ from pathlib import Path
 from typing import List, Union
 
 
-POPLOG_BINARY_PATH = shutil.which("poplog")
 HERE = Path(__file__).absolute().parent
+BUILT_POPLOG_BINARY_PATH = Path(HERE.parent / "_build/poplog_base/pop/bin/poplog")
+USE_SYSTEM_POPLOG = os.getenv('USE_SYSTEM_POPLOG', '0')
+if BUILT_POPLOG_BINARY_PATH.exists() and USE_SYSTEM_POPLOG.lower() in {"0", "false"}:
+    POPLOG_BINARY_PATH = BUILT_POPLOG_BINARY_PATH
+else:
+    POPLOG_BINARY_PATH = shutil.which("poplog")
 
 
 def run_poplog_commander(args: Union[str, List[str]], extra_env=None) -> subprocess.CompletedProcess:

@@ -55,7 +55,7 @@ class TestVariables:
         assert check_poplog_commander(
             ["--run", "pop11", ":systranslate('popcom')=>"],
             extra_env={"popcom": "/nosuchfile"},
-        ).endswith("poplog/V16/pop/com")
+        ).endswith("/pop/com")
 
     def test_conflicting_environment_variables_are_not_overwritten_in_pop11_environment_in_dev_mode(self):
         assert check_poplog_commander(
