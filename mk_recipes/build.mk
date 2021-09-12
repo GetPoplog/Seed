@@ -1,4 +1,3 @@
-$(call check_defined, BINARY_TARBALL)
 ################################################################################
 # Build targets
 ################################################################################
@@ -67,14 +66,6 @@ _build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) _build/NoInit.pr
 
 _build/POPLOG_VERSION: _build/Base.proxy
 	_build/poplog_base/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
-
-binarytarball: $(BINARY_TARBALL)
-# Pop-tree: can be untarred and used directly (as an alternative to
-# installing via a poplog package e.g. deb/rpm etc)
-$(BINARY_TARBALL): _build/Done.proxy
-	mkdir -p "$(@D)"
-	( cd _build/poplog_base/; tar cf - pop ) | gzip > $@
-	[ -f $@ ] # Sanity check that we built the target
 
 _build/NoInit.proxy: _build/Base.proxy
 	# Add the noinit files for poplog --run.

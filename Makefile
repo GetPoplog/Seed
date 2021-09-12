@@ -89,21 +89,6 @@ help:
 include mk_recipes/helpers.mk
 include mk_recipes/jumpstart.mk
 include mk_recipes/download.mk
-################################################################################
-# Source tarball targets
-################################################################################
-.PHONY: srctarball
-srctarball: $(SRC_TARBALL)
-
-$(SRC_TARBALL): _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout.sh _download/poplogout.csh
-	mkdir -p "$(@D)"
-	rm -f "$@"; \
-	ASSEMBLY_DIR="$$(umask u=rwx,go=r && mktemp --directory --tmpdir="$(TMP_DIR)")"; \
-	POPLOG_TAR_DIR="$$ASSEMBLY_DIR/$(SRC_TARBALL_FILENAME)"; \
-	mkdir -p "$$POPLOG_TAR_DIR"; \
-	tar cf - --exclude=_build . | ( cd $$POPLOG_TAR_DIR && tar xf - ); \
-	tar -C "$$ASSEMBLY_DIR" -czf "$@" "$(SRC_TARBALL_FILENAME)"; \
-	rm -rf "$$ASSEMBLY_DIR"
-
+include mk_recipes/tarballs.mk
 include mk_recipes/packaging.mk
 include mk_recipes/release.mk
