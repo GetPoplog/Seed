@@ -85,10 +85,14 @@ help:
 	#   deepclean - removes build artifacts and the _download cache.
 	#   help - this explanation, for more info read the Makefile comments.
 
+include mk_recipes/lib.mk
 
 include mk_recipes/helpers.mk
 include mk_recipes/jumpstart.mk
 include mk_recipes/download.mk
+include mk_recipes/build.mk
 include mk_recipes/tarballs.mk
 include mk_recipes/packaging.mk
 include mk_recipes/release.mk
+include mk_recipes/install.mk
+include mk_recipes/transplant.mk
