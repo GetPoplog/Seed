@@ -85,22 +85,6 @@ help:
 	#   deepclean - removes build artifacts and the _download cache.
 	#   help - this explanation, for more info read the Makefile comments.
 
-.PHONY: help-jumpstart
-help-jumpstart:
-	# Jumpstarts are targets that install the dependencies for a particular
-	# Linux distribution. Installing dependencies are not part of a normal
-	# build process and they are provided as a convenience to admins.
-	# These will need to be run with sudo e.g.
-	#	sudo make jumpstart-debian
-	#
-	# Valid targets are:
-	#   jumpstart-debian - installs the packages a Debian system needs
-	#   jumpstart-ubuntu - installs the packages an Ubuntu system needs
-	#   jumpstart-fedora - installs the packages a Fedora system needs.
-	#   jumpstart-rocky - installs the packages a Rocky Linux system needs.
-	#   jumpstart-centos - installs the packages a Rocky Linux system needs.
-	#   jumpstart-opensuse-leap - installs the packages a openSUSE Leap system needs.
-	#
 
 ################################################################################
 # Installation targets
