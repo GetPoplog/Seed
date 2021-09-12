@@ -41,6 +41,7 @@ VERSION_DIR:=V$(MAJOR_VERSION)
 POPLOG_VERSION_DIR:=$(POPLOG_HOME_DIR)/$(VERSION_DIR)
 SYMLINK:=current_usepop
 POPLOG_VERSION_SYMLINK:=$(POPLOG_HOME_DIR)/$(SYMLINK)
+export GETPOPLOG_VERSION
 
 POPLOCAL_HOME_DIR:=$(POPLOG_VERSION_DIR)/../../poplocal
 
@@ -349,12 +350,14 @@ $(SRC_TARBALL): _download/packages-V$(MAJOR_VERSION).tar.bz2 _download/poplogout
 #         This file represents the completion of the build-tree in the
 #         _build/poplog_base folder. This can be moved to the appropriate
 #         place.
-#
+
+POPLOG_COMMANDER:=_build/poplog_base/pop/bin/poplog
+
 .PHONY: build
 build: _build/Done.proxy
 	# Target "build" completed
 
-_build/Done.proxy: _build/MakeIndexes.proxy _build/PoplogCommander.proxy _build/NoInit.proxy _build/POPLOG_VERSION
+_build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) _build/NoInit.proxy _build/POPLOG_VERSION
 	find _build/poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
 	find _build/poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
@@ -382,13 +385,14 @@ _build/NoInit.proxy: _build/Base.proxy
 	chmod a-w _build/poplog_base/pop/com/noinit/*.*
 	touch $@
 
-_build/PoplogCommander.proxy: _build/Stage2.proxy
-	mkdir -p _build/commander
-	mkdir -p _build/poplog_base/pop/bin
-	GETPOPLOG_VERSION="$(GETPOPLOG_VERSION)" bash makePoplogCommander.sh > _build/commander/poplog.c
-	cd _build/commander && $(CC) $(CFLAGS) -Wextra -Werror -Wpedantic -o poplog poplog.c
-	cp -f _build/commander/poplog _build/poplog_base/pop/bin/
-	touch $@
+_build/commander/poplog.c: makePoplogCommander.sh
+	mkdir -p $(@D)
+	bash makePoplogCommander.sh > $@
+	
+$(POPLOG_COMMANDER): CFLAGS+=-Wextra -Werror -Wpedantic
+$(POPLOG_COMMANDER): _build/commander/poplog.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $^ -o $@
 
 _build/MakeIndexes.proxy: _build/Stage2.proxy _build/Packages.proxy
 	export usepop=$(abspath ./_build/poplog_base) \
