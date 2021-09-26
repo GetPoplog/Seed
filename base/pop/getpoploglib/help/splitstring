@@ -1,0 +1,5 @@
+HELP SPLITSTRING                                         Stephen Leach, Sep 2021
+
+    splitstring( string, separator, constructor ) -> constructor( N )
+    splitstring( string, separator ) -> vector
+
