@@ -6,6 +6,7 @@ section $-unittest =>
     register_unittest 
     fail_unittest
     ved_discover
+    ved_discover_files
     pop_unittests
     assert;
 
@@ -253,6 +254,40 @@ define select_scope_for_vedargument();
             endfor
         endprocedure
     endif 
+enddefine;
+
+define select_file_scope_for_vedargument();
+    if vedargument = '' then
+        if hasendstring( vedcurrent, unittest_suffix ) then            
+            ['CURRENT_BUFFER']
+        elseif hasendstring( vedcurrent, '.p' ) then  
+            lvars dir = sys_fname_path( vedcurrent ); 
+            lvars name = sys_fname_nam( vedcurrent ) <> unittest_suffix;
+            sys_file_match( name, dir dir_>< '../*/', false, false ).pdtolist;
+        else    
+            mishap( 'No tests found', [vedargument ^vedargument vedcurrent ^vedcurrent] )
+        endif
+    else
+        lvars folder = sys_fname_path( vedargument ); 
+        sys_file_match( folder, '.../*' <> unittest_suffix, false, false ).pdtolist;
+    endif 
+enddefine;
+
+define ved_discover_files();
+    lvars files = select_file_scope_for_vedargument();
+    dlocal vedpositionstack;
+
+    vededit( '*TEST FILES IN SCOPE*', procedure(); vedhelpdefaults(); false -> vedbreak; endprocedure );
+    ved_clear();
+    vedpositionpush();
+    dlocal cucharout = vedcharinsert;
+    
+    lvars f;
+    for f in files do
+        npr( f )
+    endfor;
+
+    vedpositionpop();
 enddefine;
 
 define test_discovery_in_ved();
