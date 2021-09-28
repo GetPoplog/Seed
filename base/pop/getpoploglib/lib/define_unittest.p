@@ -237,7 +237,7 @@ define global syntax assert();
         else
             lvars result = ();
             unless result do
-                mishap( 0, 'Failed', 'unittest-assert:unittest-fail' )
+                mishap( 0, 'Assertion failed', 'unittest-assert:unittest-fail' )
             endunless
         endif
     enddefine;
@@ -278,9 +278,20 @@ define show_failures( passes, failures );
     nprintf( 'Test results at: ' <> sysdaytime() );
     nl(1);
 
-    lvars u;
-    for u, n in failures, up_from(1) do
-        nprintf( '%p.\t%p', [^n ^u] );
+    lvars p;
+    for p, n in failures, up_from(1) do
+        lvars ( u, mishap_details ) = p.destpair;
+        lvars ( msg, idstring, args ) = mishap_details.dl;
+        lvars name = u.pdprops;
+        nprintf( '%p.\tUnit test: %p', [^n ^name] );
+        nprintf( '\tMessage  : %p', [ ^msg ] );
+        unless args.null do
+            npr( 'Argument: ' );
+            lvars a;
+            for a in args do
+                nprintf( '\t\t%p', [^a] )
+            endfor;
+        endunless;
     endfor;
 
     vedpositionpop();
