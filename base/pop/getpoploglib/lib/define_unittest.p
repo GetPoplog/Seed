@@ -2,23 +2,30 @@ compile_mode :pop11 +strict;
 
 section $-unittest => 
     define_unittest 
-    define_testblock
     ved_test 
     register_unittest 
     fail_unittest
-    ved_tmr 
     ved_discover
-    pop_unittests;
+    pop_unittests
+    assert;
 
-vars pop_unittests = undef;
-vars unittest_passes = undef;
-vars unittest_failures = undef;
-vars current_unittest = undef;
+vars pop_unittests = undef;     ;;; Part of test-discovery.
+vars unittest_passes = undef;   ;;; Part of test-execution.
+vars unittest_failures = undef; ;;; Part of test-execution.
+vars current_unittest = undef;  ;;; Part of test-execution.
 
+;;; Part of test-discovery, although may be re-invoked during execution.
 ;;; At top-level do nothing.
 define vars register_unittest( u );
 enddefine;
 
+defclass context {
+    context_parent,
+    context_linenum
+};
+
+;;; This is a map from unit-tests, which are procedures, to the context in 
+;;; which they were defined.
 constant procedure registration_table =
     newanyproperty( 
         [], 8, 1, 8,
@@ -26,30 +33,47 @@ constant procedure registration_table =
         false, false
     );
 
+;;; Inside a test-context we record the notional parent. This is purely 
+;;; so we can present the test results inside a nice-looking classification tree.
 define vars register_unittest_during_discovery( u );
     lvars index = popfilename or vedpathname;
     if index do
-        index -> registration_table( u );
+        conscontext( index, poplinenum ) -> registration_table( u );
     endif; 
     u :: pop_unittests -> pop_unittests;
 enddefine;
 
+;;; Part of test-execution.
+;;; This is defensive - we only want to run unit tests inside an appropriate
+;;; dynamic context.
 define vars run_unittest( p );
-    p();
+    mishap( 'Trying to trace unit tests with context (this should never happen)', [] )
 enddefine;
 
+;;; This is the normal way to run a unit test & we will dlocalise run_unittest
+;;; to its value.
 define run_unittest_during_execution( p );
+
+    define dlocal pop_exception_final( N, mess, idstring, severity );
+        returnunless( severity == `E` or severity == `R` )( false );
+        lvars args = conslist( N );
+        chain( [ ^mess ^idstring ^args ], fail_unittest ) 
+    enddefine;
+
     dlocal current_unittest = p;
     p();
     p :: unittest_passes -> unittest_passes;
 enddefine;
 
-define vars fail_unittest();
+;;; Part of test-execution.
+;;; This will only be invoked at top-level and hence outside of a test
+;;; context, so it is OK for it to simply mishap.
+define vars fail_unittest( info );
     mishap( 'Unittest failed', [] )
 enddefine;
 
-define fail_unittest_during_execution();
-    current_unittest :: unittest_failures -> unittest_failures;
+define fail_unittest_during_execution( info );
+    conspair( current_unittest, info ) :: unittest_failures -> unittest_failures;
     exitfrom( run_unittest )
 enddefine;
 
@@ -141,18 +165,9 @@ define :define_form global unittest;
     sysCALL( "register_unittest" );
 enddefine;
 
-
-define ved_tmr();
-    lvars ( passes, failures ) = run_all_unittests( discover_unittests( ved_lmr ) );
-    sprintf(
-        '%p passes, %p failures',
-        [% length( passes ), length( failures ) %]
-    ).vedputmessage;
-enddefine;
-
 constant unittest_suffix = '.test.p';
 
-define discover_unittest_scope();
+define select_scope();
     if vedargument = '' then
         if hasendstring( vedcurrent, unittest_suffix ) then            
             ved_l1
@@ -194,14 +209,16 @@ define discovered_files( d );
     if d.discovered_files_cache then
         d.discovered_files_cache
     else
-        lvars t =  newanyproperty( 
-            [], 8, 1, 8,
-            syshash, nonop =, "perm",
-            false, false
+        lvars t = (
+            newanyproperty( 
+                [], 8, 1, 8,
+                syshash, nonop =, "perm",
+                false, false
+            )
         );
         lvars u;
         for u in d.discovered_unittests do
-            lvars parent = registration_table( u );
+            lvars parent = context_parent( registration_table( u ) );
             if parent.isstring do
                 true -> t( parent )
             endif
@@ -210,8 +227,36 @@ define discovered_files( d );
     endif
 enddefine;
 
+define global syntax assert();
+
+    define lconstant check_assertion( N );
+        if N == 0 then
+            mishap( 0, 'No results from assertion', 'unittest-assert:stack-empty' )
+        elseif N > 2 then 
+            mishap( N, 'Too many results from assertion', 'unittest-assert:stack-many' )
+        else
+            lvars result = ();
+            unless result do
+                mishap( 0, 'Failed', 'unittest-assert:unittest-fail' )
+            endunless
+        endif
+    enddefine;
+
+    dlocal pop_new_lvar_list;
+    lvars t = sysNEW_LVAR();
+    sysCALL( "stacklength" );
+    sysPOP( t );
+    pop11_comp_expr_to( ";" ) -> _;
+    sysCALL( "stacklength" );
+    sysPUSH( t );
+    sysCALL( "fi_-" );
+    sysCALLQ( check_assertion );
+enddefine;
+
+;;; -- VED integration ---
+
 define test_discovery_in_ved();
-    newdiscovered( discover_unittests( discover_unittest_scope() ) )
+    newdiscovered( discover_unittests( select_scope() ) )
 enddefine;
 
 define up_from( n );
@@ -219,6 +264,26 @@ define up_from( n );
         n;
         n + 1 -> n;
     endprocedure.pdtolist
+enddefine;
+
+define show_failures( passes, failures );
+    dlocal vedpositionstack;
+    lvars d = test_discovery_in_ved();
+
+    vededit( '*TEST RESULTS*', procedure(); vedhelpdefaults(); false -> vedbreak; endprocedure );
+    ved_clear();
+    vedpositionpush();
+    dlocal cucharout = vedcharinsert;
+
+    nprintf( 'Test results at: ' <> sysdaytime() );
+    nl(1);
+
+    lvars u;
+    for u, n in failures, up_from(1) do
+        nprintf( '%p.\t%p', [^n ^u] );
+    endfor;
+
+    vedpositionpop();
 enddefine;
 
 define ved_discover();
@@ -261,17 +326,21 @@ define ved_test();
     dlocal run_unittest = run_unittest_during_execution;
     dlocal fail_unittest = fail_unittest_during_execution;
     lvars ( passes, failures ) = run_all_unittests( d.discovered_unittests );
-    lvars n_passes = passes.length;
-    lvars n_failures = failures.length;
-    sprintf(
-        '%p pass%p, %p failure%p',
-        [% 
-            n_passes, 
-            if n_passes == 1 then '' else 'es' endif, ;;; singular v plural
-            n_failures, 
-            if n_failures == 1 then '' else 's' endif ;;; singular v plural
-        %]
-    ).vedputmessage;
+    if null(failures) then
+        lvars n_passes = passes.length;
+        lvars n_failures = failures.length;
+        sprintf(
+            '%p pass%p, %p failure%p',
+            [% 
+                n_passes, 
+                if n_passes == 1 then '' else 'es' endif, ;;; singular v plural
+                n_failures, 
+                if n_failures == 1 then '' else 's' endif ;;; singular v plural
+            %]
+        ).vedputmessage;
+    else
+        show_failures( passes, failures )
+    endif;
 enddefine;
 
 endsection;
