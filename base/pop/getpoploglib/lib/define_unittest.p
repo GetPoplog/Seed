@@ -51,6 +51,18 @@ define vars run_unittest( p );
     mishap( 'Trying to trace unit tests with context (this should never happen)', [] )
 enddefine;
 
+;;; Part of test-execution.
+;;; This will only be invoked at top-level and hence outside of a test
+;;; context, so it is OK for it to simply mishap.
+define vars fail_unittest( info );
+    mishap( 'Unittest failed', [] )
+enddefine;
+
+define fail_unittest_during_execution( info );
+    conspair( current_unittest, info ) :: unittest_failures -> unittest_failures;
+    exitfrom( run_unittest )
+enddefine;
+
 ;;; This is the normal way to run a unit test & we will dlocalise run_unittest
 ;;; to its value.
 define run_unittest_during_execution( p );
@@ -66,17 +78,7 @@ define run_unittest_during_execution( p );
     p :: unittest_passes -> unittest_passes;
 enddefine;
 
-;;; Part of test-execution.
-;;; This will only be invoked at top-level and hence outside of a test
-;;; context, so it is OK for it to simply mishap.
-define vars fail_unittest( info );
-    mishap( 'Unittest failed', [] )
-enddefine;
 
-define fail_unittest_during_execution( info );
-    conspair( current_unittest, info ) :: unittest_failures -> unittest_failures;
-    exitfrom( run_unittest )
-enddefine;
 
 define discover_unittests( p );
     dlocal pop_unittests = [];
@@ -313,7 +315,7 @@ define show_failures( passes, failures );
     nprintf( 'Test results at: ' <> sysdaytime() );
     nl(1);
 
-    lvars p;
+    lvars p, n;
     for p, n in failures, up_from(1) do
         lvars ( u, mishap_details ) = p.destpair;
         lvars ( msg, idstring, args ) = mishap_details.dl;
