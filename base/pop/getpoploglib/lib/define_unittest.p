@@ -51,6 +51,12 @@ define vars run_unittest( p );
     mishap( 'Trying to trace unit tests with context (this should never happen)', [] )
 enddefine;
 
+defclass failureinfo {
+    failureinfo_message,
+    failureinfo_idstring,
+    failureinfo_argv
+};
+
 ;;; Part of test-execution.
 ;;; This will only be invoked at top-level and hence outside of a test
 ;;; context, so it is OK for it to simply mishap.
@@ -70,15 +76,13 @@ define run_unittest_during_execution( p );
     define dlocal pop_exception_final( N, mess, idstring, severity );
         returnunless( severity == `E` or severity == `R` )( false );
         lvars args = conslist( N );
-        chain( [ ^mess ^idstring ^args ], fail_unittest ) 
+        chain( consfailureinfo( mess, idstring, args ), fail_unittest ) 
     enddefine;
 
     dlocal current_unittest = p;
     p();
     p :: unittest_passes -> unittest_passes;
 enddefine;
-
-
 
 define discover_unittests( p );
     dlocal pop_unittests = [];
@@ -90,7 +94,7 @@ enddefine;
 define run_all_unittests( unittest_list );
     dlocal unittest_passes = [];
     dlocal unittest_failures = [];
-    applist( unittest_list, run_unittest );
+    lvars L = [RETURNS % applist( unittest_list, run_unittest ) %]; 
     ( unittest_passes, unittest_failures )
 enddefine;
 
@@ -201,17 +205,29 @@ define discovered_files( d );
     endif
 enddefine;
 
+define peek_expr_to( closing_keyword );
+    dlocal pop_syntax_only = true;
+    dlocal proglist_state;
+    lvars old_proglist = proglist;
+    pop11_comp_expr_to( ";" ) -> _;
+    [%
+        while old_proglist.ispair and not( old_proglist.back.isprocedure ) do
+            old_proglist.destpair -> old_proglist
+        endwhile;
+    %]
+enddefine;
+
 define global syntax assert();
 
-    define lconstant check_assertion( N );
+    define lconstant check_assertion( N, filename, linenum, expr );
         if N == 0 then
             mishap( 0, 'No results from assertion', 'unittest-assert:stack-empty' )
-        elseif N > 2 then 
+        elseif N > 1 then 
             mishap( N, 'Too many results from assertion', 'unittest-assert:stack-many' )
         else
             lvars result = ();
             unless result do
-                mishap( 0, 'Assertion failed', 'unittest-assert:unittest-fail' )
+                mishap( #| filename, linenum, expr |#, 'Assertion failed', 'unittest-assert:unittest-fail' )
             endunless
         endif
     enddefine;
@@ -220,10 +236,14 @@ define global syntax assert();
     lvars t = sysNEW_LVAR();
     sysCALL( "stacklength" );
     sysPOP( t );
+    lvars expr = peek_expr_to( ";" );
     pop11_comp_expr_to( ";" ) -> _;
     sysCALL( "stacklength" );
     sysPUSH( t );
     sysCALL( "fi_-" );
+    sysPUSHQ( popfilename );
+    sysPUSHQ( poplinenum );
+    sysPUSHQ( expr );
     sysCALLQ( check_assertion );
 enddefine;
 
@@ -318,17 +338,29 @@ define show_failures( passes, failures );
     lvars p, n;
     for p, n in failures, up_from(1) do
         lvars ( u, mishap_details ) = p.destpair;
-        lvars ( msg, idstring, args ) = mishap_details.dl;
-        lvars name = u.pdprops;
-        nprintf( '%p.\tUnit test: %p', [^n ^name] );
-        nprintf( '\tMessage  : %p', [ ^msg ] );
-        unless args.null do
-            npr( 'Argument: ' );
-            lvars a;
-            for a in args do
-                nprintf( '\t\t%p', [^a] )
-            endfor;
-        endunless;
+        lvars ( msg, idstring, args ) = mishap_details.destfailureinfo;
+        if idstring = 'unittest-assert:unittest-fail' then
+            lvars name = u.pdprops;
+            nprintf( '%p.\tFailed    : %p', [^n ^name] );
+            lvars (filename, linenumber, assert_expr, _n) = args.destlist;
+            printf( '\tExpression: ' );
+            applist( [assert ^^assert_expr], spr );
+            nl(1);
+            nprintf( '\tLine num  : %p', [ ^linenumber ] );
+            nprintf( '\tFile name : %p', [ ^filename ] );
+        else
+            lvars name = u.pdprops;
+            nprintf( '%p.\tUnit test : %p', [^n ^name] );
+            nprintf( '\tMessage   : %p', [ ^msg ] );
+            unless args.null do
+                npr( '\tInvolving : ' );
+                lvars a;
+                for a in args do
+                    nprintf( '\t *\t%p', [^a] )
+                endfor;
+            endunless;
+        endif;
+        nl( 1 );
     endfor;
 
     vedpositionpop();
@@ -373,7 +405,9 @@ define ved_test();
     lvars d = test_discovery_in_ved();
     dlocal run_unittest = run_unittest_during_execution;
     dlocal fail_unittest = fail_unittest_during_execution;
-    lvars ( passes, failures ) = run_all_unittests( d.discovered_unittests );
+    lvars disco = d.discovered_unittests;
+    lvars ( passes, failures ) = run_all_unittests( disco ); 
+
     if null(failures) then
         lvars n_passes = passes.length;
         lvars n_failures = failures.length;
