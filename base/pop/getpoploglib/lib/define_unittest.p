@@ -167,35 +167,6 @@ enddefine;
 
 constant unittest_suffix = '.test.p';
 
-define select_scope();
-    if vedargument = '' then
-        if hasendstring( vedcurrent, unittest_suffix ) then            
-            ved_l1
-        elseif hasendstring( vedcurrent, '.p' ) then  
-            lvars dir = sys_fname_path( vedcurrent ); 
-            lvars name = sys_fname_nam( vedcurrent ) <> unittest_suffix;
-            procedure();
-                lvars file;
-                for file in sys_file_match( name, dir dir_>< '../*/', false, false ).pdtolist do
-                    vedputmessage( 'COMPILING ' >< file );
-                    pop11_compile( file )
-                endfor
-            endprocedure
-        else    
-            mishap( 'No tests found', [vedargument ^vedargument vedcurrent ^vedcurrent] )
-        endif
-    else
-        lvars folder = sys_fname_path( vedcurrent ); 
-        procedure();
-            lvars file;
-            for file in sys_file_match( folder, '*' <> unittest_suffix, false, false ).pdtolist do
-                vedputmessage( 'COMPILING ' >< file );
-                pop11_compile( file )
-            endfor
-        endprocedure
-    endif 
-enddefine;
-
 defclass discovered {
     discovered_unittests,
     discovered_files_cache
@@ -255,8 +226,37 @@ enddefine;
 
 ;;; -- VED integration ---
 
+define select_scope_for_vedargument();
+    if vedargument = '' then
+        if hasendstring( vedcurrent, unittest_suffix ) then            
+            ved_l1
+        elseif hasendstring( vedcurrent, '.p' ) then  
+            lvars dir = sys_fname_path( vedcurrent ); 
+            lvars name = sys_fname_nam( vedcurrent ) <> unittest_suffix;
+            procedure();
+                lvars file;
+                for file in sys_file_match( name, dir dir_>< '../*/', false, false ).pdtolist do
+                    vedputmessage( 'COMPILING ' >< file );
+                    pop11_compile( file )
+                endfor
+            endprocedure
+        else    
+            mishap( 'No tests found', [vedargument ^vedargument vedcurrent ^vedcurrent] )
+        endif
+    else
+        lvars folder = sys_fname_path( vedcurrent ); 
+        procedure();
+            lvars file;
+            for file in sys_file_match( folder, '*' <> unittest_suffix, false, false ).pdtolist do
+                vedputmessage( 'COMPILING ' >< file );
+                pop11_compile( file )
+            endfor
+        endprocedure
+    endif 
+enddefine;
+
 define test_discovery_in_ved();
-    newdiscovered( discover_unittests( select_scope() ) )
+    newdiscovered( discover_unittests( select_scope_for_vedargument() ) )
 enddefine;
 
 define up_from( n );
