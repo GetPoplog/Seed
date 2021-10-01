@@ -5,11 +5,9 @@ section $-unittest =>
     assert                  ;;; used for defining unit tests
     expect_mishap           ;;; used for defining unit tests
     ved_test                ;;; discovery and execution
-    fail_unittest
     ved_discover            ;;; performs test-discovery
-    run_unittests_files
-    unittests_discover
-    unittests_run
+    unittests_discover      ;;; performs test-discovery at Pop-11 prompt
+    unittests_run           ;;; performs test discovery-and-execution at Pop-11 prompt
     register_unittest       ;;; exported because of code-planting
     pop_unittests           ;;; exported because of code-planting
 ;
@@ -225,7 +223,7 @@ define :define_form global unittest;
 
     ;;; Set up dynamic test discovery.
     sysLOCAL( "pop_unittests" );
-    sysPUSH( "nil" );
+    sysCALL( "new_list_builder" );
     sysPOP( "pop_unittests" );
     sysLOCAL( "register_unittest" );
     sysPUSHQ( procedure(u); pop_unittests( u ) endprocedure );
