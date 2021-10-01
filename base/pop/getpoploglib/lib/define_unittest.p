@@ -1,15 +1,18 @@
 compile_mode :pop11 +strict;
 
 section $-unittest =>
-    define_unittest
-    ved_test
-    register_unittest
+    define_unittest         ;;; used for defining unit tests
+    assert                  ;;; used for defining unit tests
+    expect_mishap           ;;; used for defining unit tests
+    ved_test                ;;; discovery and execution
     fail_unittest
-    ved_discover
-    ved_discover_files
-    pop_unittests
-    assert
-    expect_mishap;
+    ved_discover            ;;; performs test-discovery
+    run_unittests_files
+    unittests_discover
+    unittests_run
+    register_unittest       ;;; exported because of code-planting
+    pop_unittests           ;;; exported because of code-planting
+;
 
 vars expect_mishap = false;      ;;; Part of test-execution.
 
@@ -44,7 +47,7 @@ define vars register_unittest_during_discovery( u );
     if index do
         conscontext( index, poplinenum ) -> registration_table( u );
     endif;
-    u :: pop_unittests -> pop_unittests;
+    pop_unittests( u );
 enddefine;
 
 ;;; Part of test-execution.
@@ -69,8 +72,47 @@ define vars fail_unittest( info );
 enddefine;
 
 define fail_unittest_during_execution( info );
-    info :: unittest_failures -> unittest_failures;
+    unittest_failures( info ); 
     exitfrom( run_unittest )
+enddefine;
+
+define up_from( n );
+    procedure();
+        n;
+        n + 1 -> n;
+    endprocedure.pdtolist
+enddefine;
+
+define pr_show_failures( passes, failures );
+    nprintf( 'Test results at: ' <> sysdaytime() );
+    nl(1);
+
+    lvars i, n;
+    for i, n in failures, up_from(1) do
+        lvars ( u, msg, idstring, args ) = i.destfailureinfo;
+        if idstring = 'unittest-assert:unittest-fail' then
+            lvars name = u.pdprops;
+            nprintf( '%p.\tFailed    : %p', [^n ^name] );
+            lvars (filename, linenumber, assert_expr, _n) = args.destlist;
+            printf( '\tExpression: ' );
+            applist( [assert ^^assert_expr], spr );
+            nl(1);
+            nprintf( '\tLine num  : %p', [ ^linenumber ] );
+            nprintf( '\tFile name : %p', [ ^filename ] );
+        else
+            lvars name = u.pdprops;
+            nprintf( '%p.\tUnit test : %p', [^n ^name] );
+            nprintf( '\tMessage   : %p', [ ^msg ] );
+            unless args.null do
+                npr( '\tInvolving : ' );
+                lvars a;
+                for a in args do
+                    nprintf( '\t *\t%p', [^a] )
+                endfor;
+            endunless;
+        endif;
+        nl( 1 );
+    endfor;
 enddefine;
 
 ;;; This is the normal way to run a unit test & we will dlocalise run_unittest
@@ -108,24 +150,24 @@ define run_unittest_during_execution( p );
     p();
     if expect_mishap then
         lvars info = consfailureinfo( current_unittest, 'Required mishap skipped', '', [] );
-        p :: unittest_failures -> unittest_failures;
+        unittest_failures( p );
     else
-        p :: unittest_passes -> unittest_passes;
+        unittest_passes( p );
     endif
 enddefine;
 
 define discover_unittests( p );
-    dlocal pop_unittests = [];
+    dlocal pop_unittests = new_list_builder();
     dlocal register_unittest = register_unittest_during_discovery;
     erasenum(#| p() |#);
-    return( pop_unittests )
+    return( pop_unittests( termin ) )
 enddefine;
 
 define run_all_unittests( unittest_list );
-    dlocal unittest_passes = [];
-    dlocal unittest_failures = [];
-    lvars L = [RETURNS % applist( unittest_list, run_unittest ) %];
-    ( unittest_passes, unittest_failures )
+    dlocal unittest_passes = new_list_builder();
+    dlocal unittest_failures = new_list_builder();
+    [% applist( unittest_list, run_unittest ) %] -> _; ;;; defensive.
+    ( unittest_passes( termin ), unittest_failures( termin ) )
 enddefine;
 
 vars procedure unittest_sysVARS = sysVARS;
@@ -186,7 +228,7 @@ define :define_form global unittest;
     sysPUSH( "nil" );
     sysPOP( "pop_unittests" );
     sysLOCAL( "register_unittest" );
-    sysPUSHQ( procedure(u); u :: pop_unittests -> pop_unittests endprocedure );
+    sysPUSHQ( procedure(u); pop_unittests( u ) endprocedure );
     sysPOP( "register_unittest" );
 
     ;;; Main body.
@@ -308,90 +350,19 @@ define select_scope_for_vedargument();
     endif
 enddefine;
 
-define select_file_scope_for_vedargument();
-    if vedargument = '' then
-        if hasendstring( vedcurrent, unittest_suffix ) then
-            ['CURRENT_BUFFER']
-        elseif hasendstring( vedcurrent, '.p' ) then
-            lvars dir = sys_fname_path( vedcurrent );
-            lvars name = sys_fname_nam( vedcurrent ) <> unittest_suffix;
-            sys_file_match( name, dir dir_>< '../*/', false, false ).pdtolist;
-        else
-            mishap( 'No tests found', [vedargument ^vedargument vedcurrent ^vedcurrent] )
-        endif
-    else
-        lvars folder = sys_fname_path( vedargument );
-        sys_file_match( folder, '.../*' <> unittest_suffix, false, false ).pdtolist;
-    endif
-enddefine;
-
-define ved_discover_files();
-    lvars files = select_file_scope_for_vedargument();
-    dlocal vedpositionstack;
-
-    vededit( '*TEST FILES IN SCOPE*', procedure(); vedhelpdefaults(); false -> vedbreak; endprocedure );
-    ved_clear();
-    vedpositionpush();
-    dlocal cucharout = vedcharinsert;
-
-    lvars f;
-    for f in files do
-        npr( f )
-    endfor;
-
-    vedpositionpop();
-enddefine;
-
 define test_discovery_in_ved();
     newdiscovered( discover_unittests( select_scope_for_vedargument() ) )
 enddefine;
 
-define up_from( n );
-    procedure();
-        n;
-        n + 1 -> n;
-    endprocedure.pdtolist
-enddefine;
-
 define show_failures( passes, failures );
     dlocal vedpositionstack;
-    lvars d = test_discovery_in_ved();
 
     vededit( '*TEST RESULTS*', procedure(); vedhelpdefaults(); false -> vedbreak; endprocedure );
     ved_clear();
     vedpositionpush();
     dlocal cucharout = vedcharinsert;
 
-    nprintf( 'Test results at: ' <> sysdaytime() );
-    nl(1);
-
-    lvars p, n;
-    for p, n in failures, up_from(1) do
-        lvars ( u, mishap_details ) = p.destpair;
-        lvars ( msg, idstring, args ) = mishap_details.destfailureinfo;
-        if idstring = 'unittest-assert:unittest-fail' then
-            lvars name = u.pdprops;
-            nprintf( '%p.\tFailed    : %p', [^n ^name] );
-            lvars (filename, linenumber, assert_expr, _n) = args.destlist;
-            printf( '\tExpression: ' );
-            applist( [assert ^^assert_expr], spr );
-            nl(1);
-            nprintf( '\tLine num  : %p', [ ^linenumber ] );
-            nprintf( '\tFile name : %p', [ ^filename ] );
-        else
-            lvars name = u.pdprops;
-            nprintf( '%p.\tUnit test : %p', [^n ^name] );
-            nprintf( '\tMessage   : %p', [ ^msg ] );
-            unless args.null do
-                npr( '\tInvolving : ' );
-                lvars a;
-                for a in args do
-                    nprintf( '\t *\t%p', [^a] )
-                endfor;
-            endunless;
-        endif;
-        nl( 1 );
-    endfor;
+    pr_show_failures( passes, failures );
 
     vedpositionpop();
 enddefine;
@@ -453,6 +424,34 @@ define ved_test();
     else
         show_failures( passes, failures )
     endif;
+enddefine;
+
+;;; --- Loading from outside Ved ---
+
+define unittests_discover( location );
+    if hasendstring( location, unittest_suffix ) then
+        [% location %]
+    elseif hasendstring( location, '.p' ) then
+        lvars dir = sys_fname_path( location );
+        lvars name = sys_fname_nam( location ) <> unittest_suffix;
+        sys_file_match( name, dir dir_>< '../*/', false, false ).pdtolist;
+    else
+        lvars folder = sys_fname_path( location );
+        sys_file_match( folder, '*' <> unittest_suffix, false, false ).pdtolist
+    endif
+enddefine;
+
+define unittests_run( location );
+    lvars files = unittests_discover( location );
+    lvars tests = applist(% files, loadcompiler %).discover_unittests;
+    lvars d = newdiscovered( tests );
+
+    dlocal run_unittest = run_unittest_during_execution;
+    dlocal fail_unittest = fail_unittest_during_execution;
+    lvars disco = d.discovered_unittests;
+    lvars ( passes, failures ) = run_all_unittests( disco );
+
+    pr_show_failures( passes, failures );
 enddefine;
 
 endsection;
