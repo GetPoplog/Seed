@@ -9,7 +9,6 @@ section $-unittest =>
     unittests_discover      ;;; performs test-discovery at Pop-11 prompt
     unittests_run           ;;; performs test discovery-and-execution at Pop-11 prompt
     register_unittest       ;;; exported because of code-planting
-    pop_unittests           ;;; exported because of code-planting
 ;
 
 vars expect_mishap = false;      ;;; Part of test-execution.
@@ -82,6 +81,7 @@ define up_from( n );
 enddefine;
 
 define pr_show_failures( passes, failures );
+    dlocal poplinewidth = false;
     nprintf( 'Test results at: ' <> sysdaytime() );
     nl(1);
 
@@ -112,6 +112,7 @@ define pr_show_failures( passes, failures );
         nl( 1 );
     endfor;
 enddefine;
+
 
 ;;; This is the normal way to run a unit test & we will dlocalise run_unittest
 ;;; to its value.
@@ -216,26 +217,31 @@ define read_declaration( defdec ) -> ( pdrname, is_global, declarator );
 enddefine;
 
 define :define_form global unittest;
+    dlocal pop_new_lvar_list;
+
+    define lconstant run_all( list_builder );
+        applist( list_builder( termin ), run_unittest )
+    enddefine;
+
     lvars ( pdrname, is_global, declarator ) = read_declaration( unittest_sysVARS );
     declarator( pdrname.isword and pdrname, 0 );
     if is_global then sysGLOBAL( pdrname, is_global ) endif;
     sysPROCEDURE( pdrname, 0 );
 
     ;;; Set up dynamic test discovery.
-    sysLOCAL( "pop_unittests" );
+    lvars collector = sysNEW_LVAR();
     sysCALL( "new_list_builder" );
-    sysPOP( "pop_unittests" );
+    sysPOP( collector );
     sysLOCAL( "register_unittest" );
-    sysPUSHQ( procedure(u); pop_unittests( u ) endprocedure );
+    sysPUSH( collector );
     sysPOP( "register_unittest" );
 
     ;;; Main body.
     pop11_comp_stmnt_seq_to( "enddefine" ) -> _;
 
     ;;; Run any registered tests.
-    sysPUSH( "pop_unittests" );
-    sysPUSHQ( run_unittest );
-    sysCALL( "applist" );
+    sysPUSH( collector );
+    sysCALLQ( run_all );
 
     sysPASSIGN( sysENDPROCEDURE(), pdrname );
     sysPUSH( pdrname );
@@ -274,6 +280,27 @@ define discovered_files( d );
         nc_listsort( [% fast_appproperty( t, erase ) %], alphabefore ) ->> d.discovered_files_cache;
     endif
 enddefine;
+
+define pr_show_discovered( d );
+    dlocal poplinewidth = false;
+    nprintf( 'Test discovery at: ' <> sysdaytime() );
+    nl( 1 );
+
+    nprintf( 'Unittests discovered (total of %p)', [% d.discovered_unittests.length %] );
+
+    lvars u, n;
+    for u, n in d.discovered_unittests, up_from(1) do
+        nprintf( '%p. %p', [% n, u %] );
+    endfor;
+    nl(1);
+
+    nprintf( 'Files compiled during discovery (total of %p)', [% d.discovered_files.length %] );
+    lvars file, n;
+    for file, n in d.discovered_files, up_from(1) do
+        nprintf( '%p. %p', [% n, file %] );
+    endfor;
+enddefine;
+
 
 define peek_expr_to( closing_keyword );
     dlocal pop_syntax_only = true;
@@ -336,15 +363,16 @@ define select_scope_for_vedargument();
         else
             mishap( 'No tests found', [vedargument ^vedargument vedcurrent ^vedcurrent] )
         endif
-    else
-        lvars folder = sys_fname_path( vedcurrent );
-        procedure();
+    elseif sysisdirectory( vedargument ) then
+        procedure( folder );
             lvars file;
-            for file in sys_file_match( folder, '*' <> unittest_suffix, false, false ).pdtolist do
+            for file in sys_file_match( folder dir_>< '.../', '*' <> unittest_suffix, false, false ).pdtolist do
                 vedputmessage( 'COMPILING ' >< file );
                 pop11_compile( file )
             endfor
-        endprocedure
+        endprocedure(% vedargument %)
+    else
+        identfn(% [] %)
     endif
 enddefine;
 
@@ -365,6 +393,7 @@ define show_failures( passes, failures );
     vedpositionpop();
 enddefine;
 
+
 define ved_discover();
     dlocal vedpositionstack;
     lvars d = test_discovery_in_ved();
@@ -375,27 +404,7 @@ define ved_discover();
 
     dlocal cucharout = vedcharinsert;
 
-    nprintf( 'Test discovery at: ' <> sysdaytime() );
-    nl( 1 );
-
-    nprintf( 'Unittests discovered (total of %p)', [% d.discovered_unittests.length %] );
-    ;;; vedinsertstring( sprintf( 'Unittests discovered (total of %p)', [% d.discovered_unittests.length %] ) );
-    ;;; vedlinebelow();
-
-    lvars u, n;
-    for u, n in d.discovered_unittests, up_from(1) do
-        vedinsertstring( sprintf( '%p. %p', [% n, u %] ) );
-        vedlinebelow();
-    endfor;
-    vedlinebelow();
-
-    vedinsertstring( sprintf( 'Files compiled during discovery (total of %p)', [% d.discovered_files.length %] ) );
-    vedlinebelow();
-    lvars file, n;
-    for file, n in d.discovered_files, up_from(1) do
-        vedinsertstring( sprintf( '%p. %p', [% n, file %] ) );
-        vedlinebelow();
-    endfor;
+    pr_show_discovered( d );
 
     vedpositionpop();
 enddefine;
@@ -426,23 +435,34 @@ enddefine;
 
 ;;; --- Loading from outside Ved ---
 
-define unittests_discover( location );
+define find_unittest_files( location );
     if hasendstring( location, unittest_suffix ) then
         [% location %]
     elseif hasendstring( location, '.p' ) then
         lvars dir = sys_fname_path( location );
         lvars name = sys_fname_nam( location ) <> unittest_suffix;
         sys_file_match( name, dir dir_>< '../*/', false, false ).pdtolist;
-    else
+    elseif sysisdirectory( location ) then
         lvars folder = sys_fname_path( location );
-        sys_file_match( folder, '*' <> unittest_suffix, false, false ).pdtolist
-    endif
+        sys_file_match( folder dir_>< '.../', '*' <> unittest_suffix, false, false ).pdtolist
+    else 
+        []
+    endif.expandlist
+enddefine;
+
+define find_unittests( location );
+    lvars files = find_unittest_files( location );
+    lvars tests = applist(% files, loadcompiler %).discover_unittests;
+    return( newdiscovered( tests ) )
+enddefine;
+
+define unittests_discover( location );
+    lvars d = find_unittests( location );
+    pr_show_discovered( d );
 enddefine;
 
 define unittests_run( location );
-    lvars files = unittests_discover( location );
-    lvars tests = applist(% files, loadcompiler %).discover_unittests;
-    lvars d = newdiscovered( tests );
+    lvars d = find_unittests( location );
 
     dlocal run_unittest = run_unittest_during_execution;
     dlocal fail_unittest = fail_unittest_during_execution;
