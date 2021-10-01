@@ -306,7 +306,7 @@ define peek_expr_to( closing_keyword );
     dlocal pop_syntax_only = true;
     dlocal proglist_state;
     lvars old_proglist = proglist;
-    pop11_comp_expr_to( ";" ) -> _;
+    pop11_comp_expr_to( closing_keyword ) -> _;
     [%
         while old_proglist.ispair and not( old_proglist.back.isprocedure ) do
             old_proglist.destpair -> old_proglist
@@ -334,7 +334,7 @@ define global syntax assert();
     sysCALL( "stacklength" );
     sysPOP( t );
     lvars expr = peek_expr_to( ";" );
-    pop11_comp_expr_to( ";" ) -> _;
+    pop11_comp_expr();
     sysCALL( "stacklength" );
     sysPUSH( t );
     sysCALL( "fi_-" );
