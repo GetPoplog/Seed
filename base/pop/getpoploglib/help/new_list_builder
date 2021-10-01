@@ -1,5 +1,7 @@
 HELP NEW_LIST_BUILDER                                 Stephen Leach, Sept 2021
 
+    uses new_list_builder
+
     new_list_builder() -> builder
     builder( item )
     builder( termin ) -> list
