@@ -1,3 +1,5 @@
+.ONESHELL:
+SHELL:=/bin/bash
 # This is a makefile that can be used to acquire Poplog, build and install it locally.
 # It will be installed into $(POPLOG_HOME_DIR), which is by default /usr/local/poplog.
 # This folder supports multiple versions via the symlink current_usepop.
@@ -90,7 +92,7 @@ include mk_recipes/lib.mk
 include mk_recipes/helpers.mk
 include mk_recipes/jumpstart.mk
 include mk_recipes/download.mk
-include mk_recipes/build.mk
+include mk_recipes/build-management.mk
 include mk_recipes/tarballs.mk
 include mk_recipes/packaging.mk
 include mk_recipes/release.mk
