@@ -187,6 +187,7 @@ define core_define_unittest();
     declarator( pdrname, 0 );
     if is_global then sysGLOBAL( pdrname, is_global ) endif;
     sysPROCEDURE( props, 0 );
+    dlocal unittest_sysVARS = sysLVARS;
 
     ;;; Set up dynamic test discovery.
     lvars collector = sysNEW_LVAR();
