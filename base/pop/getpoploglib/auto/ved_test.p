@@ -79,21 +79,21 @@ define ved_test();
     lvars disco = d.discovered_unittests;
     lvars ( passes, failures ) = run_all_unittests( disco );
 
-    if null(failures) then
-        lvars n_passes = passes.length;
-        lvars n_failures = failures.length;
-        sprintf(
-            '%p pass%p, %p failure%p',
-            [%
-                n_passes,
-                if n_passes == 1 then '' else 'es' endif, ;;; singular v plural
-                n_failures,
-                if n_failures == 1 then '' else 's' endif ;;; singular v plural
-            %]
-        ).vedputmessage;
-    else
+    unless null(failures) then
         show_failures( passes, failures )
-    endif;
+    endunless;
+
+    lvars n_passes = passes.length;
+    lvars n_failures = failures.length;
+    sprintf(
+        '%p pass%p, %p failure%p',
+        [%
+            n_passes,
+            if n_passes == 1 then '' else 'es' endif, ;;; singular v plural
+            n_failures,
+            if n_failures == 1 then '' else 's' endif ;;; singular v plural
+        %]
+    ).vedputmessage;
 enddefine;
 
 endsection;
