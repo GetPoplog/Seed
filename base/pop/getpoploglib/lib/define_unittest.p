@@ -316,6 +316,13 @@ define global syntax assert();
     sysCALLQ( check_assertion );
 enddefine;
 
+define r_pdprops( u );
+    while u.isclosure and not( u.pdprops ) do
+        u.pdpart -> u
+    endwhile;
+    u.pdprops
+enddefine;
+
 define pr_show_failures( passes, failures );
     dlocal poplinewidth = false;
     nprintf( 'Test results at: ' <> sysdaytime() );
@@ -325,19 +332,22 @@ define pr_show_failures( passes, failures );
     for i, n in failures, list_from(1) do
         lvars ( u, msg, idstring, args ) = i.destfailureinfo;
         if idstring = 'unittest-assert:unittest-fail' then
-            lvars name = u.pdprops;
+            lvars name = u.r_pdprops;
             nprintf( '%p.\tFailed    : %p', [^n ^name] );
             if u.isclosure then
                 nprintf( '\tData      : %p', [[% u.explode %]])
             endif;
             lvars (filename, linenumber, assert_expr, _n) = args.destlist;
+            if hasstartstring( filename, current_directory ) then
+                allbutfirst( datalength(current_directory) + 1, filename ) -> filename;
+            endif;
             printf( '\tExpression: ' );
             applist( [assert ^^assert_expr], spr );
             nl(1);
             nprintf( '\tLine num  : %p', [ ^linenumber ] );
             nprintf( '\tFile name : %p', [ ^filename ] );
         else
-            lvars name = u.pdprops;
+            lvars name = u.r_pdprops;
             nprintf( '%p.\tUnit test : %p', [^n ^name] );
             nprintf( '\tMessage   : %p', [ ^msg ] );
             unless args.null do
