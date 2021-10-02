@@ -26,4 +26,16 @@ define :unittest test_new_list_builder;
         assert M == nil;
     enddefine;
 
+    define :unittest is;
+        ;;; Arrange
+        lvars banana = "banana";
+        lvars b = new_list_builder();
+        ;;; Act
+        lvars banana_is = is_list_builder( banana );
+        lvars b_is = is_list_builder( b );
+        ;;; Assert
+        assert banana_is.not;
+        assert b_is;
+    enddefine;
+
 enddefine;

@@ -127,7 +127,7 @@ enddefine;
 
 vars procedure unittest_sysVARS = sysVARS;
 
-define read_declaration( defdec ) -> ( pdrname, is_global, declarator );
+define read_declaration( defdec ) -> ( pdrname, props, is_global, declarator );
     lvars attributes = (
         [%
             repeat
@@ -170,6 +170,9 @@ define read_declaration( defdec ) -> ( pdrname, is_global, declarator );
         sysNEW_LVAR() -> pdrname;
         false -> is_global;
         procedure( w, n ); endprocedure -> declarator;
+        "anonymous_unittest" -> props;
+    else
+        pdrname -> props
     endif;
 enddefine;
 
@@ -180,10 +183,10 @@ define core_define_unittest();
         applist( list_builder( termin ), run_unittest )
     enddefine;
 
-    lvars ( pdrname, is_global, declarator ) = read_declaration( unittest_sysVARS );
-    declarator( pdrname.isword and pdrname, 0 );
+    lvars ( pdrname, props, is_global, declarator ) = read_declaration( unittest_sysVARS );
+    declarator( pdrname, 0 );
     if is_global then sysGLOBAL( pdrname, is_global ) endif;
-    sysPROCEDURE( pdrname, 0 );
+    sysPROCEDURE( props, 0 );
 
     ;;; Set up dynamic test discovery.
     lvars collector = sysNEW_LVAR();
