@@ -73,20 +73,13 @@ define fail_unittest_during_execution( info );
     exitfrom( run_unittest )
 enddefine;
 
-define up_from( n );
-    procedure();
-        n;
-        n + 1 -> n;
-    endprocedure.pdtolist
-enddefine;
-
 define pr_show_failures( passes, failures );
     dlocal poplinewidth = false;
     nprintf( 'Test results at: ' <> sysdaytime() );
     nl(1);
 
     lvars i, n;
-    for i, n in failures, up_from(1) do
+    for i, n in failures, list_from(1) do
         lvars ( u, msg, idstring, args ) = i.destfailureinfo;
         if idstring = 'unittest-assert:unittest-fail' then
             lvars name = u.pdprops;
@@ -289,14 +282,14 @@ define pr_show_discovered( d );
     nprintf( 'Unittests discovered (total of %p)', [% d.discovered_unittests.length %] );
 
     lvars u, n;
-    for u, n in d.discovered_unittests, up_from(1) do
+    for u, n in d.discovered_unittests, list_from(1) do
         nprintf( '%p. %p', [% n, u %] );
     endfor;
     nl(1);
 
     nprintf( 'Files compiled during discovery (total of %p)', [% d.discovered_files.length %] );
     lvars file, n;
-    for file, n in d.discovered_files, up_from(1) do
+    for file, n in d.discovered_files, list_from(1) do
         nprintf( '%p. %p', [% n, file %] );
     endfor;
 enddefine;
