@@ -66,7 +66,7 @@ define vars fail_unittest( info );
 enddefine;
 
 define fail_unittest_during_execution( info );
-    unittest_failures( info ); 
+    unittest_failures( info );
     exitfrom( run_unittest )
 enddefine;
 
@@ -329,6 +329,7 @@ enddefine;
 
 define pr_show_failures( passes, failures );
     dlocal poplinewidth = false;
+    dlocal pop_pr_quotes = false;
     nprintf( 'Test results at: ' <> sysdaytime() );
     nl(1);
 
@@ -368,6 +369,7 @@ enddefine;
 
 define pr_show_discovered( d );
     dlocal poplinewidth = false;
+    dlocal pop_pr_quotes = false;
     nprintf( 'Test discovery at: ' <> sysdaytime() );
     nl( 1 );
 
