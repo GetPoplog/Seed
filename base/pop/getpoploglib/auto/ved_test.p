@@ -85,6 +85,7 @@ define ved_test();
 
     lvars n_passes = passes.length;
     lvars n_failures = failures.length;
+    dlocal pop_pr_quotes = false;
     sprintf(
         '%p pass%p, %p failure%p',
         [%
