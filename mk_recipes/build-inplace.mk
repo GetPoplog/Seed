@@ -4,17 +4,27 @@
 SHELL:=/bin/bash
 
 
-POP_arch=x86_64
+POP_ARCH=x86_64
 export POP__as=$(shell which as)
 export usepop=$(shell pwd)/poplog_base
 popsys:=$(usepop)/pop/pop
 popsrc:=$(usepop)/pop/src
-popexternlib:=$(usepop)/pop/extern/lib
+popcom:=$(usepop)/pop/com
+popobj:=$(usepop)/pop/obj
 
-.PHONY: all
-all: $(addprefix $(popsys),poplibr poplibr.psv popc popc.psv poplink poplink.psv)
 
-$(popsrc)/syscomp/x86_64/asmout.p: $(popsrc)/syscomp/x86_64/asmout.p.template
+POPC:=$(popsys)/popc
+POPLIBR:=$(popsys)/poplibr
+POPLINK:=$(popsys)/poplink
+PGLINK:=$(popsys)/pglink
+
+RUN_POPC:=source $(popcom)/popinit.sh && $(POPC)
+RUN_POPLIBR:=source $(popcom)/popinit.sh && $(POPLIBR)
+RUN_POPLINK:=source $(popcom)/popinit.sh && $(POPLINK)
+RUN_PGLINK:=source $(popcom)/popinit.sh && $(PGLINK)
+
+
+$(popsrc)/syscomp/$(POP_ARCH)/asmout.p: $(popsrc)/syscomp/$(POP_ARCH)/asmout.p.template
 	echo 'void test(){}' > test.c
 	if `(cd _build; /usr/bin/gcc -no-pie -c test.c 2>&1)`; then \
 		POP__CC_OPTIONS=-v -Wl,-export-dynamic -Wl,-no-as-needed; \
@@ -29,12 +39,12 @@ $(popsrc)/syscomp/x86_64/asmout.p: $(popsrc)/syscomp/x86_64/asmout.p.template
 
 POPLOG_COMMANDER:=poplog_base/pop/bin/poplog
 
-LIBPOP_SRC:=$(wildcard base/pop/extern/lib/*.c)
-LIBPOP_HEADERS:=$(wildcard base/pop/extern/lib/*.h)
-LIBPOP_OBJ:=$(LIBPOP_SRC:base/%.c=poplog_base/%.o)
-LIBPOP:=poplog_base/pop/extern/libpop.a
+LIBPOP_SRC:=$(wildcard $(usepop)/pop/extern/lib/*.c)
+LIBPOP_HEADERS:=$(wildcard $(usepop)/pop/extern/lib/*.h)
+LIBPOP_OBJ:=$(LIBPOP_SRC:%.c=%.o)
+LIBPOP:=$(usepop)/pop/extern/lib/libpop.a
 
-$(LIBPOP_OBJ): poplog_base/%.o: base/%.c $(LIBPOP_HEADERS)
+$(LIBPOP_OBJ): %.o: %.c $(LIBPOP_HEADERS)
 	mkdir -p $(@D)
 	$(CC) -c -O $(CFLAGS) -o $@ $<
 
@@ -45,13 +55,13 @@ $(LIBPOP): $(LIBPOP_OBJ)
 X11_CFLAGS:=$(shell pkg-config --cflags x11) -I/usr/include/X11
 X11_LDFLAGS:=$(shell pkg-config --libs x11)
 
-LIBXPW_SRC:=$(wildcard base/pop/x/Xpw/*.c)
-LIBXPW_HEADERS:=$(wildcard base/pop/x/Xpw/*.h)
-LIBXPW_OBJ:=$(LIBXPW_SRC:base/%.c=poplog_base/%.o)
-LIBXPW:=poplog_base/pop/extern/lib/libXpw.so
+LIBXPW_SRC:=$(wildcard $(usepop)/pop/x/Xpw/*.c)
+LIBXPW_HEADERS:=$(wildcard $(usepop)/pop/x/Xpw/*.h)
+LIBXPW_OBJ:=$(LIBXPW_SRC:%.c=%.o)
+LIBXPW:=$(usepop)/pop/extern/lib/libXpw.so
 
 $(LIBXPW_OBJ): CFLAGS=$(X11_CFLAGS) -Ibase/pop/x/Xpw/ -fpic -g
-$(LIBXPW_OBJ): poplog_base/%.o: base/%.c $(LIBXPW_HEADERS)
+$(LIBXPW_OBJ): %.o: %.c $(LIBXPW_HEADERS)
 	mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
@@ -120,16 +130,15 @@ poplog_base/pop/pop/newpop.psv: Stage1.proxy
         && . ./poplog_base/pop/com/popinit.sh \
         && (cd $$popsys; $$popsys/corepop %nort ../lib/lib/mkimage.p -entrymain ./newpop.psv ../lib/lib/newpop.p)
 
-POP_COMPILER_TOOLS:=$(addprefix poplog_base/pop/pop/,poplibr popc poplink)
+POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
 POP_COMPILER_TOOL_IMAGES:=$(addsuffix .psv,$(POP_COMPILER_TOOLS))
 $(POP_COMPILER_TOOLS) $(POP_COMPILER_TOOL_IMAGES) &: poplog_base/pop/pop/corepop poplog_base/pop/src/syscomp/x86_64/asmout.p
 	TOP="$$(pwd)"
 	. "$${usepop}/pop/com/popinit.sh"
 	export usepop
 	export POP__as
-	export POP_arch
 	pushd $$popsrc
-	$$TOP/mk_cross -d -a=$(POP_arch) popc poplibr poplink
+	$$TOP/mk_cross -d -a=$(POP_ARCH) popc poplibr poplink
 	popd
 
 	pushd poplog_base/pop/pop
@@ -142,7 +151,59 @@ $(POP_COMPILER_TOOLS) $(POP_COMPILER_TOOL_IMAGES) &: poplog_base/pop/pop/corepop
 # This target ensures that we have a working popc, poplink, poplibr and a fresh corepop
 # in newpop11. It is the equivalent of Waldek's build_pop0 script.
 Stage1.proxy: Corepops.proxy
-	bash makeSystemTools.sh
+    # DONE bash makeSystemTools.sh
 	bash relinkCorepop.sh
 	cp poplog_base/pop/pop/newpop11 poplog_base/pop/pop/corepop
 	touch $@
+
+SRC_WLB_SRC:=$(wildcard $(popsrc)/*.p $(popsrc)/$(POP_ARCH)/*.[ps])
+SRC_WLB_HEADERS:=$(wildcard $(popsrc)/*.ph)
+SRC_WLB_HEADERS+=$(addsuffix .ph,$(addprefix $(usepop)/pop/lib/include/,ast doc_index itemise pop11_flags sigdefs subsystem sysdefs unix_errno vedfile_struct vedscreendefs vm_flags))
+SRC_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(SRC_WLB_SRC))) \
+				 $(patsubst %.s,%.w,$(filter %.s,$(SRC_WLB_SRC)))
+SRC_WLB_OBJECTS:=$(addprefix $(popsrc)/,$(notdir $(SRC_WLB_OBJECTS)))
+SRC_WLB:=$(popobj)/src.wlb
+$(SRC_WLB_OBJECTS) &: $(SRC_WLB_SRC) $(SRC_WLB_HEADERS) $(POPC)
+	cd $(popsrc)
+	$(RUN_POPC) -c -nosys $(POP_ARCH)/*.[ps] ./*.p
+
+$(SRC_WLB): $(SRC_WLB_OBJECTS) $(POPLIBR)
+	cd $(popsrc)
+	$(RUN_POPLIBR) -c $@ $(shell realpath --relative-to $(popsrc) $(SRC_WLB_OBJECTS))
+
+
+VED_WLB_SRC:=$(wildcard $(usepop)/pop/ved/src/*.p)
+VED_WLB_HEADERS:=$(wildcard $(usepop)/pop/ved/src/*.ph) \
+				 $(popsrc)/syspop.ph \
+				 $(usepop)/pop/lib/include/ved_declare.ph \
+				 $(usepop)/pop/lib/include/vedfile_struct.ph \
+				 $(usepop)/pop/lib/include/vedscreendefs.ph
+VED_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(VED_WLB_SRC)))
+VED_WLB:=$(popobj)/vedsrc.wlb
+$(VED_WLB_OBJECTS) &: $(VED_WLB_SRC) $(VED_WLB_HEADERS) $(POPC)
+	cd $(usepop)/pop/ved/src
+	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+
+$(VED_WLB): $(popobj)/src.wlb $(VED_WLB_OBJECTS) $(POPLIBR)
+	cd $(usepop)/pop/ved/src
+	$(RUN_POPLIBR) -c $@ ./*.w
+
+
+XSRC_WLB_SRC:=$(wildcard $(usepop)/pop/x/src/*.p)
+XSRC_WLB_HEADERS:=$(wildcard $(usepop)/pop/x/src/*.ph)
+XSRC_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(XSRC_WLB_SRC)))
+XSRC_WLB:=$(popobj)/xsrc.wlb
+$(XSRC_WLB_OBJECTS) &: $(XSRC_WLB_SRC) $(XSRC_WLB_HEADERS) $(POPC)
+	cd $(usepop)/pop/x/src
+	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+
+XSRC_WLB: $(popobj)/src.wlb $(XSRC_WLB_OBJECTS) $(POPLIBR)
+	cd $(usepop)/pop/x/src
+	$(RUN_POPLIBR) -c $@ ./*.w
+
+$(popsys)/newpop11: $(SRC_WLB) $(VED_WLB) $(LIBPOP) $(PGLINK)
+	cd $(popsys)
+	$(RUN_PGLINK) -core
+
+.PHONY: all
+all: $(popsys)/newpop11 $(LIBXPW) $(popobj)/xsrc.wlb
