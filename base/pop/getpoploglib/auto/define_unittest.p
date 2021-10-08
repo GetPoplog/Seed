@@ -8,7 +8,17 @@ section $-unittest =>
     register_unittest       ;;; exported because of code-planting
 ;
 
-vars expect_mishap = false;     ;;; Part of test-execution.
+vars mishap_happened = false;
+vars _expect_mishap = false;
+define global active:1 expect_mishap();
+    _expect_mishap;
+enddefine;
+define updaterof active:1 expect_mishap( saved );
+    saved -> _expect_mishap;
+    if not(saved) and not( mishap_happened ) do
+        mishap( 'Expected mishap was skipped', [] )
+    endif;
+enddefine;
 
 vars pop_unittests = undef;     ;;; Part of test-discovery.
 vars unittest_passes = undef;   ;;; Part of test-execution.
@@ -92,6 +102,7 @@ define run_unittest_during_execution( p );
 
     define dlocal pop_exception_final( N, mess, idstring, severity );
         returnunless( severity == `E` or severity == `R` )( false );
+        true -> mishap_happened;
         lvars args = conslist( N );
         lvars is_expected = is_expected_mishap( mess, idstring, severity, args );
         if is_expected then
@@ -102,13 +113,9 @@ define run_unittest_during_execution( p );
     enddefine;
 
     dlocal current_unittest = p;
+    dlocal mishap_happened = false;
     p();
-    if expect_mishap then
-        lvars info = consfailureinfo( current_unittest, 'Required mishap skipped', '', [] );
-        unittest_failures( p );
-    else
-        unittest_passes( p );
-    endif
+    unittest_passes( p );
 enddefine;
 
 define discover_unittests( p );
@@ -188,6 +195,7 @@ define core_define_unittest();
     if is_global then sysGLOBAL( pdrname, is_global ) endif;
     sysPROCEDURE( props, 0 );
     dlocal unittest_sysVARS = sysLVARS;
+    sysLOCAL( "ident $-unittest$-mishap_happened" );
 
     ;;; Set up dynamic test discovery.
     lvars collector = sysNEW_LVAR();
@@ -203,7 +211,7 @@ define core_define_unittest();
     ;;; Run any registered tests.
     sysPUSH( collector );
     sysCALLQ( run_all );
-
+    sysLABEL( "return" );
     sysPASSIGN( sysENDPROCEDURE(), pdrname );
 
     return( pdrname );
@@ -347,12 +355,13 @@ define pr_show_failures( passes, failures );
                 allbutfirst( datalength(current_directory) + 1, filename ) -> filename;
             endif;
             printf( '\tExpression: ' );
-            applist( [assert ^^assert_expr], spr );
+            applist( [assert ^^assert_expr], procedure(); dlocal pop_pr_quotes = true; spr() endprocedure );
             nl(1);
             nprintf( '\tLine num  : %p', [ ^linenumber ] );
             nprintf( '\tFile name : %p', [ ^filename ] );
         else
             lvars name = u.r_pdprops;
+            lvars ctx = u.registration_table;
             nprintf( '%p.\tUnit test : %p', [^n ^name] );
             nprintf( '\tMessage   : %p', [ ^msg ] );
             unless args.null do
@@ -362,6 +371,18 @@ define pr_show_failures( passes, failures );
                     nprintf( '\t *\t%p', [^a] )
                 endfor;
             endunless;
+            if ctx.iscontext then
+                lvars (parent, linenum) = ctx.destcontext;
+                if linenum then
+                    nprintf( '\tLine num  : %p', [ ^linenum ] );
+                endif;
+                if parent.isstring then
+                    if hasstartstring( parent, current_directory ) then
+                        allbutfirst( datalength(current_directory) + 1, parent ) -> parent;
+                    endif;
+                    nprintf( '\tFrom      : %p', [ ^parent ] );
+                endif;
+            endif;
         endif;
         nl( 1 );
     endfor;
