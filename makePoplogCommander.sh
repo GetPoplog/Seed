@@ -49,8 +49,10 @@ BUILD_HOME="$(pwd)/_build"
 process_env() {
     build="$1"
     suffix="$2"
+    env_file="${BUILD_HOME}/environments/${build}-base0${suffix}"
+    [ -f "$env_file" ]
     sed -z -e 's/\\/\\\\/g' -e 's/\n/\\n/g' -e 's/"/\\"/g' \
-    < "${BUILD_HOME}/environments/${build}-base0${suffix}" | \
+    < "$env_file" | \
     tr '\0' '\n' | \
     grep -v '^\(_\|SHLVL\|PWD\|poplib\|poplocal\(auto\|bin\)\?\)=' | \
     sort

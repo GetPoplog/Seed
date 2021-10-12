@@ -41,23 +41,23 @@ cd "$usepop/pop/x/src/"
 mkdir -p "${BUILD_HOME}/environments"
 
 # We need to capture the Poplog environment for each build variant. This is
-# required for the poplog command tool, which needs to bind the appropriate 
+# required for the poplog command tool, which needs to bind the appropriate
 # environment variables. Each build variant has slightly different variables
-# and values. So we capture these and later on will synthesise them into 
+# and values. So we capture these and later on will synthesise them into
 # C-code functions. This is the best point at which to capture the variables.
 
-# We run the popenv.sh script inside a clean environment to capture the 
+# We run the popenv.sh script inside a clean environment to capture the
 # set of environment variables needed. We then need to replace any matches
 # of the string "_build/poplog_base" ($usepop) with our unique value USEPOP.
 # This will allow us to dynamically substitute with the selfHome'd value
-# at run-time. 
+# at run-time.
 
 # We don't want the exact paths - we need to abstract over $usepop. And we
 # also need to modify $usepop/pop/pop and $usepop/pop/lib/psv to include the
-# $build. 
+# $build.
 
 # N.B. We work in null-separated lines here, giving us a much better chance
-# in converting newlines and other control characters to valid C-strings later 
+# in converting newlines and other control characters to valid C-strings later
 # on.
 
 echo_env() {
@@ -83,7 +83,7 @@ link_and_create_env() {
 
     "$usepop/pop/src/newpop" -link "${build_options[$build]}" -norsv
 
-    # echo_env has weak strategy because it relies on being able to identify 
+    # echo_env has weak strategy because it relies on being able to identify
     # substitutions of $usepop. So we do it twice with a tiny variation and check
     # the results are the same in order to improve robustness.
     echo_env "$usepop" "${build}" > "${BUILD_HOME}/environments/${build}-base0"
@@ -125,7 +125,7 @@ mv "$usepop"/pop/lib/psv{,-xt}
 
 ################################################################################
 
-# Choose our default build variant. 
+# Choose our default build variant.
 ln -sf pop-xm "$usepop/pop/pop"
 ln -sf psv-xm "$usepop/pop/lib/psv"
 
