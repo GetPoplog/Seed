@@ -56,7 +56,12 @@ _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog
 _build/BuildPrep.proxy: _build/mk_cross _build/poplog_base _build/poplog_base/pop/packages _build/poplog_base/pop/pop/corepop _build/Makefile _build/makePoplogCommander.sh _build/echoEnv.sh _build/makePopEnv.sh
 	touch $@
 
-_build/BuildEnvs.proxy: _build/BuildPrep.proxy
+_build/NewCorepop.proxy: _build/BuildPrep.proxy
+	$(MAKE) -C _build corepop
+	mv $(usepop)/pop/pop/{new_corepop,corepop}
+	find $(usepop) -iname '*.w' -o -iname '*.wlb' -o -iname '*.olb' -o -iname '*.psv' -delete
+
+_build/BuildEnvs.proxy: _build/NewCorepop.proxy
 	tar_fromdir_todir() {
 	  ( cd "$$1"; tar cf - . ) | ( cd "$$2"; tar xf - )
 	}
@@ -117,3 +122,9 @@ _build/NoInit.proxy: _build/BuildPrep.proxy
 
 _build/POPLOG_VERSION: _build/poplog_base/pop/pop/corepop
 	$(usepop)/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
+
+_build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) _build/NoInit.proxy _build/POPLOG_VERSION
+	find poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
+	find poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
+	touch $@
+
