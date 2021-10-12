@@ -1,5 +1,8 @@
 .ONESHELL:
 SHELL:=/bin/bash
+.SHELLFLAGS:=-e -o pipefail -c
+.DELETE_ON_ERROR:
+.SUFFIXES:
 # This is a makefile that can be used to acquire Poplog, build and install it locally.
 # It will be installed into $(POPLOG_HOME_DIR), which is by default /usr/local/poplog.
 # This folder supports multiple versions via the symlink current_usepop.

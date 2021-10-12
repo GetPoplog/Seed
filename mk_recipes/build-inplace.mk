@@ -1,10 +1,14 @@
 # This Makefile is meant to invoked directly and not included.
 .ONESHELL:
 SHELL:=/bin/bash
+.SHELLFLAGS:=-e -o pipefail -c
+.DEFAULT_GOAL:=all
+.DELETE_ON_ERROR:
+.SUFFIXES:
 
 POP_X_CONFIG?=xm
 POP_ARCH=x86_64
-export POP__as=$(shell which as)
+export POP__as?=/usr/bin/as
 export usepop=$(shell pwd)/poplog_base
 export popsys:=$(usepop)/pop/pop
 popsrc:=$(usepop)/pop/src
@@ -103,52 +107,24 @@ Done.proxy: MakeIndexes.proxy $(POPLOG_COMMANDER) NoInit.proxy POPLOG_VERSION
 	find poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
 	touch $@
 
-NoInit.proxy:
-	# Add the noinit files for poplog --run.
-	mkdir -p poplog_base/pop/com/noinit
-	cd poplog_base/pop/com/noinit; \
-	  touch init.p; \
-	  ln -sf init.p vedinit.p; \
-	  ln -sf init.p init.pl; \
-	  ln -sf init.p init.lsp; \
-	  ln -sf init.p init.ml
-	chmod a-w poplog_base/pop/com/noinit/*.*
-	touch $@
-
-MakeIndexes.proxy: Stage2.proxy Packages.proxy
-	export usepop=$(abspath ./poplog_base) \
-        && . ./poplog_base/pop/com/popinit.sh \
-        && $(usepop)/pop/com/makeindexes > makeindexes.log
-	touch $@
-
-
-Packages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2
-	(cd poplog_base/pop; tar jxf "../../../$<")
-	./patchPackages.sh
-
-	cd poplog_base/pop/packages/popvision/lib
-	mkdir -p bin/linux
-	for f in *.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
-
-	cd poplog_base/pop/packages/neural/
-	mkdir -p bin/linux
-	for f in src/c/*.c; do gcc -o bin/linux/`basename $$f .c`.so -O3 -fpic -shared $$f; done
-
-	touch $@
-
-
+$(POPLINK): $(POPLINK).psv
+$(POPC): $(POPC).psv
+$(POPLIBR): $(POPLIBR).psv
 
 POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
 POP_COMPILER_TOOL_IMAGES:=$(addsuffix .psv,$(POP_COMPILER_TOOLS))
 $(POP_COMPILER_TOOLS) $(POP_COMPILER_TOOL_IMAGES) &: poplog_base/pop/pop/corepop poplog_base/pop/src/syscomp/x86_64/asmout.p
 	TOP="$$(pwd)"
-	. "$${usepop}/pop/com/popinit.sh"
+	. "$(usepop)/pop/com/popinit.sh"
 	export usepop
 	export POP__as
 	pushd $$popsrc
+	rm -f ./*.psv
 	$$TOP/mk_cross -d -a=$(POP_ARCH) popc poplibr poplink
+	echo "first popd"
 	popd
-
+	echo "first popd complete"
+	
 	pushd poplog_base/pop/pop
 	ln -sf corepop popc
 	ln -sf corepop poplibr
@@ -165,10 +141,12 @@ SRC_WLB_OBJECTS:=$(addprefix $(popsrc)/,$(notdir $(SRC_WLB_OBJECTS)))
 SRC_WLB:=$(popobjlib)/src.wlb
 $(SRC_WLB_OBJECTS) &: $(SRC_WLB_SRC) $(SRC_WLB_HEADERS) $(POPC)
 	cd $(popsrc)
+	rm -f $@
 	$(RUN_POPC) -c -nosys $(POP_ARCH)/*.[ps] ./*.p
 
 $(SRC_WLB): $(SRC_WLB_OBJECTS) $(POPLIBR)
 	cd $(popsrc)
+	rm -f $@
 	$(RUN_POPLIBR) -c $@ $(shell realpath --relative-to $(popsrc) $(SRC_WLB_OBJECTS))
 
 
@@ -182,10 +160,12 @@ VED_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(VED_WLB_SRC)))
 VED_WLB:=$(popobjlib)/vedsrc.wlb
 $(VED_WLB_OBJECTS) &: $(VED_WLB_SRC) $(VED_WLB_HEADERS) $(POPC)
 	cd $(usepop)/pop/ved/src
+	rm -f $@
 	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
 
 $(VED_WLB): $(popobjlib)/src.wlb $(VED_WLB_OBJECTS) $(POPLIBR)
 	cd $(usepop)/pop/ved/src
+	rm -f $@
 	$(RUN_POPLIBR) -c $@ ./*.w
 
 
@@ -195,15 +175,24 @@ XSRC_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(XSRC_WLB_SRC)))
 XSRC_WLB:=$(popobjlib)/xsrc.wlb
 $(XSRC_WLB_OBJECTS) &: $(XSRC_WLB_SRC) $(XSRC_WLB_HEADERS) $(XPW_TARGET) $(POPC)
 	cd $(usepop)/pop/x/src
+	rm -f $@
 	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
 
 $(XSRC_WLB): $(popobjlib)/src.wlb $(XSRC_WLB_OBJECTS) $(POPLIBR)
 	cd $(usepop)/pop/x/src
+	rm -f $@
 	$(RUN_POPLIBR) -c $@ ./*.w
 
 ifneq ($(POP_X_CONFIG),nox)
 XSRC_TARGET=$(XSRC_WLB)
 endif
+
+.PHONY: corepop
+corepop: $(popsys)/new_corepop
+$(popsys)/new_corepop: $(POPC) $(LIBPOP) $(SRC_WLB)
+	cd $(popsys)
+	$(RUN_PGLINK) -core
+	mv newpop11 $@
 
 $(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map) &: $(XSRC_TARGET) $(SRC_WLB) $(VED_WLB) $(LIBPOP) $(PGLINK) $(call GUARD,POP_X_CONFIG)
 	cd $(popsys)
