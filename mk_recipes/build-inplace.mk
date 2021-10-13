@@ -1,4 +1,6 @@
 # This Makefile is meant to invoked directly and not included.
+
+# Causes the commands in a recipe to be issued in the same shell
 .ONESHELL:
 SHELL:=/bin/bash
 .SHELLFLAGS:=-e -o pipefail -c
@@ -15,6 +17,7 @@ popsrc:=$(usepop)/pop/src
 popcom:=$(usepop)/pop/com
 popobjlib:=$(usepop)/pop/obj
 popsavelib:=$(usepop)/pop/lib/psv
+poppackages:$(usepop)/pop/packages
 
 COREPOP:=$(popsys)/corepop
 POPC:=$(popsys)/popc
@@ -22,11 +25,11 @@ POPLIBR:=$(popsys)/poplibr
 POPLINK:=$(popsys)/poplink
 PGLINK:=$(popsys)/pglink
 
+MK_CROSS:=$(shell pwd)/../mk_cross
 RUN_POPC:=source $(popcom)/popinit.sh && $(POPC)
 RUN_POPLIBR:=source $(popcom)/popinit.sh && $(POPLIBR)
-RUN_POPLINK:=source $(popcom)/popinit.sh && $(POPLINK)
 RUN_PGLINK:=source $(popcom)/popinit.sh && $(PGLINK)
-RUN_MKIMAGE:=source $(popcom)/popinit.sh && cd $$popsys && ./pop11 %nort %noinit ../lib/lib/mkimage.p
+RUN_MKIMAGE:=cd $$popsys && source $(popcom)/popinit.sh && ./pop11 %nort %noinit ../lib/lib/mkimage.p
 
 ifeq ($(POP_X_CONFIG),xm)
 PGLINK_X_FLAG:=-xm
@@ -44,7 +47,8 @@ endif
 # Taken from https://stackoverflow.com/questions/11647859/make-targets-depend-on-variables
 GUARD = $(1)_GUARD_$(shell echo $($(1)) | md5sum | cut -d ' ' -f 1)
 
-$(call GUARD,POP_X_CONFIG):
+POP_X_CONFIG_FILE:=$(call GUARD,POP_X_CONFIG)
+$(POP_X_CONFIG_FILE):
 	rm -rf POP_X_CONFIG*
 	touch $@
 
@@ -55,7 +59,7 @@ $(popsrc)/syscomp/$(POP_ARCH)/asmout.p: $(popsrc)/syscomp/$(POP_ARCH)/asmout.p.t
 	else \
 		POP__CC_OPTIONS=-v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed; \
 	fi
-	test ! -z "$$POP__CC_OPTIONS" # test variable was set in previous block
+	test ! -z "$$POP__CC_OPTIONS" # ensure variable was set in previous block
 	# Substitute the template-parameter that looks like
 	# {{{POP__CC_OPTIONS:_random_text_}}} with the compiler options.
 	sed -e 's/{{{POP__CC_OPTIONS:[^}]*}}}/$$POP__CC_OPTIONS/' < $< > $@
@@ -95,42 +99,28 @@ $(LIBXPW): $(LIBXPW_OBJ)
 	mkdir -p $(@D)
 	$(CC) -shared $(LDFLAGS) -o $@ $^
 
-ifneq ($(POP_X_CONFIG),nox)
-XPW_TARGET=$(LIBXPW)
-endif
 
-POPLOG_VERSION: $(COREPOP)
-	$(COREPOP) ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
+$(POPLINK): $(POPLINK).psv $(COREPOP)
+	cd $(popsys)
+	ln -sf corepop poplink
 
-Done.proxy: MakeIndexes.proxy $(POPLOG_COMMANDER) NoInit.proxy POPLOG_VERSION
-	find poplog_base -name '*-' -exec rm -f {} \; # Remove the backup files
-	find poplog_base -xtype l -exec rm -f {} \;   # Remove bad symlinks (we have some from poppackages)
-	touch $@
+$(POPC): $(POPC).psv $(COREPOP)
+	cd $(popsys)
+	ln -sf corepop popc
 
-$(POPLINK): $(POPLINK).psv
-$(POPC): $(POPC).psv
 $(POPLIBR): $(POPLIBR).psv
+	cd $(popsys)
+	ln -sf corepop poplibr
 
 POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
 POP_COMPILER_TOOL_IMAGES:=$(addsuffix .psv,$(POP_COMPILER_TOOLS))
-$(POP_COMPILER_TOOLS) $(POP_COMPILER_TOOL_IMAGES) &: poplog_base/pop/pop/corepop poplog_base/pop/src/syscomp/x86_64/asmout.p
-	TOP="$$(pwd)"
+$(POP_COMPILER_TOOL_IMAGES) &: poplog_base/pop/pop/corepop poplog_base/pop/src/syscomp/x86_64/asmout.p ../mk_cross
 	. "$(usepop)/pop/com/popinit.sh"
 	export usepop
 	export POP__as
-	pushd $$popsrc
-	rm -f ./*.psv
-	$$TOP/mk_cross -d -a=$(POP_ARCH) popc poplibr poplink
-	echo "first popd"
-	popd
-	echo "first popd complete"
-	
-	pushd poplog_base/pop/pop
-	ln -sf corepop popc
-	ln -sf corepop poplibr
-	ln -sf corepop poplink
-	popd
-
+	cd $(popsrc)
+	rm -f ./{popc,poplibr,poplink}.psv*
+	$(MK_CROSS) -d -a=$(POP_ARCH) popc poplibr poplink
 
 SRC_WLB_SRC:=$(wildcard $(popsrc)/*.p $(popsrc)/$(POP_ARCH)/*.[ps])
 SRC_WLB_HEADERS:=$(wildcard $(popsrc)/*.ph)
@@ -168,7 +158,9 @@ $(VED_WLB): $(popobjlib)/src.wlb $(VED_WLB_OBJECTS) $(POPLIBR)
 	rm -f $@
 	$(RUN_POPLIBR) -c $@ ./*.w
 
-
+ifneq ($(POP_X_CONFIG),nox)
+XPW_TARGET=$(LIBXPW)
+endif
 XSRC_WLB_SRC:=$(wildcard $(usepop)/pop/x/src/*.p)
 XSRC_WLB_HEADERS:=$(wildcard $(usepop)/pop/x/src/*.ph)
 XSRC_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(XSRC_WLB_SRC)))
@@ -183,18 +175,18 @@ $(XSRC_WLB): $(popobjlib)/src.wlb $(XSRC_WLB_OBJECTS) $(POPLIBR)
 	rm -f $@
 	$(RUN_POPLIBR) -c $@ ./*.w
 
-ifneq ($(POP_X_CONFIG),nox)
-XSRC_TARGET=$(XSRC_WLB)
-endif
 
 .PHONY: corepop
 corepop: $(popsys)/new_corepop
-$(popsys)/new_corepop: $(POPC) $(LIBPOP) $(SRC_WLB)
+$(popsys)/new_corepop: $(LIBPOP) $(SRC_WLB) $(PGLINK) $(POP_COMPILER_TOOLS) 
 	cd $(popsys)
 	$(RUN_PGLINK) -core
 	mv newpop11 $@
 
-$(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map) &: $(XSRC_TARGET) $(SRC_WLB) $(VED_WLB) $(LIBPOP) $(PGLINK) $(call GUARD,POP_X_CONFIG)
+ifneq ($(POP_X_CONFIG),nox)
+XSRC_TARGET=$(XSRC_WLB)
+endif
+$(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map) &: $(XSRC_TARGET) $(SRC_WLB) $(VED_WLB) $(LIBPOP) $(PGLINK) $(POP_COMPILER_TOOLS) $(POP_X_CONFIG_FILE)
 	cd $(popsys)
 	$(RUN_PGLINK) $(PGLINK_X_FLAG) -map
 	mv newpop11 basepop11
@@ -217,11 +209,16 @@ $(popsavelib)/pml.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popen
 	@rm -f $@
 	$(RUN_MKIMAGE) -nodebug -install -flags ml \( \) $@ ../pml/src/ml.p
 
+.PHONY: images
+images: $(addsuffix .psv,$(addprefix $(popsavelib)/,startup clisp prolog pml))
+
 ifneq ($(POP_X_CONFIG),nox)
 $(popsavelib)/xved.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	$(RUN_MKIMAGE) -nodebug -nonwriteable -install -entry xved_standalone_setup $@ mkxved
+images: $(popsavelib)/xved.psv
 endif
+
 
 $(popsys)/clisp: $(popsavelib)/clisp.psv $(popsys)/basepop11
 	cd $$popsys
@@ -243,22 +240,41 @@ $(popsys)/ved: $(popsys)/basepop11
 	cd $$popsys
 	ln -f basepop11 ved
 
-$(popsys)/popenv.sh: makePopEnv.sh $(call GUARD,POP_X_CONFIG) $(popsavelib)/startup.psv
-	./makePopEnv.sh $@ $(if $(filter nox,$(POP_X_CONFIG)),false,true)
+$(popsys)/popenv.sh: ../makePopEnv.sh $(POP_X_CONFIG_FILE) $(popsavelib)/startup.psv
+	../makePopEnv.sh $@ $(if $(filter nox,$(POP_X_CONFIG)),false,true)
 
 COMMAND_TARGETS:=$(addprefix $(popsys)/,clisp pml prolog ved)
 ifneq ($(POP_X_CONFIG),nox)
 COMMAND_TARGETS+=$(popsys)/xved
 endif
 
-environments/$(POP_X_CONFIG)-base0: $(COMMAND_TARGETS) echoEnv.sh 
-	./echoEnv.sh $$PWD/poplog_base $(POP_X_CONFIG) "$@"
+environments/$(POP_X_CONFIG)-base0: $(COMMAND_TARGETS) ../echoEnv.sh
+	../echoEnv.sh $$PWD/poplog_base $(POP_X_CONFIG) "$@"
 
-environments/$(POP_X_CONFIG)-base0-cmp: $(COMMAND_TARGETS) echoEnv.sh $(popsys)/popenv.sh
-	./echoEnv.sh $$PWD/poplog_base/pop/.. $(POP_X_CONFIG) "$@"
+environments/$(POP_X_CONFIG)-base0-cmp: $(COMMAND_TARGETS) ../echoEnv.sh $(popsys)/popenv.sh
+	../echoEnv.sh $$PWD/poplog_base/pop/.. $(POP_X_CONFIG) "$@"
 
 .PHONY: build_envs
-build_envs: environments/$(POP_X_CONFIG)-base0 environments/$(POP_X_CONFIG)-base0-cmp 
+build_envs: environments/$(POP_X_CONFIG)-base0 environments/$(POP_X_CONFIG)-base0-cmp
+
+NEURAL_DIR:=$(poppackages)/neural
+NEURAL_LIB_DIR:=$(NEURAL_DIR)/bin/linux
+NEURAL_SRC_DIR:=$(NEURAL_DIR)/src/c
+NEURAL_LIBS:=$(addprefix $(NEURAL_LIB_DIR)/,backprop.so complearn.so ranvecs.so)
+$(NEURAL_LIBS): CFLAGS+=-I$(NEURAL_SRC_DIR) -O3 -fpic -shared
+$(NEURAL_LIBS): $(NEURAL_LIB_DIR)/%.so: $(NEURAL_SRC_DIR)/%.c $(NEURAL_SRC_DIR)/neural.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+VISION_DIR:=$(poppackages)/popvision
+VISION_SRC_DIR:=$(VISION_DIR)/lib
+VISION_LIB_DIR:=$(VISION_DIR)/lib/bin/linux
+VISION_LIBS:=$(addsuffix .so,$(notdir $(wildcard $(VISION_LIB_DIR)/*.c)))
+$(VISION_LIBS): CFLAGS+=-I$(VISION_LIB_DIR) -O3 -fpic -shared
+$(VISION_LIBS): $(VISION_LIB_DIR)/%.so: $(VISION_SRC_DIR)/%.c $(addprefix $(VISION_SRC_DIR)/,arrpack.h arrscan.h)
+	$(CC) $(CFLAGS) -o $@ $<
+
+PackagesNativeExtensions.proxy: $(NEURAL_LIBS) $(VISION_LIBS)
+	touch $@
 
 .PHONY: all
-all: $(popsys)/pop11 $(COMMAND_TARGETS) build_envs
+all: $(popsys)/pop11 $(COMMAND_TARGETS) build_envs PackagesNativeExtensions.proxy
