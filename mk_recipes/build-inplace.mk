@@ -53,16 +53,17 @@ $(POP_X_CONFIG_FILE):
 	touch $@
 
 $(popsrc)/syscomp/$(POP_ARCH)/asmout.p: $(popsrc)/syscomp/$(POP_ARCH)/asmout.p.template
+	trap "rm -f test.c" EXIT
 	echo 'void test(){}' > test.c
-	if `(cd _build; /usr/bin/gcc -no-pie -c test.c 2>&1)`; then \
-		POP__CC_OPTIONS=-v -Wl,-export-dynamic -Wl,-no-as-needed; \
-	else \
-		POP__CC_OPTIONS=-v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed; \
+	if `(/usr/bin/gcc -no-pie -c test.c 2>&1)`; then
+		POP__CC_OPTIONS="-v -Wl,-export-dynamic -Wl,-no-as-needed"
+	else
+		POP__CC_OPTIONS="-v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed"
 	fi
 	test ! -z "$$POP__CC_OPTIONS" # ensure variable was set in previous block
 	# Substitute the template-parameter that looks like
 	# {{{POP__CC_OPTIONS:_random_text_}}} with the compiler options.
-	sed -e 's/{{{POP__CC_OPTIONS:[^}]*}}}/$$POP__CC_OPTIONS/' < $< > $@
+	sed -e "s/{{{POP__CC_OPTIONS:[^}]*}}}/$$POP__CC_OPTIONS/" < $< > $@
 
 
 LIBPOP_SRC:=$(addprefix $(usepop)/pop/extern/lib/,\
