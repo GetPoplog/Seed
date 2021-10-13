@@ -20,7 +20,7 @@ build="$1"; shift
 environment_file="$1"; shift
 
 environment_dir="$(dirname "$environment_file")"
-if [[ ! -z "$environment_dir" ]]; then
+if [[ -n "$environment_dir" ]]; then
     mkdir -p "$environment_dir"
 fi
 
