@@ -114,7 +114,7 @@ $(POPLIBR): $(POPLIBR).psv
 
 POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
 POP_COMPILER_TOOL_IMAGES:=$(addsuffix .psv,$(POP_COMPILER_TOOLS))
-$(POP_COMPILER_TOOL_IMAGES) &: poplog_base/pop/pop/corepop poplog_base/pop/src/syscomp/x86_64/asmout.p ../mk_cross
+$(POP_COMPILER_TOOL_IMAGES) &: $(COREPOP) $(popsrc)/syscomp/$(POP_ARCH)/asmout.p ../mk_cross
 	. "$(usepop)/pop/com/popinit.sh"
 	export usepop
 	export POP__as
