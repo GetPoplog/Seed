@@ -11,15 +11,17 @@ _build/Makefile: mk_recipes/build-inplace.mk
 	mkdir -p $(@D)
 	cp $< $@
 
-_build/poplog_base/pop/pop/corepop: corepops/find.sh $(COREPOPS)
-	mkdir -p $(@D)
+_build/BootstrapCorepop.proxy: corepops/find.sh $(COREPOPS)
+	mkdir -p _build/poplog_base/pop/pop/
 	COREPOP=$$(./corepops/find.sh)
 	[ $$? -eq 0 ] || { echo "No valid corepop found"; exit 1; }
-	cp $$COREPOP $@
+	cp $$COREPOP _build/poplog_base/pop/pop/corepop
+	touch $@
 
-_build/CopyBase.proxy: base
+_build/CopyBase.proxy:
 	mkdir -p _build/poplog_base
-	( cd $<; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	( cd base; tar cf - pop ) | ( cd _build/poplog_base; tar xf - )
+	touch $@
 
 _build/CopyPackages.proxy: _download/packages-V$(MAJOR_VERSION).tar.bz2
 	mkdir -p _build/poplog_base/pop/packages
@@ -37,7 +39,7 @@ _build/poplog_base/pop/com/poplogout.%: _download/poplogout.%
 _build/ExtraScripts.proxy: _build/poplog_base/pop/com/poplogout.sh _build/poplog_base/pop/com/poplogout.csh
 	touch $@
 
-_build/BuildPrep.proxy:  _build/poplog_base/pop/pop/corepop _build/Makefile _build/CopyBase.proxy _build/CopyPackages.proxy
+_build/BuildPrep.proxy:  _build/BootstrapCorepop.proxy _build/Makefile _build/CopyBase.proxy _build/CopyPackages.proxy
 	touch $@
 
 _build/NewCorepop.proxy: _build/BuildPrep.proxy
@@ -101,7 +103,7 @@ _build/NoInit.proxy: _build/BuildPrep.proxy
 	chmod a-w $(usepop)/pop/com/noinit/*.*
 	touch $@
 
-_build/POPLOG_VERSION: _build/poplog_base/pop/pop/corepop
+_build/POPLOG_VERSION: _build/NewCorepop.proxy
 	$(usepop)/pop/pop/corepop ":printf( pop_internal_version // 10000, '%p.%p\n' );" > $@
 
 _build/Done.proxy: _build/MakeIndexes.proxy $(POPLOG_COMMANDER) _build/NoInit.proxy _build/POPLOG_VERSION

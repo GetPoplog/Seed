@@ -17,7 +17,7 @@ popsrc:=$(usepop)/pop/src
 popcom:=$(usepop)/pop/com
 popobjlib:=$(usepop)/pop/obj
 popsavelib:=$(usepop)/pop/lib/psv
-poppackages:$(usepop)/pop/packages
+poppackages:=$(usepop)/pop/packages
 
 COREPOP:=$(popsys)/corepop
 POPC:=$(popsys)/popc
@@ -193,20 +193,27 @@ $(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map) &: $(XSRC_TA
 	mv newpop11.map basepop11.map
 	mv newpop11.stb basepop11.stb
 	ln -sf basepop11 pop11
+	ln -f basepop11 ved
 
 $(popsavelib)/startup.psv: $(popsys)/basepop11
 	source $(popcom)/popinit.sh && cd $$popsys && ./basepop11 %nort %noinit ../lib/lib/mkimage.p -nodebug -nonwriteable -install $@ startup
 
 $(popsavelib)/clisp.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
+	cd $(popsys)
+	ln -f basepop11 clisp
 	$(RUN_MKIMAGE) -install -subsystem lisp $@ ../lisp/src/clisp.p
 
 $(popsavelib)/prolog.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
+	cd $(popsys)
+	ln -f basepop11 prolog
 	$(RUN_MKIMAGE) -nodebug -install -flags prolog \( \) $@ ../plog/src/prolog.p
 
 $(popsavelib)/pml.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
+	cd $(popsys)
+	ln -f basepop11 pml
 	$(RUN_MKIMAGE) -nodebug -install -flags ml \( \) $@ ../pml/src/ml.p
 
 .PHONY: images
@@ -215,37 +222,20 @@ images: $(addsuffix .psv,$(addprefix $(popsavelib)/,startup clisp prolog pml))
 ifneq ($(POP_X_CONFIG),nox)
 $(popsavelib)/xved.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
+	cd $(popsys)
+	ln -f basepop11 xved
 	$(RUN_MKIMAGE) -nodebug -nonwriteable -install -entry xved_standalone_setup $@ mkxved
 images: $(popsavelib)/xved.psv
 endif
 
 
-$(popsys)/clisp: $(popsavelib)/clisp.psv $(popsys)/basepop11
-	cd $$popsys
-	ln -f basepop11 clisp
-
-$(popsys)/pml: $(popsavelib)/pml.psv $(popsys)/basepop11
-	cd $$popsys
-	ln -f basepop11 pml
-
-$(popsys)/prolog: $(popsavelib)/prolog.psv $(popsys)/basepop11
-	cd $$popsys
-	ln -f basepop11 prolog
-
-$(popsys)/xved: $(popsavelib)/xved.psv $(popsys)/basepop11
-	cd $$popsys
-	ln -f basepop11 xved
-
-$(popsys)/ved: $(popsys)/basepop11
-	cd $$popsys
-	ln -f basepop11 ved
 
 $(popsys)/popenv.sh: ../makePopEnv.sh $(POP_X_CONFIG_FILE) $(popsavelib)/startup.psv
 	../makePopEnv.sh $@ $(if $(filter nox,$(POP_X_CONFIG)),false,true)
 
-COMMAND_TARGETS:=$(addprefix $(popsys)/,clisp pml prolog ved)
+COMMAND_TARGETS:=$(addsuffix .psv,$(addprefix $(popsavelib)/,clisp pml prolog))
 ifneq ($(POP_X_CONFIG),nox)
-COMMAND_TARGETS+=$(popsys)/xved
+COMMAND_TARGETS+=$(popsavelib)/xved.psv
 endif
 
 environments/$(POP_X_CONFIG)-base0: $(COMMAND_TARGETS) ../echoEnv.sh
