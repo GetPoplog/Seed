@@ -13,8 +13,8 @@ deepclean: clean
 
 .PHONY: test
 test:
-	cd systests; \
-	if [ -e venv ]; then \
-	    . venv/bin/activate; \
-	fi; \
+	cd systests
+	if [ -e venv ]; then
+	    . venv/bin/activate
+	fi
 	pytest --junit-xml=report.xml
