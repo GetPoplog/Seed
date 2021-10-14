@@ -30,13 +30,13 @@ _build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL) _build/changelo
 
 _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
 	mkdir -p "$(@D)"
-	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && debuild --no-lintian -i -us -uc -b
+	( cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && debuild --no-lintian -i -us -uc -b )
 	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb "$@"
 
 
 _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz &: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
 	mkdir -p "$(@D)"
-	cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && dpkg-source -b .
+	( cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && dpkg-source -b . )
 	# https://en.opensuse.org/openSUSE:Build_Service_Debian_builds#DEBTRANSFORM_tags
 	# The following additional line is used by OBS to pick up the
 	# correct tar.gz file. Without this additional field in the .dsc
@@ -59,9 +59,9 @@ _build/packaging/rpm/poplog.spec: packaging/rpm/poplog.spec.tmpl
 _build/artifacts/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm: _build/packaging/rpm/poplog.spec $(SRC_TARBALL)
 	mkdir -p "$(@D)"
 	rm -rf _build/packaging/rpm/rpmbuild && mkdir -p _build/packaging/rpm/rpmbuild
-	cd _build/packaging/rpm/rpmbuild && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+	( cd _build/packaging/rpm/rpmbuild && mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS )
 	cp "$(SRC_TARBALL)" _build/packaging/rpm/rpmbuild/SOURCES/
-	cd _build/packaging/rpm && rpmbuild --define "_topdir `pwd`/rpmbuild" -bb poplog.spec
+	( cd _build/packaging/rpm && rpmbuild --define "_topdir `pwd`/rpmbuild" -bb poplog.spec )
 	mv _build/packaging/rpm/rpmbuild/RPMS/x86_64/poplog-$(GETPOPLOG_VERSION)-1.x86_64.rpm "$@"  # mv is safe - rpmbuild is idempotent
 
 #-- AppImage *.AppImage packaging ----------------------------------------------
@@ -91,13 +91,13 @@ buildappimage: _download/appimagetool
 		cp -p `realpath $$i` _build/AppDir/usr/lib/`basename $$i`; \
 	done
 	# But we want to exclude libc and libdl.
-	cd _build/AppDir/usr/lib/; rm -f libc* libdl.*
+	( cd _build/AppDir/usr/lib/; rm -f libc* libdl.* )
 	# Now to create systematically re-named symlinks.
-	cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`; done
+	( cd _build/AppDir/usr/lib; for i in *.so.*; do ln -s $$i `echo "$$i" | sed 's/\.so\.[^.]*$$/.so/'`; done )
 	chmod a-w _build/AppDir/usr/lib/*
 	mkdir -p _build/AppDir/usr/bin
-	cd _build/AppDir/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/bin/poplog .
-	cd _build && ARCH=x86_64 ../_download/appimagetool AppDir
+	( cd _build/AppDir/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/bin/poplog . )
+	( cd _build && ARCH=x86_64 ../_download/appimagetool AppDir )
 
 
 #-- Snap (Ubuntu) *.snap packaging ---------------------------------------------
@@ -113,7 +113,7 @@ _build/dotsnap/poplog_16.0.1_amd64.snap: "$(BINARY_TARBALL)"
 .PHONY: buildsnap
 buildsnap:
 	$(MAKE) buildsnapcraftready
-	cd _build/dotsnap; snapcraft
+	( cd _build/dotsnap; snapcraft )
 
 PREBUILT_DIR:=/prebuilt
 
@@ -123,7 +123,7 @@ buildsnapcraftready:
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR)
 	mkdir -p _build/dotsnap$(PREBUILT_DIR)/usr/bin
 	cat "$(BINARY_TARBALL)" | ( cd _build/dotsnap$(PREBUILT_DIR)$(POPLOG_VERSION_DIR); tar zxf - )
-	cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/bin/poplog .
+	( cd _build/dotsnap$(PREBUILT_DIR)/usr/bin; ln -s ../..$(POPLOG_VERSION_DIR)/pop/bin/poplog . )
 	cp snapcraft.yaml _build/dotsnap
 
 
