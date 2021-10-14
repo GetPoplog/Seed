@@ -56,9 +56,9 @@ $(popsrc)/syscomp/$(POP_ARCH)/asmout.p: $(popsrc)/syscomp/$(POP_ARCH)/asmout.p.t
 	trap "rm -f test.c" EXIT
 	echo 'void test(){}' > test.c
 	if `(/usr/bin/gcc -no-pie -c test.c 2>&1)`; then
-		POP__CC_OPTIONS="-v -Wl,-export-dynamic -Wl,-no-as-needed"
-	else
 		POP__CC_OPTIONS="-v -no-pie -Wl,-export-dynamic -Wl,-no-as-needed"
+	else
+		POP__CC_OPTIONS="-v -Wl,-export-dynamic -Wl,-no-as-needed"
 	fi
 	test ! -z "$$POP__CC_OPTIONS" # ensure variable was set in previous block
 	# Substitute the template-parameter that looks like
