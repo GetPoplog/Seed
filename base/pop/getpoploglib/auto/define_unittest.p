@@ -1,12 +1,16 @@
 compile_mode :pop11 +strict;
 
 section $-unittest =>
+    define_testsuite        ;;; used for defining test collections
     define_unittest         ;;; used for defining unit tests
     assert                  ;;; used for defining unit tests
     expect_mishap           ;;; used for defining unit tests
     with_data               ;;; used for defining unit tests with scenario data
     register_unittest       ;;; exported because of code-planting
 ;
+
+
+constant unittest_suffix = '.test.p';
 
 ;;; --- expecting mishaps ---
 
@@ -27,38 +31,13 @@ enddefine;
 
 ;;; --- test discovery and execution ---
 
-vars pop_unittests = undef;     ;;; Part of test-discovery.
-vars unittest_passes = undef;   ;;; Part of test-execution.
-vars unittest_failures = undef; ;;; Part of test-execution.
-vars current_unittest = undef;  ;;; Part of test-execution.
+vars unittest_passes = undef;           ;;; Part of test-execution.
+vars unittest_failures = undef;         ;;; Part of test-execution.
+vars current_unittest = undef;          ;;; Part of test-execution.
 
 ;;; Part of test-discovery, although may be re-invoked during execution.
-;;; At top-level do nothing.
+;;; At top-level do nothing. This will be dlocalised during test-discovery.
 define vars register_unittest( u );
-enddefine;
-
-defclass context {
-    context_parent,
-    context_linenum
-};
-
-;;; This is a map from unit-tests, which are procedures, to the context in
-;;; which they were defined.
-constant procedure registration_table =
-    newanyproperty(
-        [], 8, 1, 8,
-        false, false, "tmpval",
-        false, false
-    );
-
-;;; Inside a test-context we record the notional parent. This is purely
-;;; so we can present the test results inside a nice-looking classification tree.
-define vars register_unittest_during_discovery( u );
-    lvars index = popfilename or vedpathname;
-    if index do
-        conscontext( index, poplinenum ) -> registration_table( u );
-    endif;
-    pop_unittests( u );
 enddefine;
 
 ;;; Part of test-execution.
@@ -126,10 +105,9 @@ define run_unittest_during_execution( p );
 enddefine;
 
 define discover_unittests( p );
-    dlocal pop_unittests = new_list_builder();
-    dlocal register_unittest = register_unittest_during_discovery;
+    dlocal register_unittest = new_list_builder();
     erasenum(#| p() |#);
-    return( pop_unittests( termin ) )
+    return( register_unittest( termin ) )
 enddefine;
 
 define run_all_unittests( unittest_list );
@@ -138,6 +116,44 @@ define run_all_unittests( unittest_list );
     [% applist( unittest_list, run_unittest ) %] -> _; ;;; defensive.
     ( unittest_passes( termin ), unittest_failures( termin ) )
 enddefine;
+
+
+;;; --- Discovery ---
+
+;;; This is a class to collect the results from discovery - especially inside VED.
+defclass discovered {
+    discovered_unittests,
+    discovered_files_cache
+};
+
+define newdiscovered( unittests );
+    consdiscovered( unittests, false )
+enddefine;
+
+define discovered_files( d );
+    if d.discovered_files_cache then
+        d.discovered_files_cache
+    else
+        lvars t = (
+            newanyproperty(
+                [], 8, 1, 8,
+                syshash, nonop =, "perm",
+                false, false
+            )
+        );
+        lvars u;
+        for u in d.discovered_unittests do
+            lvars ( parent, linenum ) = pdorigin( u );
+            if parent.isstring do
+                true -> t( parent )
+            endif
+        endfor;
+        nc_listsort( [% fast_appproperty( t, erase ) %], alphabefore ) ->> d.discovered_files_cache;
+    endif
+enddefine;
+
+
+;;; --- Syntax ---
 
 vars procedure unittest_sysVARS = sysVARS;
 
@@ -191,35 +207,24 @@ define read_declaration( defdec ) -> ( pdrname, props, is_global, declarator );
 enddefine;
 
 define core_define_unittest();
-    dlocal pop_new_lvar_list;
-
-    define lconstant run_all( list_builder );
-        applist( list_builder( termin ), run_unittest )
-    enddefine;
-
     lvars ( pdrname, props, is_global, declarator ) = read_declaration( unittest_sysVARS );
+
+    lvars captured_popfilename = popfilename or vedpathname;
+    lvars captured_poplinenum = poplinenum;
+
     declarator( pdrname, 0 );
     if is_global then sysGLOBAL( pdrname, is_global ) endif;
     sysPROCEDURE( props, 0 );
     dlocal unittest_sysVARS = sysLVARS;
     sysLOCAL( "ident $-unittest$-mishap_happened" );
-
-    ;;; Set up dynamic test discovery.
-    lvars collector = sysNEW_LVAR();
-    sysCALL( "new_list_builder" );
-    sysPOP( collector );
-    sysLOCAL( "register_unittest" );
-    sysPUSH( collector );
-    sysPOP( "register_unittest" );
-
     ;;; Main body.
     sysCALLQ( pop11_comp_procedure( "enddefine", false, pdrname and pdrname >< "_body" or "unittest_body" ) );
-
-    ;;; Run any registered tests.
-    sysPUSH( collector );
-    sysCALLQ( run_all );
-    sysLABEL( "return" );
     sysPASSIGN( sysENDPROCEDURE(), pdrname );
+
+    sysPUSHQ( captured_popfilename );
+    sysPUSHQ( captured_poplinenum );
+    sysPUSH( pdrname );
+    sysUCALL( "pdorigin" );
 
     return( pdrname );
 enddefine;
@@ -260,49 +265,42 @@ define syntax with_data;
     sysCALLQ( register_closures );
 enddefine;
 
-constant unittest_suffix = '.test.p';
 
-defclass discovered {
-    discovered_unittests,
-    discovered_files_cache
-};
+;;; --- Syntax: testsuite
 
-define newdiscovered( unittests );
-    consdiscovered( unittests, false )
+define :define_form global testsuite;
+    lvars ( pdrname, props, is_global, declarator ) = read_declaration( unittest_sysVARS );
+    pop11_need_nextreaditem( ";" ) -> _;
+    declarator( pdrname, 0 );
+    if is_global then sysGLOBAL( pdrname, is_global ) endif;
+    sysPROCEDURE( props, 0 );
+    dlocal unittest_sysVARS = sysLVARS;
+    pop11_comp_stmnt_seq_to( "enddefine" ) -> _;
+    sysPASSIGN( sysENDPROCEDURE(), pdrname );
+    sysCALL( pdrname );
 enddefine;
 
-define discovered_files( d );
-    if d.discovered_files_cache then
-        d.discovered_files_cache
-    else
-        lvars t = (
-            newanyproperty(
-                [], 8, 1, 8,
-                syshash, nonop =, "perm",
-                false, false
-            )
-        );
-        lvars u;
-        for u in d.discovered_unittests do
-            lvars parent = context_parent( registration_table( u ) );
-            if parent.isstring do
-                true -> t( parent )
-            endif
-        endfor;
-        nc_listsort( [% fast_appproperty( t, erase ) %], alphabefore ) ->> d.discovered_files_cache;
-    endif
+
+;;; --- Syntax: assert ---
+
+;;; Return a copy of the expanded portion of a partially expanded
+;;; dynamic list without causing any further expansion.
+define lconstant only_expanded( L );
+    [%
+        while L.ispair and not( L.fast_back.isprocedure ) do
+            L.fast_destpair -> L
+        endwhile;
+    %]
 enddefine;
 
+;;; -peek_expr_to- does not consume any input nor plant any code but expands -proglist-
+;;; by exactly one Pop-11 expression and returns the expanded portion.
 define lconstant peek_expr_to( closing_keyword );
     dlocal pop_syntax_only = true;
     dlocal proglist_state;
     lvars old_proglist = proglist;
     pop11_comp_expr_to( closing_keyword ) -> _;
-    [%
-        while old_proglist.ispair and not( old_proglist.back.isprocedure ) do
-            old_proglist.destpair -> old_proglist
-        endwhile;
-    %]
+    old_proglist.only_expanded;
 enddefine;
 
 define global syntax assert();
@@ -335,11 +333,18 @@ define global syntax assert();
     sysCALLQ( check_assertion );
 enddefine;
 
+
+;;; --- Common reporting ---
+
 define r_pdprops( u );
     while u.isclosure and not( u.pdprops ) do
         u.pdpart -> u
     endwhile;
-    u.pdprops
+    lvars props = u.pdprops;
+    while props.islist and not( null( props ) ) do
+        props.hd -> props
+    endwhile;
+    props;
 enddefine;
 
 define pr_show_failures( passes, failures );
@@ -368,7 +373,7 @@ define pr_show_failures( passes, failures );
             nprintf( '\tFile name : %p', [ ^filename ] );
         else
             lvars name = u.r_pdprops;
-            lvars ctx = u.registration_table;
+            lvars ( parent, linenum ) = u.pdorigin;
             nprintf( '%p.\tUnit test : %p', [^n ^name] );
             nprintf( '\tMessage   : %p', [ ^msg ] );
             unless args.null do
@@ -378,8 +383,7 @@ define pr_show_failures( passes, failures );
                     nprintf( '\t *\t%p', [^a] )
                 endfor;
             endunless;
-            if ctx.iscontext then
-                lvars (parent, linenum) = ctx.destcontext;
+            if parent then
                 if linenum then
                     nprintf( '\tLine num  : %p', [ ^linenum ] );
                 endif;
@@ -401,19 +405,20 @@ define pr_show_discovered( d );
     nprintf( 'Test discovery at: ' <> sysdaytime() );
     nl( 1 );
 
-    nprintf( 'Unittests discovered (total of %p)', [% d.discovered_unittests.length %] );
+    nprintf( 'Files compiled during discovery (total of %p)', [% d.discovered_files.length %] );
+    lvars file, n;
+    for file, n in d.discovered_files, list_from(1) do
+        nprintf( '%p. %p', [% n, file %] );
+    endfor;
+    nl(1);
 
+    nprintf( 'Unittests discovered (total of %p)', [% d.discovered_unittests.length %] );
     lvars u, n;
     for u, n in d.discovered_unittests, list_from(1) do
         nprintf( '%p. %p', [% n, u %] );
     endfor;
     nl(1);
 
-    nprintf( 'Files compiled during discovery (total of %p)', [% d.discovered_files.length %] );
-    lvars file, n;
-    for file, n in d.discovered_files, list_from(1) do
-        nprintf( '%p. %p', [% n, file %] );
-    endfor;
 enddefine;
 
 endsection;
