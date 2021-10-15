@@ -8,17 +8,24 @@ section $-unittest =>
     register_unittest       ;;; exported because of code-planting
 ;
 
+;;; --- expecting mishaps ---
+
 vars mishap_happened = false;
+
 vars _expect_mishap = false;
+
 define global active:1 expect_mishap();
     _expect_mishap;
 enddefine;
+
 define updaterof active:1 expect_mishap( saved );
     saved -> _expect_mishap;
     if not(saved) and not( mishap_happened ) do
         mishap( 'Expected mishap was skipped', [] )
     endif;
 enddefine;
+
+;;; --- test discovery and execution ---
 
 vars pop_unittests = undef;     ;;; Part of test-discovery.
 vars unittest_passes = undef;   ;;; Part of test-execution.
