@@ -9,7 +9,17 @@
 #
 # For help on how to use this Makefile please try "make help". The rest of this intro explains
 # the strategy used for the fairly elaborate build process.
-#
+MAKEFLAGS+=--warn-undefined-variables
+# Causes the commands in a recipe to be issued in the same shell (beware cd commands not executed in a subshell!)
+.ONESHELL:
+SHELL:=/bin/bash
+# When using ONESHELL, we want to exit on error (-e) and error if a command fails in a pipe (-o pipefail)
+# When overriding .SHELLFLAGS one must always add a tailing `-c` as this is the default setting of Make.
+.SHELLFLAGS:=-e -o pipefail -c
+# Invoke the all target when no target is explicitly specified.
+.DEFAULT_GOAL:=all
+# Delete targets if their recipe exits with a non-zero exit code.
+.DELETE_ON_ERROR:
 
 # CONVENTION: If we want to allow the user of the Makefile to set via the CLI
 # then we use ?= to bind it. If it's an internal variables then we use :=
@@ -86,11 +96,10 @@ help:
 	#   help - this explanation, for more info read the Makefile comments.
 
 include mk_recipes/lib.mk
-
 include mk_recipes/helpers.mk
 include mk_recipes/jumpstart.mk
 include mk_recipes/download.mk
-include mk_recipes/build.mk
+include mk_recipes/buildManagement.mk
 include mk_recipes/tarballs.mk
 include mk_recipes/packaging.mk
 include mk_recipes/release.mk

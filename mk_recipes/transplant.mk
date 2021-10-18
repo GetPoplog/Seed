@@ -41,10 +41,9 @@ _build/transplant-getpoplog.tgz: _build/Done.proxy
 .PHONY: relink-and-build
 relink-and-build:
 	[ -f _build/Done.proxy ] # Sanity check that we are starting from a pre-built tree.
-	export usepop=$(abspath ./_build/poplog_base) \
-        && . ./_build/poplog_base/pop/com/popinit.sh \
-        && cd $$popsys \
-        && $$usepop/pop/pop/poplink_cmnd
+	export usepop=$(abspath ./_build/poplog_base)
+	. ./_build/poplog_base/pop/com/popinit.sh
+	( cd $$popsys && $$usepop/pop/pop/poplink_cmnd )
 	output=`./_build/poplog_base/pop/pop/newpop11 ":sysexit()" 2>&1` && [ -z "$$output" ] # Check the rebuilt newpop11 works
 	mv _build/poplog_base/pop/pop/newpop11 .
 	$(MAKE) clean && $(MAKE) _build/Base.proxy

@@ -36,7 +36,7 @@ install:
 	fi
 	mkdir -p $(DESTDIR)$(POPLOG_VERSION_DIR)
 	( cd _build/poplog_base; tar cf - . ) | ( cd $(DESTDIR)$(POPLOG_VERSION_DIR); tar xf - )
-	cd $(DESTDIR)$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK)
+	( cd $(DESTDIR)$(POPLOG_HOME_DIR); ln -sf $(VERSION_DIR) $(SYMLINK) )
 	mkdir -p $(DESTDIR)$(bindir)
 	ln -sf $(POPLOG_VERSION_SYMLINK)/pop/bin/poplog $(DESTDIR)$(bindir)/
 	# Target "install" completed
@@ -60,7 +60,7 @@ _build/poplog_base/UNINSTALL_INSTRUCTIONS.md:
 # will clean it up eventually.
 .PHONY: uninstall
 uninstall:
-	(cd $(POPLOG_HOME_DIR); tar cf - .) | gzip > /tmp/POPLOG_HOME_DIR.tgz
+	( cd $(POPLOG_HOME_DIR); tar cf - . ) | gzip > /tmp/POPLOG_HOME_DIR.tgz
 	$(MAKE) really-uninstall-poplog
 	# A BACKUP HAS BEEN LEFT IN /tmp/POPLOG_HOME_DIR.tgz. REMOVE THIS TO SAVE SPACE.
 	# Target "uninstall" completed
