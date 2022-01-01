@@ -1,0 +1,11 @@
+HELP strpr                                          Stephen Leach, Jan 2022
+
+This procedure takes N arguments and prints them all to a string. It works
+in a similar way to the infix >< operator but can be more efficient and readable
+when there are many arguments.
+
+Example:
+
+    strpr(#| 'a', 'ab', 'abc' |#) =>
+    ** aababc
+
