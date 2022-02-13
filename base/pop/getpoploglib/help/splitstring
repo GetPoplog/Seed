@@ -1,0 +1,33 @@
+HELP SPLITSTRING                                         Stephen Leach, Sep 2021
+
+    splitstring( string, separator ) -> vector
+    splitstring( string, separator, maxsplit: int_or_false, constructor: procedure ) -> constructor( N )
+
+In the first form, -splitstring- returns a vector of the sub-strings in the
+-string-, using -sep- as the delimiter. The delimiter can be specified as a
+string, character or regexp. For example:
+
+    Setpop
+    : splitstring( 'abc,def,ghi', `,` ) =>
+    ** {'abc' 'def' 'ghi'}
+    :
+
+In the second form, a limit on the number of splits can be specified and also
+a different constructor from -consvector-. The constructor should be a
+procedure that expects the top of the stack to be a count of the items beneath
+it.
+
+If maxsplit is given as an integer, at most maxsplit splits are done (thus,
+the list will have at most maxsplit+1 elements). If maxsplit is not specified
+or -false- or -pop_undef-, then there is no limit on the number of splits (all
+possible splits are made).
+
+For example:
+
+    Setpop
+    : splitstring( 'abc,def,ghi', `,`, 1, conslist ) =>
+    ** ['abc' 'def,ghi']
+    :
+    : splitstring( 'abc,def,ghi', `,`, _, conslist ) =>
+    ** ['abc' 'def' 'ghi']
+    :

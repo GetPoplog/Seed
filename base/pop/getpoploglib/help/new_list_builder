@@ -1,0 +1,81 @@
+HELP NEW_LIST_BUILDER                                 Stephen Leach, Sept 2021
+
+    uses new_list_builder
+
+    new_list_builder() -> builder
+    builder( item )
+    builder( termin ) -> list
+
+    is_list_builder( item ) -> bool
+    list_builder_push_front( item, builder )
+    list_builder_push_back( item, builder )
+    list_builder_copylist( builder ) -> list
+    list_builder_newlist( builder ) -> list
+
+
+         CONTENTS - (Use <ENTER> g to access required sections)
+
+ -- Introduction
+ -- Predicates on List Builders
+ -- Constructing List Builders
+ -- Manipulating List Builders
+
+
+-- Introduction -------------------------------------------------------
+
+A list-builder is a consumer procedure that constructs a list from all the
+items that it is applied to. It is particularly useful for building lists
+by adding to the end of the list, although you can also add to the start of
+the list as an alternative.
+
+The builder returns the list when it is applied to the special item <termin>.
+For example:
+
+
+    Setpop
+    : vars b = new_list_builder();
+    : b( 1 );
+    : b( true );
+    : b( 'three' );
+    : b( termin ) =>
+    ** [1 <true> three]
+    :
+
+
+-- Predicates on List Builders ----------------------------------------
+
+List builders are closures so both isprocedure and isclosure is true
+for any list builder.
+
+is_list_builder( item ) -> bool
+        Returns true if item is a list builder, false if not.
+
+
+-- Constructing List Builders -----------------------------------------
+
+
+new_list_builder() -> list_builder
+        Returns a new, empty list builder.
+
+
+-- Manipulating List Builders -----------------------------------------
+
+list_builder_push_front( item, builder )
+        Adds an item to the start of the list that is being built.
+
+
+list_builder_push_back( item, builder )
+        Adds an item to the end of the list that is being built. This
+        is the same as calling builder( item )
+
+
+list_builder_copylist( builder ) -> list
+        This takes a copy of the in-progress list that is being built.
+        Each time you take a copy you get a completely new list.
+
+
+list_builder_newlist( builder ) -> list
+        This returns the in-progress list _and_ resets the builder back
+        to its initial empty state.
+
+--- Copyright GetPoplog (c) 2021.

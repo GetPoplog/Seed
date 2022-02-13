@@ -1,0 +1,41 @@
+HELP LIST_FROM                                          Stephen Leach, Oct 2021
+
+    list_from( n: num ) -> [ n, n+1, n+2, ... ]
+    list_from( n: item, procedure p ) -> [ n, p(n), p(p(n)), ... ]
+
+This function is used to construct non-terminating lists. If called with a
+single numerical argument it returns a list whose first member is n, and
+whose next member is n+1, then n+2 etc. For example:
+
+    Setpop
+    : vars list = list_from(1);
+    : list =>
+    ** [...]
+    : list(1) =>
+    ** 1
+    : list(2) =>
+    ** 2
+    : list(3) =>
+    ** 3
+    : list =>
+    ** [1 2 3 ...]
+    :
+
+If it is called with a procedure then the list that is returned contains
+n, p(n), p(p(n)), etc. For example:
+
+    Setpop
+    : vars L = list_from( 1, nonop *(% 2 %) );
+    : L =>
+    ** [...]
+    : L(1) =>
+    ** 1
+    : L(2) =>
+    ** 2
+    : L(3) =>
+    ** 4
+    : L(4) =>
+    ** 8
+    : L =>
+    ** [1 2 4 8 ...]
+    :
