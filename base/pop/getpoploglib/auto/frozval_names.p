@@ -1,7 +1,8 @@
 section $-frozval_names => 
     frozval_names 
     frozval_stack_slot
-    frozval_closure_slot;
+    frozval_closure_slot
+    frozval_by_name;
 
 constant procedure frozval_slot_table =
     newanyproperty( [], 8, 1, 8, false, false, "tmpval", false, false );
@@ -31,6 +32,13 @@ define global constant procedure frozval_closure_slot( word, closure );
     mishap( 'Unrecognised slot name', [^word ^closure] )
 enddefine;
 
+define frozval_by_name( word, closure );
+    frozval( frozval_closure_slot( word, closure ), closure )
+enddefine;
+
+define updaterof frozval_by_name( value, word, closure );
+    value -> frozval( frozval_closure_slot( word, closure ), closure )
+enddefine;
 
 define frozval_names( closure );
     unless closure.isclosure do

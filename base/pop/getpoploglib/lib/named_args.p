@@ -2,7 +2,8 @@
 ;;; Version: 1.1
 
 ;;; Version 1.2
-;;; Added in define_optargs.
+;;; Added in define_optargs. Note that the default values are calculated TO BE CONTINUED
+;;;
 
 /*
 Usage pattern
@@ -21,11 +22,36 @@ keywords in SORTED order.  Here's a summary
 
 turns into
 
-    V'1, K'1, V'2, K'2, ...., V'n, K'n, n, ______________________OPTIONAL_ARGUMENT_MARK
+    V'1, K'1, V'2, K'2, ...., V'n, K'n, n, OPTIONAL_ARGUMENT_MARK
 
     where   K'1 < K'2 < ... < K'n
     and     K'1 ... K'n is a permutation of K1, ..., Kn
     and     V'1 ... V'n is the same permutation of V1, ... Vn
+
+NOTE 1
+------
+We also have mandatory named arguments, indicated by an omission
+of the defaults. These must be provided using the optional arguments
+mechanism. e.g.
+
+    ;;; The  following can only be satisfied by a stack that looks like:
+    ;;; VALUE_FOR_ALPHA, VALUE_FOR_BETA, "beta", 1, OPTIONAL_ARGUMENT_MARK
+    lvars_named_args alpha -&- beta;
+
+NOTE 2
+------
+The internal variables of the parameters can be distinct from their
+parameter-name. To make this work use the renaming syntax. e.g.
+
+    ;;; The following uses a keyword 'secondary' but the internal
+    ;;; variable is my_list2.
+    lvars_named_args my_list1 -&- my_list2/secondary = [];
+
+NOTE 3
+------
+Default expressions are different from default values. Default
+values can only appear in define:optargs.
+
 
 */
 
@@ -35,6 +61,7 @@ compile_mode :pop11 +strict;
 
 section $-gospl$-named_args =>
     named_args,                 ;;; Hack for -uses-
+    define_optargs,             ;;; For defining procedures with new header syntax.
     lvars_named_args,           ;;; Syntax for argument processing.
     -&-,                        ;;; Syntax for argument passing.
     next_named_arg,             ;;; Procedure for argument processing.
@@ -189,9 +216,9 @@ define plant_fast_decrement( count );
     sysPOP( count );
 enddefine;
 
-define plant_eq( count, N );
-    sysPUSH( count );
-    sysPUSHQ( N );
+define plant_eq( variable, value );
+    sysPUSH( variable );
+    sysPUSHQ( value );
     sysCALL( "==" );
 enddefine;
 
@@ -466,6 +493,28 @@ define syntax lvars_named_args;
     ";" :: proglist -> proglist;
 enddefine;
 
+;;; ---------------------------------------------------------------------------
+
+/* NOTES TO MYSELF
+
+1.  Need to implement default value syntax via closures-with-names.
+2.  Need to adapt the lvars_named_syntax to terminate on a ")" and
+3.  to support "==" for default values.
+4.  Adapt the get_args so that it pops named arguments with default
+    values off the stack.
+5.  The pop order should be the left-to-right order of arguments,
+    so the order of the frozvals will be the reverse to what the
+    naive programmer might expect (but they should be accessing by
+    name anyway).
+
+*/
+
+define :form optargs;
+    mishap( "TO BE IMPLEMENTED", [] )
+enddefine;
+
+
+;;; ---------------------------------------------------------------------------
 
 define check_only_one( n );
     lvars d = stacklength() fi_- n;
@@ -598,6 +647,15 @@ define compile_single_valued_expr( stack_count_tmpvar );
     endif
 enddefine;
 
+
+/*  TODO: NOTE TO SELF
+
+We want to add some syntax for merging in a dict object. e.g.
+
+    f( 1, 2, 3 -&- ^^mydict )
+
+*/
+
 define syntax 12 -&- ;
     dlocal pop_new_lvar_list;
 
@@ -629,9 +687,33 @@ define syntax 12 -&- ;
     named_arg_mark -> pop_expr_item;
 enddefine;
 
+
+;;; ---------------------------------------------------------------------------
+
+/*  TODO: NOTE TO SELF
+
+We also need a runtime facility for merging a dict into
+an optional-arg stack. e.g.
+
+    named_arg_group_push_dict( dict );
+
+Consider renaming as follows:
+
+    is_named_arg_group() -> bool
+    named_arg_group() -> ( 0, named_arg_mark )
+    named_arg_group_push_dict( ..., N, named_arg_mark, dict ) -> ( ..., N', named_arg_mark )
+    named_arg_group_push_named_arg( ..., N, named_arg_mark, keyword, value ) -> ( ..., N', named_arg_mark )
+    named_arg_group_pop( ..., N, named_arg_mark )
+        -> ( ..., N-1, named_arg_mark, keyword, value ) OR
+        -> ( ..., N, named_arg_mark, false, termin )
+    named_arg_group_to_dict( ..., N, named_arg_mark ) -> dict
+    named_arg_group_erase( ..., N, named_arg_mark ) -> ()
+*/
+
+
 define next_named_arg();    ;;;  -> ( keyword, x );
     if stacklength() == 0 then
-        false, _
+        false, termin
     else
         lvars mark = ();
         if mark == named_arg_mark then
@@ -642,7 +724,7 @@ define next_named_arg();    ;;;  -> ( keyword, x );
                 count - 1, named_arg_mark, k, x
             endif
         else
-            mark, false, _
+            mark, false, termin
         endif
     endif
 enddefine;

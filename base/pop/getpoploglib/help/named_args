@@ -51,7 +51,22 @@ and then its value.
 
 
 -----------------------------------------------------------------------
-2  Details of lvars_named_args
+2  Mandatory vs Optional Named Arguments
+-----------------------------------------------------------------------
+
+As mentioned above, named arguments usually have defaults and having a
+default makes the named argument optional. However, they do not have to
+have a default. In that case they become a mandatory named argument.
+That simply means that they must be supplied as named arguments with
+their values when they are used.
+
+For example,
+
+<<<EXAMPLE TO BE INSERTED HERE>>>
+
+
+-----------------------------------------------------------------------
+3  Details of lvars_named_args
 -----------------------------------------------------------------------
 
 The full syntax of lvars_named_args looks like this
@@ -60,8 +75,8 @@ The full syntax of lvars_named_args looks like this
 
     _____________ORDINARY_ARGS ___::= _[dlocal_|procedure_] _____________VARIABLE_NAME
 
-    _________NAMED_ARG ___::= _____________VARIABLE_NAME ______________[DEFAULT_EXPR]
-              ___::= _____________________VARIABLE_NAME/KEYWORD ______________[DEFAULT_EXPR]
+    _________NAMED_ARG ___::= _____________VARIABLE_NAME _[= _____________DEFAULT_EXPR]
+              ___::= _____________________VARIABLE_NAME/KEYWORD _[= _____________DEFAULT_EXPR]
 
 A named argument actually has two parts, an internal variable name and
 an external keyword.  Usually these are the same name but you can make
@@ -69,18 +84,75 @@ them different.  This is really useful when the external keyword you
 want clashes with a reserved name of some kind.
 
 The values of the named arguments are popped off the stack first.
-If the argument is optional and was omitted in the call, the default
-expression is executed to obtain a single result which is used
-instead.  You cannot guarantee the order in which the default
-expressions run (it is fixed but the order is not available for
-inspection.)
+If the argument is named and optional and was omitted in the call, the
+default value or expression is used to obtain a single result which is
+used instead. (We cannot guarantee the order in which the defaults are
+assigned, so please avoid relying on this.)
+
+Note that default expressions are only run if the optional argument is
+not supplied.
 
 When all the named arguments have been processed, the ordinary
 arguments are assigned in the usual way.
 
 
 -----------------------------------------------------------------------
-3  Utilities
+4  define :optargs
+-----------------------------------------------------------------------
+
+Roughly speaking, the define :optargs syntax allows us to write
+procedures that used named parameters in a more natural way. Instead
+of writing
+
+    define upto() -> result with_nargs 1;
+        lvars_named_args n -&- reverse = false;
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif
+    enddefine;
+
+we can write this:
+
+    define :optargs upto( n -&- reverse = false );
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif
+    enddefine;
+
+This syntax also introduces a new type of default. Up to now we have
+only seen default expressions which are evaluated at runtime. Default
+values are computed at compile-time and hence are more efficient.
+
+Default values are written with a "==" sign. So our -upto- example
+might be written like this:
+
+    define :optargs upto( n -&- reverse == false );
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif
+    enddefine;
+
+When you supply a named parameter that has a default value you just
+use the "=" as usual e.g.
+
+    : upto( 3 -&- reverse = true ) =>
+    ** [3 2 1]
+
+Using default values also has an important side-effect; it changes
+the procedure into a special kind of closure with named frozen-values!
+To continue our example above:
+
+    : upto.isclosure =>
+    ** <true>
+    : datalength( upto ) =>  ;;; will print the number of slots
+    ** 1
+    : frozval( 1, upto ) =>
+    ** <false>
+    : frozval_names( upto ) => ;;; will print the slot names
+    ** reverse
+    : frozval_by_name( "reverse", upto ) =>
+    ** <false>
+
+
+-----------------------------------------------------------------------
+5  Utilities
 -----------------------------------------------------------------------
 
 If you wish to process a set of optional arguments 'manually'
@@ -103,7 +175,7 @@ then the following utilities are provided.
 
 
 -----------------------------------------------------------------------
-4  Implementation
+6  Implementation
 -----------------------------------------------------------------------
 
 This implementation of optional arguments is designed to tradeoff
