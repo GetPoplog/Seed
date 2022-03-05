@@ -1,0 +1,6 @@
+HELP READ_VARIABLES                             Steve Knight, Jan 1991
+
+read_variables() -> <L:word list>
+
+This routine reads a list of "ordinary" variables from the input stream,
+optionally separated by commas.  It stops when it reaches any syntax word.
