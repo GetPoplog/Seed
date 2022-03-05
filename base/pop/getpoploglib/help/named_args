@@ -1,0 +1,137 @@
+HELP NAMED_ARGS                         Steve Leach, 13th Dec 04
+
+    uses named_args
+
+This library adds a named-arguments facility to Pop11.  This allows the
+programmer to define procedures that take both ordinary arguments and
+arguments that are named by keywords. Named arguments may be given
+defaults - in which case they are optional.
+
+It provides two syntax words lvars_named_args and -&- and utility
+procedures next_named_arg and push_named_arg.
+
+
+-----------------------------------------------------------------------
+1  Typical Use
+-----------------------------------------------------------------------
+
+Named arguments are passed in a special way to procedures. Because of
+this, you cannot get them the same way are ordinary arguments. Instead
+you should use the syntax word lvars_named_args.
+
+For example, this is how one might write a procedure that takes an
+ordinary input argument _n and a named argument _______reverse.  Note the
+use of the marker "-&-" to separate the ordinary argument from the
+named argument.
+
+    uses named_args;
+
+    define upto() -> result with_nargs 1;
+        lvars_named_args n -&- reverse = false;
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif
+    enddefine;
+
+lvars_named_args has two jobs.  It declares the arguments and processes
+them by popping values off the stack or assigning defaults.  A default
+is defined by following the named argument with an equals sign and then
+the default expression.
+
+If a named argument has a default then it is said to be optional.  An
+optional named argument may be omitted when the procedure is called.
+This is one of the main points of having named arguments and the
+more common situation.
+
+To invoke a procedure that takes optional arguments is done using
+the -&- syntax.  Each named parameter is followed by an equals sign
+and then its value.
+
+    upto( 3 -&- reverse = true ) =>
+    ** [3 2 1]
+
+
+-----------------------------------------------------------------------
+2  Details of lvars_named_args
+-----------------------------------------------------------------------
+
+The full syntax of lvars_named_args looks like this
+
+    lvars_named_args _____________ORDINARY_ARGS -&- __________NAMED_ARGS;
+
+    _____________ORDINARY_ARGS ___::= _[dlocal_|procedure_] _____________VARIABLE_NAME
+
+    _________NAMED_ARG ___::= _____________VARIABLE_NAME ______________[DEFAULT_EXPR]
+              ___::= _____________________VARIABLE_NAME/KEYWORD ______________[DEFAULT_EXPR]
+
+A named argument actually has two parts, an internal variable name and
+an external keyword.  Usually these are the same name but you can make
+them different.  This is really useful when the external keyword you
+want clashes with a reserved name of some kind.
+
+The values of the named arguments are popped off the stack first.
+If the argument is optional and was omitted in the call, the default
+expression is executed to obtain a single result which is used
+instead.  You cannot guarantee the order in which the default
+expressions run (it is fixed but the order is not available for
+inspection.)
+
+When all the named arguments have been processed, the ordinary
+arguments are assigned in the usual way.
+
+
+-----------------------------------------------------------------------
+3  Utilities
+-----------------------------------------------------------------------
+
+If you wish to process a set of optional arguments 'manually'
+then the following utilities are provided.
+
+
+next_named_arg() -> ( _______keyword, _____value )
+    Fetches the next optional argument from the stack.  If there
+    are no optional arguments left, -_______keyword- is false.
+
+
+push_named_arg( keyword, value )
+    Pushes the optional keyword/value pair onto the stack whilst
+    maintaining the keyword ordering.  This is not cheap.  See the
+    section on implementation for more details.
+
+    If the stack already has some optional arguments then it is
+    inserted in the right place.  Otherwise a new set of optional
+    arguments is created.
+
+
+-----------------------------------------------------------------------
+4  Implementation
+-----------------------------------------------------------------------
+
+This implementation of optional arguments is designed to tradeoff
+several considerations.
+
+    #   Calling a optarg procedure without any optional
+        arguments has a miniscule overhead.
+
+    #   The cost of processing the optional arguments is low.
+
+    #   The cost of constructing a set of optional arguments is
+        low (statically rather than dynamically).  No heap store
+        is allocated when passing the arguments.
+
+We arrange for -&- to leave the keywords in SORTED order.  Here's a summary
+
+    -&- K1 = V1, K2 = V2, ..., K = Vn
+
+    where   n >= 1
+    and     K1 ... Kn are all distinct
+
+turns into
+
+    V'1, K'1, V'2, K'2, ...., V'n, K'n, n, ______________________OPTIONAL_ARGUMENT_MARK
+
+    where   K'1 < K'2 < ... < K'n
+    and     K'1 ... K'n is a permutation of K1, ..., Kn
+    and     V'1 ... V'n is the same permutation of V1, ... Vn
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
