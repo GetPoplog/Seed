@@ -32,9 +32,9 @@ newdict_from_assoclist(assoc_list) -> dict
 
 
 newdict_from_twinlists(keys_list, values_list) -> dict
-        This constructs a dict from two lists, being a list of keys and 
-        a parallel list of values. The lists are not required to be of equal 
-        length, the first N items are taken when N is the lesser of the 
+        This constructs a dict from two lists, being a list of keys and
+        a parallel list of values. The lists are not required to be of equal
+        length, the first N items are taken when N is the lesser of the
         two lengths. e.g.
 
                 newdict_from_twinlists([a b], [1 2])
@@ -59,7 +59,7 @@ dist_destvalues( dict ) -> ( value1, value2, ..., valueN, N )
 
 dict( key ) -> value
 value -> dict(key)
-subscrdict(key, dict) -> value 
+subscrdict(key, dict) -> value
 value -> subscrdict(key, dict)
         This returns or updates the value associated with the key in the
         dict. subscrdict is the class_apply of the dict_key.
@@ -69,12 +69,12 @@ value -> subscrdict(key, dict)
 4  Miscellaneous
 ----------------
 
-appdict(dict, procedure )         
+appdict(dict, procedure )
         Applies the  procedure  p  to  each  entry  in  the  dict.  The
         procedure p is applied as:
- 
+
             p(key, value)
- 
+
         for each key/value association in dict.
 
 
