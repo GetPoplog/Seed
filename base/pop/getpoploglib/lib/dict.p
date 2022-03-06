@@ -1,7 +1,7 @@
 compile_mode :pop11 +strict;
- 
+
 section $-dict =>
-    dict_key isdict dict_length 
+    dict_key isdict dict_length
     subscr_dict appdict is_null_dict;
 
 #_IF not( isdefined( "dict_key" ) )
@@ -10,13 +10,13 @@ constant ejection_threshold = 1024;
 
 define constant procedure clear_half( prop );
     lvars clear_these = (
-        [% 
-            fast_appproperty( 
-                prop, 
+        [%
+            fast_appproperty(
+                prop,
                 procedure( k, v );
                     if random(1.0) < 0.5 then k endif
                 endprocedure
-            ) 
+            )
         %]
     );
     lvars k;
@@ -150,7 +150,7 @@ enddefine;
 ;;;
 ;;; newdict_internal<T>: [ pair< word, int > ] * { T } -> dict< T >
 ;;;
-define lconstant newdict_internal( key_index_list, values_vector );
+define newdict_internal( key_index_list, values_vector );
     nc_listsort(
         key_index_list,
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure

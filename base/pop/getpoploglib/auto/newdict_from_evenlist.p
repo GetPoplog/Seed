@@ -1,8 +1,10 @@
 compile_mode :pop11 +strict;
 
-section;
+section $-dict =>
+    newdict_from_evenlist
+    ;
 
-uses dict
+uses dict;
 
 define global constant procedure newdict_from_evenlist( list );
     lvars keys = [];
