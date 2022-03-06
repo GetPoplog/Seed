@@ -49,24 +49,36 @@ define named_arg_group_to_twinlists();
     to_twinlists() -> _
 enddefine;
 
-define named_arg_group_merge_dict( count, mark, dict );
+define named_arg_group_merge_dict( dict );
     dlvars ( keyword_list, value_list, count ) = to_twinlists();
 
     ;;; KEY ASSUMPTION: The order of iteration across a dictionary is the
     ;;; same order as that that comes from to_twinlists.
     lvars count = (#|
         appdict(
+            dict,
             procedure( key, value );
                 while keyword_list.ispair then
                     lvars ( k, tail ) = fast_destpair( keyword_list );
-                    quitunless( ascending( k, key ) );
-                    destpair( value_list ) -> value_list;
-                    k;
-                    tail -> keyword_list;
+                    if k == key then
+                        back( value_list ) -> value_list;
+                        tail -> keyword_list;
+                        quitloop;
+                    elseif ascending( k, key ) then
+                        destpair( value_list ) -> value_list;
+                        k;
+                        tail -> keyword_list;
+                    else
+                        quitloop
+                    endif
                 endwhile;
                 value, key
             endprocedure
-        )
+        );
+        while keyword_list.ispair do
+            value_list.destpair -> value_list;
+            keyword_list.fast_destpair -> keyword_list;
+        endwhile;
     |#);
 
     count >> 1, pop11_named_arg_mark
