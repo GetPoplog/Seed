@@ -109,6 +109,13 @@ define :unittest convert_to_dict();
     named_arg_group_insert( "yyy", 999 );
     ;;; Act
     lvars d = named_arg_group_to_dict();
+    ;;; Assert
+    assert d.isdict;
+    assert d.dict_length == 4;
+    assert d("aaa") == 666;
+    assert d("bbb") == 888;
+    assert d("yyy") == 999;
+    assert d("zzz") == 777;
 enddefine;
 
 endsection;
