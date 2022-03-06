@@ -3,6 +3,7 @@ compile_mode :pop11 +strict;
 uses pop11_named_arg_mark;
 
 section $-gospl$-named_args =>
+    named_arg_group
     is_named_arg_group
     new_named_arg_group
     named_arg_group_merge_dict
@@ -11,6 +12,9 @@ section $-gospl$-named_args =>
     named_arg_group_to_dict
     named_arg_group_erase
     ;
+
+;;; Hack for -uses-.
+vars named_arg_group = _;
 
 
 /*
@@ -25,8 +29,43 @@ section $-gospl$-named_args =>
     named_arg_group_erase( ..., N, pop11_named_arg_mark ) -> ()
 */
 
+define to_twinlists() -> ( keyword_list, value_list, count );
+    lvars ( count, m ) = ();
+    unless m == pop11_named_arg_mark do
+        mishap( 'Invalid named-arg group, missing named-arg mark', [^m] )
+    endunless;
+    [] -> keyword_list;
+    [] -> value_list;
+    repeat count times
+        conspair( keyword_list ) -> keyword_list;
+        conspair( value_list ) -> value_list;
+    endrepeat;
+enddefine;
+
+define named_arg_group_to_twinlists();
+    ;;; Discard the count.
+    to_twinlists() -> _
+enddefine;
+
 define named_arg_group_merge_dict( count, mark, dict );
-    ;;; TODO
+    dlvars ( keyword_list, value_list, count ) = named_arg_group_from_twinlist();
+
+    ;;; KEY ASSUMPTION: The order of iteration across a dictionary is the
+    ;;; same order as that that comes from to_twinlists.
+    lvars count = (#|
+        appdict(
+            procedure( key, value );
+                if keyword_list.ispair then
+                    lvars k = fast_front( keyword_list );
+                    if k 
+                else
+                    value, key
+                endif
+            endprocedure
+        )
+    |#);
+
+    count >> 1, pop11_named_arg_mark
 enddefine;
 
 define is_named_arg_group();
@@ -91,16 +130,7 @@ enddefine;
 ;;; until we come to one that is smaller and then re-insert.
 ;;;
 define named_arg_group_insert_named_arg( keyword, value );
-    lvars ( n, m ) = ();
-    unless m == pop11_named_arg_mark do
-        mishap( 'Invalid named-arg group, missing named-arg mark', [^m] )
-    endunless;
-    lvars keyword_list = [];
-    lvars value_list = [];
-    repeat n times
-        conspair( keyword_list ) -> keyword_list;
-        conspair( value_list ) -> value_list;
-    endrepeat;
+    lvars ( keyword_list, value_list, count ) = to_twinlists();
     repeat
         unless keyword_list.ispair do
             value, keyword;
@@ -117,7 +147,7 @@ define named_arg_group_insert_named_arg( keyword, value );
         endif;
         v, k;
     endrepeat;
-    n + 1, pop11_named_arg_mark
+    count + 1, pop11_named_arg_mark
 enddefine;
 
 endsection;

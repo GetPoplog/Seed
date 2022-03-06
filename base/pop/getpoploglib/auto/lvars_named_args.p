@@ -68,12 +68,12 @@ define sort_vk_list( vk_list, direction );
         vk_list,
         true,
         if direction == "ascending" then
-            procedure( kw1, kw2 ) with_props compare_keywords;
-                kw1.vk_keyword.order_of_appearance <= kw2.vk_keyword.order_of_appearance
+            procedure( kw1, kw2 );
+                ascending( kw1.vk_keyword, kw2.vk_keyword )
             endprocedure
         elseif direction == "descending" then
-            procedure( kw1, kw2 ) with_props compare_keywords;
-                kw1.vk_keyword.order_of_appearance >= kw2.vk_keyword.order_of_appearance
+            procedure( kw1, kw2 );
+                descending( kw1.vk_keyword, kw2.vk_keyword )
             endprocedure
         else
             mishap( direction, 1, 'Invalid direction (internal error)' )
