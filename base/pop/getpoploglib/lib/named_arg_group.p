@@ -1,22 +1,32 @@
 compile_mode :pop11 +strict;
 
-section;
+uses pop11_named_arg_mark;
 
-/*  
+section $-gospl$-named_args =>
+    is_named_arg_group
+    new_named_arg_group
+    named_arg_group_merge_dict
+    named_arg_group_insert_named_arg
+    named_arg_group_pop
+    named_arg_group_to_dict
+    named_arg_group_erase
+    ;
+
+
+/*
     is_named_arg_group() -> bool
-    new_named_arg_group() -> ( 0, named_arg_mark )
-    named_arg_group_merge_dict( ..., N, named_arg_mark, dict ) -> ( ..., N', named_arg_mark )
-    named_arg_group_insert_named_arg( ..., N, named_arg_mark, keyword, value ) -> ( ..., N', named_arg_mark )
-    named_arg_group_pop( ..., N, named_arg_mark )
-        -> ( ..., N-1, named_arg_mark, keyword, value ) OR
-        -> ( ..., N, named_arg_mark, false, termin )
-    named_arg_group_to_dict( ..., N, named_arg_mark ) -> dict
-    named_arg_group_erase( ..., N, named_arg_mark ) -> ()
+    new_named_arg_group() -> ( 0, pop11_named_arg_mark )
+    named_arg_group_merge_dict( ..., N, pop11_named_arg_mark, dict ) -> ( ..., N', pop11_named_arg_mark )
+    named_arg_group_insert_named_arg( ..., N, pop11_named_arg_mark, keyword, value ) -> ( ..., N', pop11_named_arg_mark )
+    named_arg_group_pop( ..., N, pop11_named_arg_mark )
+        -> ( ..., N-1, pop11_named_arg_mark, keyword, value ) OR
+        -> ( ..., N, pop11_named_arg_mark, false, termin )
+    named_arg_group_to_dict( ..., N, pop11_named_arg_mark ) -> dict
+    named_arg_group_erase( ..., N, pop11_named_arg_mark ) -> ()
 */
 
 define named_arg_group_merge_dict( count, mark, dict );
-    TO BE DONE!
-    WILL HELP IF I ARRANGE FOR THE SORT ORDER OF DICTS AND NAMED-ARG GROUPS TO BE THE SAME
+    ;;; TODO
 enddefine;
 
 define is_named_arg_group();
@@ -24,7 +34,7 @@ define is_named_arg_group();
     returnif( stacklength() == 0 )( false );
 
     ;;; BODY
-    if dup() == named_arg_mark then
+    if dup() == pop11_named_arg_mark then
         if stacklength() fi_>= 2 then
             lvars count = (restack n, mark -> n, mark, n);
             returnif( count.isinteger and count >= 0 );
@@ -38,12 +48,12 @@ define is_named_arg_group();
 enddefine;
 
 define new_named_arg_group();
-    ( 0, named_arg_mark )
+    ( 0, pop11_named_arg_mark )
 enddefine;
 
 define named_arg_group_erase();
     lvars ( count, mark ) = ();
-    if mark == named_arg_mark and count >= 0 then
+    if mark == pop11_named_arg_mark and count >= 0 then
         erasenum( count << 1 )
     else
         mishap( 'Invalid named-arg group', [^count ^mark] )
@@ -63,12 +73,12 @@ enddefine;
 
 define named_arg_group_pop();    ;;;  -> ( keyword, value );
     lvars count, mark = ();
-    if mark == named_arg_mark then
+    if mark == pop11_named_arg_mark then
         if count <= 0 then  ;;; defensive.
             count, mark, false, termin
         else
             lvars ( v, k ) = ();
-            count - 1, named_arg_mark, k, v
+            count - 1, pop11_named_arg_mark, k, v
         endif
     else
         count, mark, false, termin
@@ -82,7 +92,7 @@ enddefine;
 ;;;
 define named_arg_group_insert_named_arg( keyword, value );
     lvars ( n, m ) = ();
-    unless m == named_arg_mark do
+    unless m == pop11_named_arg_mark do
         mishap( 'Invalid named-arg group, missing named-arg mark', [^m] )
     endunless;
     lvars keyword_list = [];
@@ -107,7 +117,7 @@ define named_arg_group_insert_named_arg( keyword, value );
         endif;
         v, k;
     endrepeat;
-    n + 1, named_arg_mark
+    n + 1, pop11_named_arg_mark
 enddefine;
 
 endsection;
