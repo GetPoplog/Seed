@@ -10,7 +10,20 @@ section $-gospl$-named_args =>
     pop11_named_arg_mark
     ;
 
-constant named_arg_mark = 'NAMED ARGUMENT MARK';
+constant pop11_named_arg_mark = 'NAMED ARGUMENT MARK';
+
+;;; Syntactic separators.
+constant
+    key_value_separator = "=",
+    rename_separator = "/"
+;
+
+;;; Variable/Keyword pairs
+constant procedure(
+    new_vk = conspair,
+    vk_variable = front,
+    vk_keyword = back
+);
 
 #_IF false
 ;;;
