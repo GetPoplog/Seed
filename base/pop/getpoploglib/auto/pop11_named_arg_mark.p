@@ -29,6 +29,7 @@ constant procedure(
 );
 
 #_IF false
+
 ;;;
 ;;; This is an attempt to arrange that the preferred order
 ;;; of keywords when calling is the same as the order of
@@ -47,8 +48,21 @@ constant procedure order_of_appearance = (
         endprocedure
     )
 );
+
+define ascending( kw1, kw2 );
+    kw1.order_of_appearance <= kw2.order_of_appearance
+enddefine;
+
+define descending( kw1, kw2 );
+    kw1.order_of_appearance >= kw2.order_of_appearance
+enddefine;
+
 #_ELSE
-constant procedure order_of_appearance = identfn;
+
+constant procedure
+    ascending = alphabefore,
+    descending = alphabefore <> not;
+
 #_ENDIF
 
 

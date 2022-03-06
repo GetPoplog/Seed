@@ -11,13 +11,9 @@ define sort_keywords( keyword_list, direction );
         keyword_list,
         true,
         if direction == "ascending" then
-            procedure( kw1, kw2 ) with_props compare_keywords;
-                kw1.order_of_appearance <= kw2.order_of_appearance
-            endprocedure
+            ascending
         elseif direction == "descending" then
-            procedure( kw1, kw2 ) with_props compare_keywords;
-                kw1.order_of_appearance >= kw2.order_of_appearance
-            endprocedure
+            descending
         else
             mishap( direction, 1, 'Invalid direction (internal error)' )
         endif
