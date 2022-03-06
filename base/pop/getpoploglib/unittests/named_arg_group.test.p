@@ -118,4 +118,31 @@ define :unittest convert_to_dict();
     assert d("zzz") == 777;
 enddefine;
 
+define :unittest merge_dict_to_empty();
+    ;;; Arrange
+    lvars d = ${ p = 'p', q = 'q', r = 'r' };
+    new_named_arg_group();
+    ;;; Act
+    named_arg_group_merge_dict( d );
+    lvars count = named_arg_group_length();
+    ;;; Assert
+    assert 3 == count;
+enddefine;
+
+define :unittest merge_dict_to_nonempty_group();
+    ;;; Arrange
+    lvars d = ${ p = 'p', q = 'q', r = 'r', zzz = 'zzz' };
+    new_named_arg_group();
+    named_arg_group_insert( "aaa", 666 );
+    named_arg_group_insert( "zzz", 777 );
+    named_arg_group_insert( "bbb", 888 );
+    named_arg_group_insert( "yyy", 999 );
+    ;;; Act
+    named_arg_group_merge_dict( d );
+    lvars count = named_arg_group_length();
+    ;;; Assert
+    assert 7 == count;
+enddefine;
+
+
 endsection;
