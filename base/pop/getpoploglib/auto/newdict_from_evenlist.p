@@ -11,7 +11,7 @@ define global constant procedure newdict_from_evenlist( list );
     lvars values = {%
         lvars n = 0;
         until null( list ) do
-            lvars ( v, k ) = dest( fast_destpair( list ) ) -> list;
+            lvars ( k, v ) = dest( fast_destpair( list ) ) -> list;
             n fi_+ 1 -> n;
             conspair( conspair( k, n ), keys ) -> keys;
             v ;;; put values in historical order into a vector.

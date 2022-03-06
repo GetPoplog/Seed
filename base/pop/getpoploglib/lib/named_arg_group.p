@@ -1,16 +1,18 @@
 compile_mode :pop11 +strict;
 
 uses pop11_named_arg_mark;
+uses dict;
 
 section $-gospl$-named_args =>
     named_arg_group
     is_named_arg_group
     new_named_arg_group
     named_arg_group_merge_dict
-    named_arg_group_insert_named_arg
+    named_arg_group_insert
     named_arg_group_pop
     named_arg_group_to_dict
     named_arg_group_erase
+    named_arg_group_length
     ;
 
 ;;; Hack for -uses-.
@@ -21,7 +23,7 @@ vars named_arg_group = _;
     is_named_arg_group() -> bool
     new_named_arg_group() -> ( 0, pop11_named_arg_mark )
     named_arg_group_merge_dict( ..., N, pop11_named_arg_mark, dict ) -> ( ..., N', pop11_named_arg_mark )
-    named_arg_group_insert_named_arg( ..., N, pop11_named_arg_mark, keyword, value ) -> ( ..., N', pop11_named_arg_mark )
+    named_arg_group_insert( ..., N, pop11_named_arg_mark, keyword, value ) -> ( ..., N', pop11_named_arg_mark )
     named_arg_group_pop( ..., N, pop11_named_arg_mark )
         -> ( ..., N-1, pop11_named_arg_mark, keyword, value ) OR
         -> ( ..., N, pop11_named_arg_mark, false, termin )
@@ -48,19 +50,21 @@ define named_arg_group_to_twinlists();
 enddefine;
 
 define named_arg_group_merge_dict( count, mark, dict );
-    dlvars ( keyword_list, value_list, count ) = named_arg_group_from_twinlist();
+    dlvars ( keyword_list, value_list, count ) = to_twinlists();
 
     ;;; KEY ASSUMPTION: The order of iteration across a dictionary is the
     ;;; same order as that that comes from to_twinlists.
     lvars count = (#|
         appdict(
             procedure( key, value );
-                if keyword_list.ispair then
-                    lvars k = fast_front( keyword_list );
-                    if k 
-                else
-                    value, key
-                endif
+                while keyword_list.ispair then
+                    lvars ( k, tail ) = fast_destpair( keyword_list );
+                    quitunless( ascending( k, key ) );
+                    destpair( value_list ) -> value_list;
+                    k;
+                    tail -> keyword_list;
+                endwhile;
+                value, key
             endprocedure
         )
     |#);
@@ -76,7 +80,7 @@ define is_named_arg_group();
     if dup() == pop11_named_arg_mark then
         if stacklength() fi_>= 2 then
             lvars count = (restack n, mark -> n, mark, n);
-            returnif( count.isinteger and count >= 0 );
+            returnif( count.isinteger and count fi_>= 0 )( true );
             mishap( 'Invalid named-arg group, non-negative integer required', [^count] )
         else
             mishap( 'Invalid named-arg group, no items under the named-arg-mark', [] )
@@ -102,7 +106,11 @@ enddefine;
 define named_arg_group_to_dict();
     if is_named_arg_group() then
         lvars ( count, _ ) = ();
-        lvars even_list = conslist( count << 1 );
+        lvars even_list = [];
+        repeat count times
+            lvars ( v, k ) = ();
+            conspair( k, conspair( v, even_list ) ) -> even_list
+        endrepeat;
         newdict_from_evenlist( even_list );
         sys_grbg_list( even_list );
     else
@@ -111,7 +119,7 @@ define named_arg_group_to_dict();
 enddefine;
 
 define named_arg_group_pop();    ;;;  -> ( keyword, value );
-    lvars count, mark = ();
+    lvars ( count, mark ) = ();
     if mark == pop11_named_arg_mark then
         if count <= 0 then  ;;; defensive.
             count, mark, false, termin
@@ -129,7 +137,7 @@ enddefine;
 ;;; the keyword/value ... instead we could slowly work down the stack
 ;;; until we come to one that is smaller and then re-insert.
 ;;;
-define named_arg_group_insert_named_arg( keyword, value );
+define named_arg_group_insert( keyword, value );
     lvars ( keyword_list, value_list, count ) = to_twinlists();
     repeat
         unless keyword_list.ispair do
@@ -138,7 +146,7 @@ define named_arg_group_insert_named_arg( keyword, value );
         endunless;
         lvars k = keyword_list.destpair -> keyword_list;
         lvars v = value_list.destpair -> value_list;
-        if keyword.order_of_appearance < k.order_of_appearance then
+        if ascending( keyword, k ) then
             value, keyword, v, k;
             for k, v in keyword_list, value_list do
                 v, k
@@ -148,6 +156,16 @@ define named_arg_group_insert_named_arg( keyword, value );
         v, k;
     endrepeat;
     count + 1, pop11_named_arg_mark
+enddefine;
+
+define named_arg_group_length() -> count;
+    lvars ( count, mark ) = ( restack n, m -> n, m, n, m );
+    unless mark == pop11_named_arg_mark do
+        mishap( 'Missing named-arg mark', [ ^mark ] )
+    endunless;
+    unless count.isinteger do
+        mishap( 'Invalid count under named-arg mark', [ ^count ] )
+    endunless;
 enddefine;
 
 endsection;
