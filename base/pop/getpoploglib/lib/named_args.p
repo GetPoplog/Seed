@@ -52,12 +52,12 @@ NOTE 3
 Default expressions are different from default values. Default
 values can only appear in define:optargs.
 
-
 */
 
-uses int_parameters;
-
 compile_mode :pop11 +strict;
+
+uses int_parameters;
+uses pop11_named_arg_mark;
 
 section $-gospl$-named_args =>
     named_args,                 ;;; Hack for -uses-
@@ -83,25 +83,6 @@ lconstant procedure(
     vk_keyword = back
 );
 
-
-;;;
-;;; This is an attempt to arrange that the preferred order
-;;; of keywords when calling is the same as the order of
-;;; declaration.  What we do is track the order of appearance
-;;; of keywords and use that as the basis for sorting.
-;;; Crude, it is true, but better than just plain sort.
-;;;
-vars next_count = 0;
-constant procedure order_of_appearance = (
-    newanyproperty(
-        [], 8, 1, false,
-        false, false, "perm",
-        false,
-        procedure( kw, self );
-            next_count + 1 ->> next_count ->> self( kw )
-        endprocedure
-    )
-);
 
 define sort_vk_list( vk_list, direction );
     syssort(
@@ -139,8 +120,6 @@ define sort_keywords( keyword_list, direction );
     )
 enddefine;
 
-constant named_arg_mark = 'NAMED ARGUMENT MARK';
-
 ;;;
 ;;; Is there a way to write this faster?  This is called at run
 ;;; time to determine whether or not there are any named
@@ -149,7 +128,7 @@ constant named_arg_mark = 'NAMED ARGUMENT MARK';
 define named_arg_available_rt();
     if stacklength() == 0 then
         false
-    elseif dup() == named_arg_mark then
+    elseif dup() == pop11_named_arg_mark then
         erase(); true
     else
         false
@@ -336,7 +315,7 @@ define plant_check_keyword_args( S );
         ;;; don't have to worry about an empty stack in this
         ;;; case.
         ;;;
-        sysPUSHQ( named_arg_mark );
+        sysPUSHQ( pop11_named_arg_mark );
         sysCALL( "==" );
         lvars lab = sysNEW_LABEL();
         sysIFSO( lab );
@@ -492,27 +471,6 @@ define syntax lvars_named_args;
     applist( positional_args.rev, vk_variable <> sysPOP );
     ";" :: proglist -> proglist;
 enddefine;
-
-;;; ---------------------------------------------------------------------------
-
-/* NOTES TO MYSELF
-
-1.  Need to implement default value syntax via closures-with-names.
-2.  Need to adapt the lvars_named_syntax to terminate on a ")" and
-3.  to support "==" for default values.
-4.  Adapt the get_args so that it pops named arguments with default
-    values off the stack.
-5.  The pop order should be the left-to-right order of arguments,
-    so the order of the frozvals will be the reverse to what the
-    naive programmer might expect (but they should be accessing by
-    name anyway).
-
-*/
-
-define :form optargs;
-    mishap( "TO BE IMPLEMENTED", [] )
-enddefine;
-
 
 ;;; ---------------------------------------------------------------------------
 
@@ -684,7 +642,7 @@ define syntax 12 -&- ;
     permute( keywords );
     sysPUSHQ( count );
     sysPUSHQ -> pop_expr_inst;
-    named_arg_mark -> pop_expr_item;
+    pop11_named_arg_mark -> pop_expr_item;
 enddefine;
 
 endsection;
