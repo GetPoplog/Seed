@@ -10,7 +10,10 @@ section $-gospl$-named_args =>
     pop11_named_arg_mark
     ;
 
-constant pop11_named_arg_mark = 'NAMED ARGUMENT MARK';
+#_IF not(DEF pop11_named_arg_mark)
+;;; We do not want this re-executed, so we protect it behind this #_IF check.
+constant pop11_named_arg_mark = conskey( "pop11_named_arg_mark", [] ).class_cons.apply;
+#_ENDIF
 
 ;;; Syntactic separators.
 constant
