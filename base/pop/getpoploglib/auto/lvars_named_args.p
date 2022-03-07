@@ -162,11 +162,29 @@ define plant_eq( variable, value );
     sysCALL( "==" );
 enddefine;
 
+;;; We may assume that the header is correctly formatted as the more
+;;; intensive checking is done in get_args. If it is badly formatted we
+;;; just bail early.
+define get_optargs_nargs( closer ) -> count;
+    dlocal proglist;
+    0 -> count;
+    until pop11_try_nextreaditem( closer ) do
+        lconstant closers_procedure_dlocal = [procedure dlocal];
+        while pop11_try_nextreaditem( closers_procedure_dlocal ) do
+            ;;; Skip
+        endwhile;
+        lvars variable = readitem();
+        quitunless( variable.isword );
+        nextif( variable == "," );
+        lvars idprops = identprops( variable );
+        quitunless( idprops == 0 or idprops == "undef" );
+    enduntil;
+enddefine;
 
-define get_args( closers, opt_allowed );
+define get_args( closers, opt_allowed ) -> ( positional_args, closer );
     lvars bitposn = 0;
     [%
-        until pop11_try_nextitem( closers ) do
+        until pop11_try_nextitem( closers ) ->> closer do
             lvars is_proc = false;
             lvars is_dlocal = false;
             repeat
@@ -180,32 +198,40 @@ define get_args( closers, opt_allowed );
             endrepeat;
 
             lvars variable = readitem();
-            unless variable == "," do
-                lvars keyword = (
-                    if pop11_try_nextreaditem( rename_separator ) then
-                        readitem()
-                    else
-                        variable
-                    endif
-                );
-                if is_dlocal then
-                    sysLOCAL( variable )
+            nextif( variable == "," );
+
+            unless variable.isword do
+                mishap( 'Unexpected item in procedure header', [ ^variable ] )
+            endunless;
+            lvars idprops = identprops( variable );
+            unless idprops == 0 or idprops == "undef" do
+                mishap( 'Parameter not an ordinary word', [ ^variable ] )
+            endunless;
+
+            lvars keyword = (
+                if pop11_try_nextreaditem( rename_separator ) then
+                    readitem()
                 else
-                    sysLVARS( variable, is_proc or 0 )
-                endif;
-                if opt_allowed.isproperty then
-                    if pop11_try_nextitem( key_value_separator ) then
-                        pop11_comp_expr();
-                        sysPOP( variable );
-                    else
-                        bitposn -> keyword.opt_allowed;
-                        bitposn + 1 -> bitposn;
-                    endif
-                endif;
-                new_vk( variable, keyword )
-            endunless
+                    variable
+                endif
+            );
+            if is_dlocal then
+                sysLOCAL( variable )
+            else
+                sysLVARS( variable, is_proc or 0 )
+            endif;
+            if opt_allowed.isproperty then
+                if pop11_try_nextitem( key_value_separator ) then
+                    pop11_comp_expr();
+                    sysPOP( variable );
+                else
+                    bitposn -> keyword.opt_allowed;
+                    bitposn + 1 -> bitposn;
+                endif
+            endif;
+            new_vk( variable, keyword )
         enduntil;
-    %]
+    %] -> positional_args;
 enddefine;
 
 ;;;
@@ -415,13 +441,19 @@ define plant_optional_args( S );
     sysLABEL( S.state_completely_finished );
 enddefine;
 
-define syntax lvars_named_args;
+trace get_args;
+define pop11_declare_optargs( closer );
     dlocal pop_new_lvar_list;
 
-    lvars positional_args = get_args( "-&-", false );
+    lvars ( positional_args, closer ) = get_args( [ -&- ) ], false );
 
     lvars nondefault = newproperty( [], 16, false, "perm" );
-    lvars optional_args = get_args( ";", nondefault );
+    lvars optional_args =
+        if closer == "-&-" then
+            get_args( closer, nondefault )
+        else
+            []
+        endif;
     lvars nargs_optional = optional_args.length;
 
     unless nargs_optional == 0 do
@@ -430,48 +462,11 @@ define syntax lvars_named_args;
 
     ;;; Now pop the mandatory args.
     applist( positional_args.rev, vk_variable <> sysPOP );
+enddefine;
+
+define syntax lvars_named_args;
+    pop11_declare_optargs( ";" );
     ";" :: proglist -> proglist;
 enddefine;
 
-
 endsection;
-
-/*
-
-define evil1();
-    lvars_named_args -&- xxx;
-enddefine;
-
-define foo() with_nargs 2;
-    lvars_named_args x, y -&- a = false, b = "no";
-    [ ^x ^y ^a ^b ] =>
-enddefine;
-
-define bar() with_nargs 2;
-    lvars_named_args x, y -&- a = false, b = "no", mmm;
-    [ ^x ^y ^a ^b ^mmm ] =>
-enddefine;
-
-define gort() with_nargs 2;
-    lvars_named_args x, y -&- a = false, b = "no", mmm, nnn;
-    [ ^x ^y ^a ^b ^mmm ^nnn ] =>
-enddefine;
-
-define evil2();
-    lvars_named_args -&- yyy;
-enddefine;
-
-
-foo( "x", "y" );
-foo( "x", "y" -&- a = "AAA" );
-foo( "x", "y" -&- b = "BBB" );
-foo( "x", "y" -&- b = "BBB", a = "AAA" );
-
-bar( "x", "y" -&- mmm = "MMM" );
-bar( "x", "y" -&- a = "AAA", mmm = "MMM" );
-bar( "x", "y" -&- b = "BBB",  mmm = "MMM" );
-
-gort( "x", "y" -&- nnn = "NNN", mmm = "MMM" );
-gort( "x", "y" -&- );
-
-*/
