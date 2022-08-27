@@ -267,9 +267,6 @@ jobs:
           command: |
             uname -a
             ldd --version
-      - run:
-          name: Get system info
-          command: uname -a
       - attach_workspace:
           at: _build
       - run:
