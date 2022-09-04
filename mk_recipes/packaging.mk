@@ -16,7 +16,7 @@ $(call check_defined, POPLOG_VERSION_DIR)
 deb: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb
 
 .PHONY: debsrc
-debsrc: _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz
+debsrc: .proxy-deb-src-artifacts
 
 _build/packaging/deb/poplog-$(GETPOPLOG_VERSION): $(SRC_TARBALL) _build/changelogs/CHANGELOG.debian
 	mkdir -p "$@"
@@ -34,7 +34,10 @@ _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb: _build/packaging/deb/p
 	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1_amd64.deb "$@"
 
 
-_build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz &: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
+ARTIFACTS_DIR:=_build/artifacts
+DEB_SRC_ARTIFACTS:=$(ARTIFACTS_DIR)/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.tar.gz
+# Proxy file for building DEB_SRC_ARTIFACTS
+.proxy-deb-src-artifacts: _build/packaging/deb/poplog-$(GETPOPLOG_VERSION)
 	mkdir -p "$(@D)"
 	( cd _build/packaging/deb/poplog-$(GETPOPLOG_VERSION) && dpkg-source -b . )
 	# https://en.opensuse.org/openSUSE:Build_Service_Debian_builds#DEBTRANSFORM_tags
@@ -43,8 +46,9 @@ _build/artifacts/poplog_$(GETPOPLOG_VERSION)-1.dsc _build/artifacts/poplog_$(GET
 	# file, OBS is unable to determine which file to use to build the
 	# deb.
 	echo "Debtransform-Tar: poplog-$(GETPOPLOG_VERSION).tar.gz" >> _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc
-	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc "$(@D)"
-	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.tar.gz "$(@D)"
+	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.dsc "$(ARTIFACTS_DIR)"
+	mv _build/packaging/deb/poplog_$(GETPOPLOG_VERSION)-1.tar.gz "$(ARTIFACTS_DIR)"
+	touch "$@"
 
 #-- Redhat *.rpm packaging -----------------------------------------------------
 

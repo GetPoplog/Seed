@@ -78,24 +78,24 @@ $(popsrc)/syscomp/$(POP_ARCH)/asmout.p: $(popsrc)/syscomp/$(POP_ARCH)/asmout.p.t
 # mk_cross. The compiler tools are built into saved images (.psv files) which
 # are then invoked by the symlinked commands.
 POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
-POP_COMPILER_TOOL_IMAGES:=$(addsuffix .psv,$(POP_COMPILER_TOOLS))
-$(POP_COMPILER_TOOL_IMAGES) &: $(COREPOP) $(popsrc)/syscomp/$(POP_ARCH)/asmout.p ../mk_cross
+.proxy-pop-compiler-tool-images: $(COREPOP) $(popsrc)/syscomp/$(POP_ARCH)/asmout.p ../mk_cross
 	. "$(usepop)/pop/com/popinit.sh"
 	export usepop
 	export POP__as
 	cd $(popsrc)
 	rm -f ./{popc,poplibr,poplink}.psv*
 	$(MK_CROSS) -d -a=$(POP_ARCH) popc poplibr poplink
+	touch "$@"
 
-$(POPLINK): $(POPLINK).psv $(COREPOP)
+$(POPLINK): .proxy-pop-compiler-tool-images $(COREPOP)
 	cd $(popsys)
 	ln -sf corepop poplink
 
-$(POPC): $(POPC).psv $(COREPOP)
+$(POPC): .proxy-pop-compiler-tool-images $(COREPOP)
 	cd $(popsys)
 	ln -sf corepop popc
 
-$(POPLIBR): $(POPLIBR).psv $(COREPOP)
+$(POPLIBR): .proxy-pop-compiler-tool-images $(COREPOP)
 	cd $(popsys)
 	ln -sf corepop poplibr
 
@@ -108,12 +108,14 @@ SRC_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(SRC_WLB_SRC))) \
 				 $(patsubst %.s,%.w,$(filter %.s,$(SRC_WLB_SRC)))
 SRC_WLB_OBJECTS:=$(addprefix $(popsrc)/,$(notdir $(SRC_WLB_OBJECTS)))
 SRC_WLB:=$(popobjlib)/src.wlb
-$(SRC_WLB_OBJECTS) &: $(SRC_WLB_SRC) $(SRC_WLB_HEADERS) $(POPC)
+# Proxy target for building all SRC_WLB_OBJECTS
+.proxy-wlb-objects: $(SRC_WLB_SRC) $(SRC_WLB_HEADERS) $(POPC)
 	cd $(popsrc)
 	rm -f $@
 	$(RUN_POPC) -c -nosys $(POP_ARCH)/*.[ps] ./*.p
+	touch "$@"
 
-$(SRC_WLB): $(SRC_WLB_OBJECTS) $(POPLIBR)
+$(SRC_WLB): .proxy-wlb-objects $(POPLIBR)
 	cd $(popsrc)
 	rm -f $@
 	$(RUN_POPLIBR) -c $@ $(shell realpath --relative-to $(popsrc) $(SRC_WLB_OBJECTS))
@@ -127,12 +129,14 @@ VED_WLB_HEADERS:=$(wildcard $(usepop)/pop/ved/src/*.ph) \
 				 $(usepop)/pop/lib/include/vedscreendefs.ph
 VED_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(VED_WLB_SRC)))
 VED_WLB:=$(popobjlib)/vedsrc.wlb
-$(VED_WLB_OBJECTS) &: $(VED_WLB_SRC) $(VED_WLB_HEADERS) $(POPC)
+# Proxy target for building all VED_WLB_OBJECTS
+.proxy-ved-wlb-objects : $(VED_WLB_SRC) $(VED_WLB_HEADERS) $(POPC)
 	cd $(usepop)/pop/ved/src
 	rm -f $@
 	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+	touch "$@"
 
-$(VED_WLB): $(popobjlib)/src.wlb $(VED_WLB_OBJECTS) $(POPLIBR)
+$(VED_WLB): $(popobjlib)/src.wlb .proxy-ved-wlb-objects $(POPLIBR)
 	cd $(usepop)/pop/ved/src
 	rm -f $@
 	$(RUN_POPLIBR) -c $@ ./*.w
@@ -163,12 +167,14 @@ XSRC_WLB_SRC:=$(wildcard $(usepop)/pop/x/src/*.p)
 XSRC_WLB_HEADERS:=$(wildcard $(usepop)/pop/x/src/*.ph)
 XSRC_WLB_OBJECTS:=$(patsubst %.p,%.w,$(filter %.p,$(XSRC_WLB_SRC)))
 XSRC_WLB:=$(popobjlib)/xsrc.wlb
-$(XSRC_WLB_OBJECTS) &: $(XSRC_WLB_SRC) $(XSRC_WLB_HEADERS) $(XPW_TARGET) $(POPC)
+# Proxy target for building all XSRC_WLB_OBJECTS
+.proxy-xsrc-wlb-objects: $(XSRC_WLB_SRC) $(XSRC_WLB_HEADERS) $(XPW_TARGET) $(POPC)
 	cd $(usepop)/pop/x/src
 	rm -f $@
 	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+	touch "$@"
 
-$(XSRC_WLB): $(popobjlib)/src.wlb $(XSRC_WLB_OBJECTS) $(POPLIBR)
+$(XSRC_WLB): $(popobjlib)/src.wlb .proxy-xsrc-wlb-objects $(POPLIBR)
 	cd $(usepop)/pop/x/src
 	rm -f $@
 	$(RUN_POPLIBR) -c $@ ./*.w
@@ -203,8 +209,9 @@ ifneq ($(POP_X_CONFIG),nox)
 XSRC_TARGET=$(XSRC_WLB)
 endif
 # The corepop is used to build a new pop11 executable via `pglink`.
-$(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map) &: \
-  $(XSRC_TARGET) $(SRC_WLB) $(VED_WLB) $(LIBPOP) $(PGLINK) $(POP_COMPILER_TOOLS) $(POP_X_CONFIG_FILE)
+BASEPOPS:=$(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map)
+# Proxy target for building BASEPOPS
+.proxy-basepops: $(XSRC_TARGET) $(SRC_WLB) $(VED_WLB) $(LIBPOP) $(PGLINK) $(POP_COMPILER_TOOLS) $(POP_X_CONFIG_FILE)
 	cd $(popsys)
 	$(RUN_PGLINK) $(PGLINK_X_FLAG) -map
 	mv newpop11 basepop11
@@ -212,25 +219,26 @@ $(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map) &: \
 	mv newpop11.stb basepop11.stb
 	ln -sf basepop11 pop11
 	ln -f basepop11 ved
+	touch "$@"
 
-$(popsavelib)/startup.psv: $(popsys)/basepop11
+$(popsavelib)/startup.psv: .proxy-basepops
 	source $(popcom)/popinit.sh
 	cd $(popsys)
 	./basepop11 %nort %noinit ../lib/lib/mkimage.p -nodebug -nonwriteable -install $@ startup
 
-$(popsavelib)/clisp.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
+$(popsavelib)/clisp.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 clisp
 	$(RUN_MKIMAGE) -install -subsystem lisp $@ ../lisp/src/clisp.p
 
-$(popsavelib)/prolog.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
+$(popsavelib)/prolog.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 prolog
 	$(RUN_MKIMAGE) -nodebug -install -flags prolog \( \) $@ ../plog/src/prolog.p
 
-$(popsavelib)/pml.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
+$(popsavelib)/pml.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 pml
@@ -240,7 +248,7 @@ $(popsavelib)/pml.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popen
 images: $(addsuffix .psv,$(addprefix $(popsavelib)/,startup clisp prolog pml))
 
 ifneq ($(POP_X_CONFIG),nox)
-$(popsavelib)/xved.psv: $(popsys)/pop11 $(popsavelib)/startup.psv $(popsys)/popenv.sh
+$(popsavelib)/xved.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 xved
@@ -290,4 +298,4 @@ PackagesNativeExtensions.proxy: $(NEURAL_LIBS) $(VISION_LIBS)
 	touch $@
 
 .PHONY: all
-all: $(popsys)/pop11 $(COMMAND_TARGETS) build_envs PackagesNativeExtensions.proxy
+all: .proxy-basepops $(COMMAND_TARGETS) build_envs PackagesNativeExtensions.proxy
