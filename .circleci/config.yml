@@ -169,7 +169,7 @@ jobs:
       - run:
           name: 'Install Poplog from *.deb file'
           command: |
-            sudo apt install -y ./_build/artifacts/poplog_*_amd64.deb
+            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ./_build/artifacts/poplog_*_amd64.deb
       - run:
           name: Run systests
           command: |
