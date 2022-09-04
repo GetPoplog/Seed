@@ -1,0 +1,34 @@
+HELP REPEATER_FROM                                      Stephen Leach, Oct 2021
+
+    repeater_from( n: num ) -> r
+    repeater_from( n: item, procedure p ) -> r
+
+This function is used to construct non-terminating repeaters. If called with a
+single numerical argument it returns a repeater that generates n, then n+1,
+then n+2 etc. For example:
+
+    Setpop
+    : vars r = repeater_from(1);
+    : r() =>
+    ** 1
+    : r() =>
+    ** 2
+    : r() =>
+    ** 3
+    :
+
+
+If it is called with a procedure then the repeater that is returned, when called,
+will generate n, p(n), p(p(n)), etc. For example:
+
+    Setpop
+    : vars r = repeater_from( false, not );
+    : r() =>
+    ** <false>
+    : r() =>
+    ** <true>
+    : r() =>
+    ** <false>
+    : r() =>
+    ** <true>
+    :

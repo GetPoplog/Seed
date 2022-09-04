@@ -1,0 +1,101 @@
+HELP DICT                                         Stephen Leach Sep 2021
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<           DICTS             >>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+--------------
+1  Recognisers
+--------------
+
+is_null_dict(dict) -> bool
+        Returns true if dict is empty, false otherwise.
+
+
+isdict(item) -> bool
+        Returns true if item is a dict, false otherwise.
+
+
+---------------
+2  Constructors
+---------------
+
+newdict_from_assoclist(assoc_list) -> dict
+        This constructs a dict from an assoc-list i.e. a list of key/values
+        which are themselves a list of length 2 (or more). e.g.
+
+                newdict_from_assoclist([[a 1] [b 2]])
+
+        will return a dict that maps the word "a" to 1 and "b" to 2.
+
+
+newdict_from_twinlists(keys_list, values_list) -> dict
+        This constructs a dict from two lists, being a list of keys and 
+        a parallel list of values. The lists are not required to be of equal 
+        length, the first N items are taken when N is the lesser of the 
+        two lengths. e.g.
+
+                newdict_from_twinlists([a b], [1 2])
+
+        will return a dict that maps the word "a" to 1 and "b" to 2.
+
+
+------------
+3  Accessors
+------------
+
+dict_destkeys( dict ) -> ( key1, key2, ..., keyN, N )
+        This returns all the keys of a dict on the stack and a count of
+        the keys. The keys will be sorted in lexicographical order.
+
+
+dist_destvalues( dict ) -> ( value1, value2, ..., valueN, N )
+        This returns all the values of a dict on the stack and a count of
+        the values returned. The values are returned in the same order as
+        the keys.
+
+
+dict( key ) -> value
+value -> dict(key)
+subscrdict(key, dict) -> value 
+value -> subscrdict(key, dict)
+        This returns or updates the value associated with the key in the
+        dict. subscrdict is the class_apply of the dict_key.
+
+
+----------------
+4  Miscellaneous
+----------------
+
+appdict(dict, procedure )         
+        Applies the  procedure  p  to  each  entry  in  the  dict.  The
+        procedure p is applied as:
+ 
+            p(key, value)
+ 
+        for each key/value association in dict.
+
+
+dict_key -> key
+        Constant holding key structure for dict
+
+
+dict_length(dict) -> N
+        Returns the number N of key/values pairs in dict.
+
+
+nulldict -> dict
+        An instance of an empty dict object
+
+
+partapply_dict(procedure, dict) -> closure
+        Returns a closure with named frozval-slots. See HELP * PARTAPPLY_DICT.
+
+partapply_override(closure, list|dict) -> closure
+        Copies a closure and updates the frozvals from the list or dict.
+        See HELP * PARTAPPLY_OVERRIDE.
+
+
+--- Copyright (c) GetPoplog Sep 2021 -------------------------------------------
