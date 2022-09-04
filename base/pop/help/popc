@@ -254,6 +254,10 @@ searched, i.e. disables the use of popsyslist.
             Produce output files in  directory (can occur anywhere,  and
             affects all following source files).
 
+    -quiet
+            Suppresses the popgctrace messages and inhibits the printing 
+            of multiple file names when compiling multiple files.
+
     -u arg-list
             Use Pop-11  source  libraries:  for each  arg  in  arg-list,
             compiles
