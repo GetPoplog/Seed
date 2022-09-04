@@ -33,7 +33,7 @@ jobs:
             ./post_build_checks/check_for_casetwins.sh
   one_line_install:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - run:
           command: |
@@ -57,7 +57,7 @@ jobs:
 
   build_tree:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - attach_workspace:
           at: _build
@@ -104,7 +104,7 @@ jobs:
 
   build_deb:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - checkout
       - attach_workspace:
@@ -127,7 +127,7 @@ jobs:
 
   build_debsrc:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - checkout
       - attach_workspace:
@@ -148,9 +148,9 @@ jobs:
           paths:
             - artifacts/poplog*.dsc
 
-  test_deb_1604:
+  test_deb_2004:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps: &deb_systests_steps
       - checkout
       - run:
@@ -177,14 +177,14 @@ jobs:
       - store_test_results:
           path: systests
 
-  test_deb_2004:
+  test_deb_2204:
     machine:
-      image: ubuntu-2004:202104-01
+      image: ubuntu-2204:2022.07.1
     steps: *deb_systests_steps
 
   build_rpm:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - checkout
       - attach_workspace:
@@ -206,7 +206,7 @@ jobs:
 
   test_rpm_centos8:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - checkout
       - run:
@@ -230,7 +230,7 @@ jobs:
 
   build_appimage:
     machine:
-      image: ubuntu-1604:202104-01
+      image: ubuntu-2004:2022.07.1
     steps:
       - checkout
       - run:
@@ -416,7 +416,7 @@ jobs:
 
   test_corepops:
     machine:
-      image: ubuntu-2004:202107-02
+      image: ubuntu-2004:2022.07.1
     steps:
       - checkout
       - run:
@@ -492,11 +492,11 @@ workflows:
           requires:
             - build_tree
           filters:  *default_filters
-      - test_deb_1604:
+      - test_deb_2004:
           requires:
             - build_deb
           filters:  *default_filters
-      - test_deb_2004:
+      - test_deb_2204:
           requires:
             - build_deb
           filters:  *default_filters
@@ -513,8 +513,8 @@ workflows:
       - push_to_open_build_service:
           requires:
             - test_rpm_centos8
-            - test_deb_1604
             - test_deb_2004
+            - test_deb_2204
             - build_debsrc
             - build_deb
             - build_rpm
@@ -523,8 +523,8 @@ workflows:
           filters: *release_filters
       - publish_github_release:
           requires:
-            - test_deb_1604
             - test_deb_2004
+            - test_deb_2204
             - test_rpm_centos8
             - build_changelog
             - build_appimage
