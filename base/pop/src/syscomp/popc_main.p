@@ -1516,6 +1516,7 @@ lconstant procedure poplink_nf_options = newassoc([
 
     ]);
 
+vars procedure cucharverbose;
 
 define $-Pop$-Main();
     lvars   c, arg, dev, n,
@@ -1541,6 +1542,7 @@ define $-Pop$-Main();
             pop_file_versions = use_file_versions(),
             cucharout = cucharerr,
             % file_create_control(dlocal_context) %,
+            cucharverbose = cucharerr,
         ;
 
 #_IF pop_debugging
@@ -1698,6 +1700,10 @@ define $-Pop$-Main();
                     ;;; no system libraries
                     false -> syslib
 
+                elseif c == "quiet" then
+                    false -> popgctrace;
+                    erase -> cucharverbose;
+
                 elseif c == "u" then
                     ;;; use things
                     pop11_compile(stringin(consstring(#|
@@ -1810,7 +1816,7 @@ define $-Pop$-Main();
 
         define lconstant pr_fname(fname);
             lvars fname;
-            dlocal cucharout = cucharerr;
+            dlocal cucharout = cucharverbose;
             returnunless(l_flag);
 
             printf(fname, if len == 1 then
