@@ -84,7 +84,7 @@ POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
 	export POP__as
 	cd $(popsrc)
 	rm -f ./{popc,poplibr,poplink}.psv*
-	$(MK_CROSS) -d -a=$(POP_ARCH) popc poplibr poplink
+	$(MK_CROSS) -a=$(POP_ARCH) popc poplibr poplink
 	touch "$@"
 
 $(POPLINK): .proxy-pop-compiler-tool-images $(COREPOP)
