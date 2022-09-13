@@ -195,7 +195,7 @@ jobs:
                 -it \
                 --security-opt seccomp=docker/poplog_seccomp.json \
                 --volume $PWD:/mnt \
-                centos:8 \
+                rockylinux:8 \
                 /mnt/.circleci/scripts/make_rpm.sh /mnt
       - store_artifacts:
           path: _build/artifacts
@@ -204,7 +204,7 @@ jobs:
           paths:
             - artifacts/*.rpm
 
-  test_rpm_centos8:
+  test_rpm_rockylinux8:
     machine:
       image: ubuntu-2004:2022.07.1
     steps:
@@ -223,7 +223,7 @@ jobs:
                 -it \
                 --security-opt seccomp=docker/poplog_seccomp.json \
                 -v $PWD:/mnt \
-                centos:8 \
+                rockylinux:8 \
                 /mnt/.circleci/scripts/test_rpm.sh /mnt
       - store_test_results:
           path: systests
@@ -500,7 +500,7 @@ workflows:
           requires:
             - build_deb
           filters:  *default_filters
-      - test_rpm_centos8:
+      - test_rpm_rockylinux8:
           requires:
             - build_rpm
           filters:  *default_filters
@@ -512,7 +512,7 @@ workflows:
           filters:  *default_filters
       - push_to_open_build_service:
           requires:
-            - test_rpm_centos8
+            - test_rpm_rockylinux8
             - test_deb_2004
             - test_deb_2204
             - build_debsrc
@@ -525,7 +525,7 @@ workflows:
           requires:
             - test_deb_2004
             - test_deb_2204
-            - test_rpm_centos8
+            - test_rpm_rockylinux8
             - build_changelog
             - build_appimage
             - build_snap
