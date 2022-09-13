@@ -182,51 +182,51 @@ jobs:
       image: ubuntu-2204:2022.07.1
     steps: *deb_systests_steps
 
-#  build_rpm:
-#    machine:
-#      image: ubuntu-2004:2022.07.1
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: _build
-#      - run:
-#          command: |
-#            docker run \
-#                -it \
-#                --security-opt seccomp=docker/poplog_seccomp.json \
-#                --volume $PWD:/mnt \
-#                centos:8 \
-#                /mnt/.circleci/scripts/make_rpm.sh /mnt
-#      - store_artifacts:
-#          path: _build/artifacts
-#      - persist_to_workspace:
-#          root: _build
-#          paths:
-#            - artifacts/*.rpm
+  build_rpm:
+    machine:
+      image: ubuntu-2004:2022.07.1
+    steps:
+      - checkout
+      - attach_workspace:
+          at: _build
+      - run:
+          command: |
+            docker run \
+                -it \
+                --security-opt seccomp=docker/poplog_seccomp.json \
+                --volume $PWD:/mnt \
+                centos:8 \
+                /mnt/.circleci/scripts/make_rpm.sh /mnt
+      - store_artifacts:
+          path: _build/artifacts
+      - persist_to_workspace:
+          root: _build
+          paths:
+            - artifacts/*.rpm
 
-#  test_rpm_centos8:
-#    machine:
-#      image: ubuntu-2004:2022.07.1
-#    steps:
-#      - checkout
-#      - run:
-#          name: Get system info
-#          command: |
-#            uname -a
-#            ldd --version
-#      - attach_workspace:
-#          at: ./_build
-#      - run:
-#          name: 'Install Poplog from *.rpm file'
-#          command: |
-#            docker run \
-#                -it \
-#                --security-opt seccomp=docker/poplog_seccomp.json \
-#                -v $PWD:/mnt \
-#                centos:8 \
-#                /mnt/.circleci/scripts/test_rpm.sh /mnt
-#      - store_test_results:
-#          path: systests
+  test_rpm_centos8:
+    machine:
+      image: ubuntu-2004:2022.07.1
+    steps:
+      - checkout
+      - run:
+          name: Get system info
+          command: |
+            uname -a
+            ldd --version
+      - attach_workspace:
+          at: ./_build
+      - run:
+          name: 'Install Poplog from *.rpm file'
+          command: |
+            docker run \
+                -it \
+                --security-opt seccomp=docker/poplog_seccomp.json \
+                -v $PWD:/mnt \
+                centos:8 \
+                /mnt/.circleci/scripts/test_rpm.sh /mnt
+      - store_test_results:
+          path: systests
 
   build_appimage:
     machine:
@@ -482,8 +482,8 @@ workflows:
           filters:  *default_filters
           requires:
             - test_contributor_tools
-#      - build_rpm:
-#          filters:  *default_filters
+      - build_rpm:
+          filters:  *default_filters
       - build_appimage:
           requires:
             - build_tree
@@ -500,10 +500,10 @@ workflows:
           requires:
             - build_deb
           filters:  *default_filters
-#      - test_rpm_centos8:
-#          requires:
-#            - build_rpm
-#          filters:  *default_filters
+      - test_rpm_centos8:
+          requires:
+            - build_rpm
+          filters:  *default_filters
       - test_contributor_tools:
           filters:  *default_filters
       - build_changelog:
@@ -512,12 +512,12 @@ workflows:
           filters:  *default_filters
       - push_to_open_build_service:
           requires:
-#            - test_rpm_centos8
+            - test_rpm_centos8
             - test_deb_2004
             - test_deb_2204
             - build_debsrc
             - build_deb
-#            - build_rpm
+            - build_rpm
             - build_src_tarball
             - build_changelog
           filters: *release_filters
@@ -525,7 +525,7 @@ workflows:
           requires:
             - test_deb_2004
             - test_deb_2204
-#            - test_rpm_centos8
+            - test_rpm_centos8
             - build_changelog
             - build_appimage
             - build_snap
