@@ -1671,7 +1671,7 @@ define $-Pop$-Main();
                 elseif c == "l" then
                     ;;; list names of files compiled (now done
                     ;;; automatically for more than 1 file). Explicitly
-                    ;;; removes -q if previously set.
+                    ;;; clears -q_flag- if previously set.
                     true -> l_flag;
                     false -> q_flag;
 
@@ -1772,7 +1772,7 @@ define $-Pop$-Main();
         false -> l_flag;
         false -> popgctrace;
     elseif n_compile > 1 then
-        ;;; If -q not set l_flag allowed to stand. And apply this default rule.
+        ;;; If q_flag not set l_flag allowed to stand. And apply this default rule.
         true -> l_flag;
     endif;
 
