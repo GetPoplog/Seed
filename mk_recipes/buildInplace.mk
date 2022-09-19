@@ -112,7 +112,7 @@ SRC_WLB:=$(popobjlib)/src.wlb
 .proxy-wlb-objects: $(SRC_WLB_SRC) $(SRC_WLB_HEADERS) $(POPC)
 	cd $(popsrc)
 	rm -f $@
-	$(RUN_POPC) -c -nosys $(POP_ARCH)/*.[ps] ./*.p
+	$(RUN_POPC) -quiet -c -nosys $(POP_ARCH)/*.[ps] ./*.p
 	touch "$@"
 
 $(SRC_WLB): .proxy-wlb-objects $(POPLIBR)
@@ -133,7 +133,7 @@ VED_WLB:=$(popobjlib)/vedsrc.wlb
 .proxy-ved-wlb-objects : $(VED_WLB_SRC) $(VED_WLB_HEADERS) $(POPC)
 	cd $(usepop)/pop/ved/src
 	rm -f $@
-	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+	$(RUN_POPC) -quiet -c -nosys -wlib \( ../../src/ \) ./*.p
 	touch "$@"
 
 $(VED_WLB): $(popobjlib)/src.wlb .proxy-ved-wlb-objects $(POPLIBR)
@@ -171,7 +171,7 @@ XSRC_WLB:=$(popobjlib)/xsrc.wlb
 .proxy-xsrc-wlb-objects: $(XSRC_WLB_SRC) $(XSRC_WLB_HEADERS) $(XPW_TARGET) $(POPC)
 	cd $(usepop)/pop/x/src
 	rm -f $@
-	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+	$(RUN_POPC) -quiet -c -nosys -wlib \( ../../src/ \) ./*.p
 	touch "$@"
 
 $(XSRC_WLB): $(popobjlib)/src.wlb .proxy-xsrc-wlb-objects $(POPLIBR)
