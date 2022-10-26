@@ -161,15 +161,17 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            sudo apt update
-            sudo apt install -y python3 python3-pip
+            export DEBIAN_FRONTEND=noninteractive
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
             pip3 install pytest
       - attach_workspace:
           at: ./_build
       - run:
           name: 'Install Poplog from *.deb file'
           command: |
-            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ./_build/artifacts/poplog_*_amd64.deb
+            export DEBIAN_FRONTEND=noninteractive 
+            sudo apt-get install -y ./_build/artifacts/poplog_*_amd64.deb
       - run:
           name: Run systests
           command: |
@@ -242,8 +244,9 @@ jobs:
           at: _build
       - run:
           command: |
-            sudo apt update
-            sudo apt install -y make curl libncurses5 libncurses5-dev
+            export DEBIAN_FRONTEND=noninteractive 
+            sudo apt-get update
+            sudo apt-get install -y make curl libncurses5 libncurses5-dev
       - run:
           command: |
             make buildappimage POPLOG_HOME_DIR=/opt/poplog
@@ -274,8 +277,9 @@ jobs:
           at: _build
       - run:
           command: |
-            sudo apt update
-            sudo apt install make 
+            export DEBIAN_FRONTEND=noninteractive 
+            sudo apt-get update
+            sudo apt-get install make 
       - run:
           command: |
             make buildsnapcraftready POPLOG_HOME_DIR=/opt/poplog
