@@ -1,0 +1,8 @@
+-----------------------------------------------------------------------------
+-- help incharline             Fri Apr 11, 1986        Steve Knight x 2366 --
+-----------------------------------------------------------------------------
+
+incharline(character repeater) -> line repeater
+
+This procedure accepts a character repeater and returns a string repeater.
+Each string is a "line" of the input.

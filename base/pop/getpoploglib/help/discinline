@@ -1,0 +1,13 @@
+HELP DISCINLINE                        Steve Knight, March 1990
+
+    discinline( filename ) -> line repeater;
+
+This procedure is roughly equivalent in functionality (but faster) to
+    discin <> incharline
+in that it accepts a filename, as a string, and returns a line repeater.  The
+line repeater is a procedure that returns the next line of the file each time
+it is called.  When it is exhausted it returns termin.
+
+-discinline- works by opening the file as a line oriented device.  Therefore
+it is not appropriate to supply it with an already opened device, as you may
+do with discin.
