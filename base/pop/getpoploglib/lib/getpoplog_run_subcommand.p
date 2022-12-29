@@ -38,6 +38,7 @@ define getpoplog_run_subcommand();
     if poparglist.null then
         dlocal cucharout = cucharerr;
         npr( 'Missing options for poplog command' );
+        false -> pop_exit_ok;
         sysexit();
     else
         lvars (subcmd, args) = poparglist.dest;
@@ -48,6 +49,7 @@ define getpoplog_run_subcommand();
             dlocal cucharout = cucharerr;
             pr( 'Unknown poplog subcommand: ' );
             npr( subcmd );
+            false -> pop_exit_ok;
             sysexit();
         endif
     endif
