@@ -47,8 +47,10 @@ define getpoplog_run_subcommand();
             valof( w )( parse_args( args ) )
         else
             dlocal cucharout = cucharerr;
-            pr( 'Unknown poplog subcommand: ' );
-            npr( subcmd );
+            pr( 'Unexpected arguments: ' );
+            pr( subcmd );
+            applist( args, procedure(a); pr( space ); pr( a ) endprocedure );
+            pr( newline );
             false -> pop_exit_ok;
             sysexit();
         endif
