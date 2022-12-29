@@ -938,12 +938,14 @@ cat << \****
         deque_pop_front( argd );
         return processArgs( argd, base, flags, envv );
     } else {
-        fprintf( stderr, "Unexpected arguments:" );
-        for ( int i = 0; i < deque_length( argd ); i++ ) {
-            fprintf( stderr, " %s", (char *)deque_get( argd, i ) );
-        }
-        fprintf( stderr, "\n" );
-        return EXIT_FAILURE;
+        setUpEnvironment( base, flags, envv );
+        char * subpath = "/pop/getpoploglib/lib/getpoplog_run_subcommand.p";
+        char * path = safe_malloc( strlen( subpath ) + strlen( base ) + 1 );
+        char * p = stpcpy( path, base );
+        p = stpcpy( p, subpath );
+        deque_push_front( argd, path );
+        deque_push_front( argd, "pop11" );
+        execvp( "pop11", deque_as_array( argd ) );
     }
     perror( NULL );
     return EXIT_FAILURE;
