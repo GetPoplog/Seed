@@ -110,7 +110,9 @@ enddefine;
 define lconstant mkimage(args);
     lvars   arg, args, image, ss = false, initialisers = [], share = undef,
             nonwrit = false, vedmode = false, entry_p = false;
-    dlocal  pop_debugging = "undef";
+    dlocal  pop_debugging = "undef",
+            loadwarning,
+            libwarning;
 
     ;;; process any leading options (prefixed with '-')
     while args /== [] and isstartstring('-', hd(args)) do
@@ -157,6 +159,9 @@ define lconstant mkimage(args);
             false -> pop_debugging;
         elseif arg = '-debug' then
             true -> pop_debugging;
+        elseif arg = '-quiet' then
+            erase -> loadwarning;
+            erase -> libwarning;
         elseif arg = '-entrymain' or arg = '-entry' then
             if arg = '-entrymain' then
                 '$-Pop$-Main'

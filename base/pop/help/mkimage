@@ -299,6 +299,10 @@ should precede the image name.
     "undef"). (Has no affect on the value of pop_debugging when the
     saved image is restored.)
 
+-quiet
+    Reduces the amount of output produced by turning off popgctrace
+    and the file loading messages.
+
 -flags key flags
     LIB * MKIMAGE defines a property named mkimage_flags_table. This
     option adds to the table a mapping from the word key to a list of

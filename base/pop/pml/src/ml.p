@@ -92,7 +92,7 @@ lvars warnings = false;
 define lconstant loadfile(file);
     lvars   dir, file, dev = false;
     dlocal  pop_debugging = ml_debugging,
-            popgctrace = true;
+            popgctrace = ml_debugging and true;
 
     ;;; Make backslash an alphabeticiser
     dlocal  % item_chartype(`\\`) % = 12;
