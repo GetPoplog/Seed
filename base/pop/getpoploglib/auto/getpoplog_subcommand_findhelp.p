@@ -146,7 +146,7 @@ define subcmd_findhelp( category, topic, exact );
             lvars m = syssearchpath( search_list, topic );
             if m then
                 lvars qc = category_match_quality( category, m(2) );
-                ${ quality=qc, category=m(2), title=topic, path=m(1), lineno=false, summary=false }
+                ${ quality=qc, category=m(2), title=topic, path=m(1), from=pop_undef, to=pop_undef, summary=pop_undef }
             else
                 false
             endif
@@ -174,14 +174,14 @@ define subcmd_findhelp( category, topic, exact );
                 lvars isummary = trim_summary( lines( L1 ) );
                 lvars qc = category_match_quality( category, icat );
                 lvars qt = topic_match_quality( topic, itopic );
-                ${ quality=qc*qt, category=icat, title=itopic, path=ipath, lineno=L1, summary=isummary }
+                ${ quality=qc*qt, category=icat, title=itopic, path=ipath, from=L1, to=L3, summary=isummary }
             endfor;
         endfor
     %];
     if exact_match then
         exact_match :: options -> options;
     endif;
-    nc_listsort( options, procedure( x, y ); x("quality") >= y("quality") endprocedure )
+    ${ popversion=popversion, documentation=nc_listsort( options, procedure( x, y ); x("quality") >= y("quality") endprocedure ) }
 enddefine;
 
 define getpoplog_subcommand_findhelp( options, args );
