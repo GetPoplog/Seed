@@ -2,66 +2,7 @@ compile_mode :pop11 +strict;
 
 /*  Generates a JSON dump of where help can be located in the Poplog file
     hierarchy. The JSON obeys the following schema:
-
-{
-  "$id": "https://github.com/GetPoplog/findhelp.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "FindHelp",
-  "type": "object",
-  "properties": {
-    "popversion": {
-      "description": "A string describing the version of Poplog.",
-      "type": "string"
-    },
-    "documentation": {
-      "description": "Matching documentation.",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "quality": {
-            "description": "A number from 0 to 1.0 indicating the match quality, with 1 being a perfect match.",
-            "type": "number"
-          },
-          "category": {
-            "description": "The category of documentation, reflecting the level formality and technical detail.",
-            "type": "string",
-            "enum": [ "help", "teach", "doc", "ref" ]
-          },
-          "title": {
-            "description": "The title of the resource.",
-            "type": "string"
-          },
-          "summary": {
-            "description": "An optional summary of the resource as a list of lines, which may be null.",
-            "type": ["array", "null"],
-            "items": { "type": "string" }
-          },
-          "path": {
-            "description": "File path of the resource.",
-            "type": "string"
-          },
-          "from": {
-            "description": "Position in the file the description starts, which may be null.",
-            "type": ["integer", "null"]
-          },
-          "end": {
-            "description": "Position in the file of the last line of the description, which may be null.",
-            "type": ["integer", "null"]
-          },
-          "content": {
-            "description": "Full content as a list of lines, which may be null.",
-            "type": [ "array", "null" ],
-            "items": { "type": "string" }
-          }
-        },
-        "required": ["quality", "title", "summary", "path", "lineno", "category"]
-      }
-    },
-    "required": ["popversion", "documentation"]
-  }
-}
-
+        https://gist.github.com/sfkleach/4065ef69d393c659e297420ebc8c0248
 */
 
 section;
