@@ -33,24 +33,32 @@ compile_mode :pop11 +strict;
             "type": "string"
           },
           "summary": {
-            "description": "An optional summary of the resource, which may be null.",
-            "type": ["string", "null"]
+            "description": "An optional summary of the resource as a list of lines, which may be null.",
+            "type": ["array", "null"],
+            "items": { "type": "string" }
           },
           "path": {
             "description": "File path of the resource.",
             "type": "string"
           },
-          "lineno": {
+          "from": {
             "description": "Position in the file the description starts, which may be null.",
             "type": ["integer", "null"]
+          },
+          "end": {
+            "description": "Position in the file of the last line of the description, which may be null.",
+            "type": ["integer", "null"]
+          },
+          "content": {
+            "description": "Full content as a list of lines, which may be null.",
+            "type": [ "array", "null" ],
+            "items": { "type": "string" }
           }
         },
-        "required": ["quality", "title", "summary", "path", "lineno", "category"],
-        "additionalProperties": false
+        "required": ["quality", "title", "summary", "path", "lineno", "category"]
       }
     },
-    "required": ["popversion", "documentation"],
-    "additionalProperties": false
+    "required": ["popversion", "documentation"]
   }
 }
 
@@ -79,17 +87,31 @@ define lconstant new_line_fetcher();
         syshash, nonop =, "perm",
         false,
         procedure( path, self );
-            pdtolist( discinline( path ) ) ->> self( path )
+            if sysisdirectory( path ) then
+                []
+            else
+                pdtolist( discinline( path ) ) 
+            endif ->> self( path )
         endprocedure
     );
 enddefine;
 
-define lconstant trim_summary( line ) -> line;
-    lvars i = locchar(`[`, 2, line);
-    if i then
-        skipchar_back(`\s`, i - 1, line) -> i;
-        substring(1, i, line) -> line
-    endif;
+define lconstant trim_summary( lines, from_lineno, to_lineno );
+
+    define lconstant trim( line ) -> line;
+        lvars i = locchar(`[`, 2, line);
+        if i then
+            skipchar_back(`\s`, i - 1, line) -> i;
+            substring(1, i, line) -> line
+        endif;
+    enddefine;
+
+    allbutfirst( from_lineno - 1, lines ) -> lines;
+    [%
+        repeat to_lineno - from_lineno + 1 times
+            trim( lines.dest -> lines )
+        endrepeat
+    %]
 enddefine;
 
 lconstant
@@ -97,7 +119,7 @@ lconstant
     TOPIC_SUFFIX_MISMATCH_PENALTY = 0.04,
     TOPIC_PREFIX_MISMATCH_PENALTY = 0.05;
 
-define lconstant category_match_quality( expected, actual );
+define constant category_match_quality( expected, actual );
     ;;; By coincidence the difference in length of names gives
     ;;; a good heuristic! (That ref and teach are extra-different).
     if expected == actual then
@@ -126,7 +148,28 @@ define lconstant topic_match_quality( expected, actual );
     endif
 enddefine;
 
-define subcmd_findhelp( category, topic, exact );
+define lconstant extend_with_content( option, procedure fetcher );
+    lvars path = option("path");
+    lvars content = (
+        if option("from").isinteger and option("to").isinteger then
+            lvars lines = fetcher( sysfileok( path ) );
+            repeat option("from") - 1 times
+                lines.tl -> lines
+            endrepeat;
+            [%
+                lvars i;
+                for i from option("from") to option("to") do
+                    lines.dest -> lines
+                endfor;
+            %]
+        else
+            fetcher( sysfileok( path ) )
+        endif
+    );
+    extend_dict( "content", content, option )
+enddefine;
+
+define subcmd_findhelp( category, topic, exact, with_content );
     lvars search_list = (
         if category == "help" then
             [vedhelplist]
@@ -144,6 +187,9 @@ define subcmd_findhelp( category, topic, exact );
     lvars exact_match =
         lblock
             lvars m = syssearchpath( search_list, topic );
+            if m.isstring then
+                [ ^m help ] -> m
+            endif;
             if m then
                 lvars qc = category_match_quality( category, m(2) );
                 ${ quality=qc, category=m(2), title=topic, path=m(1), from=pop_undef, to=pop_undef, summary=pop_undef }
@@ -152,15 +198,14 @@ define subcmd_findhelp( category, topic, exact );
             endif
         endlblock;
 
-    returnif( exact )( exact_match and [ ^exact_match ] or [] );
-
     lvars procedure fetcher = new_line_fetcher();
     lvars ecat = exact_match and exact_match("category");
     lvars etopic = exact_match and exact_match("title");
     lvars epath = exact_match and exact_match("path");
     lvars options = [%
+        lvars topic_pattern = exact_match and topic or ( '*' <> topic <> '*' );
         lvars row;
-        for row in ved_??_search_doc_index( '*' <> topic <> '*', search_list ) do
+        for row in ved_??_search_doc_index( topic_pattern, search_list ) do
             lvars result;
             for result in tl( row ) do
                 lvars icat = hd( row );
@@ -171,7 +216,7 @@ define subcmd_findhelp( category, topic, exact );
                     false -> exact_match
                 endif;
                 lvars lines = fetcher( ipath );
-                lvars isummary = trim_summary( lines( L1 ) );
+                lvars isummary = trim_summary( lines, L1, L2 );
                 lvars qc = category_match_quality( category, icat );
                 lvars qt = topic_match_quality( topic, itopic );
                 ${ quality=qc*qt, category=icat, title=itopic, path=ipath, from=L1, to=L3, summary=isummary }
@@ -181,12 +226,15 @@ define subcmd_findhelp( category, topic, exact );
     if exact_match then
         exact_match :: options -> options;
     endif;
+    if with_content then
+        maplist( options, extend_with_content(%fetcher%) ) -> options
+    endif;
     ${ popversion=popversion, documentation=nc_listsort( options, procedure( x, y ); x("quality") >= y("quality") endprocedure ) }
 enddefine;
 
 define getpoplog_subcommand_findhelp( options, args );
-    dict_concat( ${ category='help', exact=false }, options ) -> options;
-    json_println( subcmd_findhelp( consword(options("category")), args(1), options("exact") ) )
+    dict_concat( ${ category='help', exact=false, content=false }, options ) -> options;
+    json_println( subcmd_findhelp( consword(options("category")), args(1), options("exact"), options("content") ) )
 enddefine;
 
 endsection;

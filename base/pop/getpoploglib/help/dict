@@ -6,6 +6,12 @@ HELP DICT                                         Stephen Leach Sep 2021
 <<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+Dicts are specialised tuples that map from names (or keys) to values. They are 
+intended to represent ad hoc records with a fixed set of fields, where each 
+field is associated with a word. Like records, they cannot have new fields
+added after they are created (inextensible), can have the fields updated
+(updateable), and do not have defaults.
+
 --------------
 1  Recognisers
 --------------
@@ -18,9 +24,20 @@ isdict(item) -> bool
         Returns true if item is a dict, false otherwise.
 
 
+is_key_in_dict( name, dict ) -> bool
+        Return true if the word -name- is valid key of the dict.
+
+
 ---------------
 2  Constructors
 ---------------
+
+newdict_from_stack( key1, value1, ..., N ) -> newdict
+        Creates a newdict object based a counted sequence of interleaved 
+        key/value items on the stack. e.g.
+
+                newdict_from_stack(#| "left", -1, "ahead", 0, "right", 1 |#)
+
 
 newdict_from_assoclist(assoc_list) -> dict
         This constructs a dict from an assoc-list i.e. a list of key/values
@@ -45,6 +62,11 @@ newdict_from_twinlists(keys_list, values_list) -> dict
 ------------
 3  Accessors
 ------------
+
+dict_dest( dict ) -> key1, value1, ...., keyN, valueN, N )
+        This returns a counted, interleaved sequence of key/value items.
+        N is always an even integer.
+
 
 dict_destkeys( dict ) -> ( key1, key2, ..., keyN, N )
         This returns all the keys of a dict on the stack and a count of
@@ -79,6 +101,9 @@ appdict(dict, procedure )
         for each key/value association in dict.
 
 
+dict_copy( dict ) -> newdict
+        Creates a copy of an existing dict.
+
 dict_key -> key
         Constant holding key structure for dict
 
@@ -88,15 +113,7 @@ dict_length(dict) -> N
 
 
 nulldict -> dict
-        An instance of an empty dict object
-
-
-partapply_dict(procedure, dict) -> closure
-        Returns a closure with named frozval-slots. See HELP * PARTAPPLY_DICT.
-
-partapply_override(closure, list|dict) -> closure
-        Copies a closure and updates the frozvals from the list or dict.
-        See HELP * PARTAPPLY_OVERRIDE.
+        An instance of an empty dict object. N.B. ${} will return -nulldict-.
 
 
 --- Copyright (c) GetPoplog Sep 2021 -------------------------------------------

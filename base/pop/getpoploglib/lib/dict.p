@@ -2,7 +2,8 @@ compile_mode :pop11 +strict;
 
 section $-dict =>
     dict_key isdict dict_length
-    subscr_dict appdict is_null_dict;
+    subscr_dict appdict is_null_dict
+    null_dict, newdict_from_stack;
 
 #_IF not( isdefined( "dict_key" ) )
 
@@ -42,9 +43,12 @@ constant procedure dict_table =
 
 global constant dict_key = conskey( "dict", [ full full ] );
 global constant procedure isdict = dict_key.class_recognise;
+"isdict" -> isdict.pdprops;
 
 constant procedure destdict = dict_key.class_dest;
 constant procedure consdict = dict_key.class_cons;
+
+global constant nulldict = consdict( {}.dup );
 
 ;;; Not exported but retained for autoloading.
 constant procedure dict_keys = class_access( 1, dict_key );
@@ -58,14 +62,24 @@ define global constant procedure dict_length( dict );
     dict.dict_values.datalength
 enddefine;
 
-define lconstant find( w, dict );
+;;;
+;;; Returns the position of the word -name- in the keys_vector of -dict-.
+;;; When -name- does not appear in the keys vector the behvaiour is determined by
+;;; the parameter count_preceding
+;;;  - If count_preceding is true it returns the number of keys that 
+;;;    precede -name- as ordered by -alphabefore-. 
+;;;  - If count_preceding is -pop_undef- it returns -false-.
+;;;
+define constant procedure find( name, dict, count_preceding );
+    lvars keys_vector = dict.dict_keys; ;;; Final.
+    lvars N = keys_vector.datalength;   ;;; Final.
     lvars lo = 1;
-    lvars hi = dict.dict_values.datalength;
+    lvars hi = N;
     repeat
         if lo < hi then
             lvars mid = ( lo fi_+ hi ) fi_>> 1;
-            lvars midkey = subscrv( mid, dict.dict_keys );
-            lvars cmp = alphabefore( w, midkey );
+            lvars midkey = subscrv( mid, keys_vector );
+            lvars cmp = alphabefore( name, midkey );
             if cmp then
                 if cmp == 1 then
                     return( mid )
@@ -75,32 +89,52 @@ define lconstant find( w, dict );
             else
                 mid fi_+ 1 -> lo;
             endif
-        elseif lo == hi and w == subscrv( lo, dict.dict_keys ) then
-            return( hi )
+        elseif lo == hi and name == subscrv( lo, keys_vector ) then
+            return( lo )
+        elseif count_preceding == pop_undef then
+            return( false )
+        elseif count_preceding == true then
+            ;;; Return the count of the keys before name.
+            returnif( N == 0 )( 0 );
+            ;;; There is at least 1 key (and name is different from that key)
+            returnif( alphabefore( name, subscrv( 1, keys_vector ) ) )( 0 );
+            returnif( alphabefore( subscrv( N, keys_vector ), name ) )( N );
+            ;;; There are at least 2 keys and name is sandwiched between two keys.
+            ;;; Also lo is either the element before name or the element after name.
+            returnif( lo == 1 )( 1 );
+            returnif( lo == N )( N - 1 );
+            ;;; And we know that 2 <= lo <= N - 1 so keys_vector( lo +/- 1 ) is safe.
+            lvars key_below = subscrv( lo fi_- 1, keys_vector );
+            lvars key_at = subscrv( lo, keys_vector );
+            lvars key_after = subscrv( lo fi_+ 1, keys_vector );
+            returnif( alphabefore( key_below, name ) and alphabefore( name, key_at ) )( lo fi_- 1 );
+            returnif( alphabefore( key_at, name ) and alphabefore( name, key_after ) )( lo );
+            mishap( 0, 'INTERNAL ERROR IN dict$-find' )
         else
-            mishap( 'Trying to index dict with invalid key', [ ^w ] )
+            mishap( 'Trying to index dict with invalid key', [ ^name ] )
         endif
     endrepeat
 enddefine;
 
 define global constant procedure subscr_dict( w, dict );
-    subscrv( find( w, dict ), dict.dict_values )
+    subscrv( find( w, dict, false ), dict.dict_values )
 enddefine;
 
 define updaterof subscr_dict( item, w, dict );
-    item -> subscrv( find( w, dict ), dict.dict_values )
+    item -> subscrv( find( w, dict, false ), dict.dict_values )
 enddefine;
 
 subscr_dict -> class_apply( dict_key );
 
 define global constant procedure appdict( dict, procedure p );
-    lvars i, n = dict.dict_length;
-    for i from 1 to n do
+    lvars ( keys, values ) = dict.destdict;
+    lvars i, n = datalength( keys );
+    fast_for i from 1 to n do
         p(
-            fast_subscrv( i, dict.dict_keys ),
-            fast_subscrv( i, dict.dict_values )
+            subscrv( i, keys ),
+            subscrv( i, values )
         )
-    endfor;
+    endfast_for;
 enddefine;
 
 define global constant procedure is_null_dict( dict );
@@ -141,37 +175,70 @@ define lconstant procedure check_duplicates( key_index_list );
     endfor;
 enddefine;
 
-;;;
-;;; This is a helper function for building dict objects. It takes a list
-;;; of unsorted pairs (key, position) and a vector of values and
-;;; _takes ownership of these_ i.e. no other references to these parameters
-;;; are usable after this function has run. This allows the values vector to
-;;; be sorted and the list of pairs to be returned to the heap.
-;;;
-;;; newdict_internal<T>: [ pair< word, int > ] * { T } -> dict< T >
-;;;
-define constant newdict_internal( key_index_list, values_vector );
+define lconstant gather_triples( N ) -> ( triples_list );
+    lvars i, triples_list = [];
+    fast_for i from 1 to (N >> 1) do
+        lvars ( k, v ) = ();
+        unless k.isword do
+            mishap( k, 1, 'Word needed' )
+        endunless;
+        lvars t = conspair( conspair( k, i ), v );
+        conspair( t, triples_list ) -> triples_list;
+    endfast_for;
+enddefine;
+
+define lconstant sort_triples_list( triples_list );
     nc_listsort(
-        key_index_list,
-        procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
-    ) -> key_index_list;
-    check_duplicates( key_index_list );
-    lvars sorted_keys_vector = {% applist( key_index_list, front ) %};
-    lvars sorted_values_vector = fill(
-        lblock
-            lvars p;
-            for p in key_index_list do
-                subscrv( p.back, values_vector )
-            endfor
-        endlblock,
-        values_vector      ;;; !! reusing this vector !!
-    );
-    ;;; Now we can free up the working store.
-    while key_index_list.ispair do
-        ( key_index_list.sys_grbg_destpair -> key_index_list ).sys_grbg_destpair -> _ -> _;
-    endwhile;
-    ;;; And deliver the result.
-    consdict( sorted_keys_vector.dict_table, sorted_values_vector )
+        triples_list,
+        procedure( t1, t2 );
+            lvars ( k1, i1 ) = fast_destpair( fast_front( t1 ) );
+            lvars ( k2, i2 ) = fast_destpair( fast_front( t2 ) );
+            if k1 == k2 then
+                i2 > i1
+            else
+                alphabefore( k1, k2 )
+            endif
+        endprocedure
+    )
+enddefine;
+
+define constant newdict_internal( keys_vector, values_vector );
+    consdict( keys_vector.dict_table, values_vector )
+enddefine;
+
+define constant newdict_from_stack( N );
+    lvars triples_list = gather_triples( N ).sort_triples_list;
+    
+    ;;; Iterate over the triples in sorted order, skipping duplicate keys,
+    ;;; and dump the values on the stack in order to form a vector. At the 
+    ;;; same time create a matching list of keys in reverse order. We delete the
+    ;;; triples and list spine as we go.
+    lvars rev_keys_list = [];
+    lvars values_vector = {%
+        lvars prev_k = false;            ;;; Any non-word could do here.
+        while triples_list.ispair do
+            lvars triple = sys_grbg_destpair( triples_list ) -> triples_list;
+            lvars ( ki, v ) = sys_grbg_destpair( triple );
+            lvars k = sys_grbg_destpair( ki ) -> _;
+            if k /== prev_k then
+                conspair( k, rev_keys_list ) -> rev_keys_list;
+                v
+            endif;
+            k -> prev_k
+        endwhile
+    %};
+
+    ;;; Now populate a keys vector in reverse order, deleting the reversed list
+    ;;; as we go.
+    lvars n2 = datalength( values_vector );
+    lvars keys_vector = initv( n2 );
+    while rev_keys_list.ispair do
+        quitif( n2 == 0 );
+        sys_grbg_destpair( rev_keys_list ) -> rev_keys_list -> fast_subscrv( n2, keys_vector );
+        n2 fi_- 1 -> n2;
+    endwhile; 
+
+    newdict_internal( keys_vector.dict_table, values_vector )
 enddefine;
 
 ;;; This is a non-exported helper function for writing syntax words.
@@ -198,15 +265,19 @@ define compile_newdict_to( closing_keyword ) -> actual_closer;
         keys,
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> keys;
-    check_duplicates( keys );
-    sysPUSHQ( {% applist( keys, front ) %} );
-    lvars p;
-    for p in keys do
-        sysPUSH( subscrv( p.back, tmpvars ) )
-    endfor;
-    sysPUSHQ( tmpvars.datalength );
-    sysCALL( "consvector" );
-    sysCALLQ( consdict );
+    if keys.null then
+        sysPUSH( "nulldict" ); 
+    else
+        check_duplicates( keys );
+        sysPUSHQ( {% applist( keys, front ) %} );
+        lvars p;
+        for p in keys do
+            sysPUSH( subscrv( p.back, tmpvars ) )
+        endfor;
+        sysPUSHQ( tmpvars.datalength );
+        sysCALL( "consvector" );
+        sysCALLQ( consdict );
+    endif
 enddefine;
 
 #_ENDIF
