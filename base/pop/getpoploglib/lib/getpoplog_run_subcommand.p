@@ -47,7 +47,7 @@ define getpoplog_run_subcommand();
             valof( w )( parse_args( args ) )
         else
             dlocal cucharout = cucharerr;
-            pr( 'Cannot autoload a subcommand with this name: ' );
+            pr( 'Cannot autoload a subcommand with this name and arguments: ' );
             pr( subcmd );
             applist( args, procedure(a); pr( space ); pr( a ) endprocedure );
             pr( newline );
