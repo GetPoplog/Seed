@@ -1,0 +1,19 @@
+HELP ALLFIRST                                       Steve Knight, Jan 1991
+
+    allfirst(<integer:N>, <item>) -> <item>
+
+This procedure copies the first N elements from <item>. <item> may
+be a list, string, word, or any vector type object. The result is always
+of the same type as <item>.
+
+    allfirst(3, [dog mouse elephant pig horse]) =>
+    ** [dog mouse elephant]
+
+    allfirst(2, {cat dog mouse elephant pig horse}) =>
+    ** {cat dog}
+
+
+See also:
+    HELP * ALLLAST
+    HELP * ALLBUTFIRST
+    HELP * ALLBUTLAST

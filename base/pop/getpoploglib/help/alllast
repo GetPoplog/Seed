@@ -1,0 +1,19 @@
+HELP ALLLAST                                        Steve Knight, Jan 1991
+
+    alllast(<integer:N>, <item>) -> <item>
+
+This procedure copies the last N elements from <item>. <item> may
+be a list, string, word, or any vector type object. The result is always
+of the same type as <item>.
+
+    alllast(3, [dog mouse elephant pig horse]) =>
+    ** [elephant pig horse]
+
+    alllast(2, {cat dog mouse elephant pig horse}) =>
+    ** {pig horse}
+
+
+See also:
+    HELP * ALLFIRST
+    HELP * ALLBUTFIRST
+    HELP * ALLBUTLAST

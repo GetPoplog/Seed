@@ -169,7 +169,7 @@ define lconstant extend_with_content( option, procedure fetcher );
     extend_dict( "content", content, option )
 enddefine;
 
-define subcmd_findhelp( category, topic, exact, with_content );
+define subcmd_findhelp( category, topic, exact, with_content, maxmatches );
     lvars search_list = (
         if category == "help" then
             [vedhelplist]
@@ -226,15 +226,28 @@ define subcmd_findhelp( category, topic, exact, with_content );
     if exact_match then
         exact_match :: options -> options;
     endif;
+    nc_listsort( options, procedure( x, y ); x("quality") >= y("quality") endprocedure ) -> options;
+    if maxmatches and maxmatches > 0 and maxmatches < options.length then
+        allfirst( maxmatches, options ) -> options;
+    endif;
     if with_content then
         maplist( options, extend_with_content(%fetcher%) ) -> options
     endif;
-    ${ popversion=popversion, documentation=nc_listsort( options, procedure( x, y ); x("quality") >= y("quality") endprocedure ) }
+
+    ${ popversion=popversion, documentation=options }
 enddefine;
 
 define getpoplog_subcommand_findhelp( options, args );
-    dict_concat( ${ category='help', exact=false, content=false }, options ) -> options;
-    json_println( subcmd_findhelp( consword(options("category")), args(1), options("exact"), options("content") ) )
+    dict_concat( ${ category='help', exact=false, content=false, maxmatches=false }, options ) -> options;
+    json_println( 
+        subcmd_findhelp( 
+            consword(options("category")), 
+            args(1), 
+            options("exact"), 
+            options("content"),
+            strnumber( options("maxmatches") or '-1' )
+        ) 
+    )
 enddefine;
 
 endsection;
