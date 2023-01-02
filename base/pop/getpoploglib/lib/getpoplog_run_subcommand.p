@@ -37,7 +37,7 @@ enddefine;
 define getpoplog_run_subcommand();
     if poparglist.null then
         dlocal cucharout = cucharerr;
-        npr( 'Missing options for poplog command' );
+        npr( 'Expected name of subcommand but none was given' );
         false -> pop_exit_ok;
         sysexit();
     else
@@ -47,7 +47,7 @@ define getpoplog_run_subcommand();
             valof( w )( parse_args( args ) )
         else
             dlocal cucharout = cucharerr;
-            pr( 'Unexpected arguments: ' );
+            pr( 'Cannot autoload a subcommand with this name: ' );
             pr( subcmd );
             applist( args, procedure(a); pr( space ); pr( a ) endprocedure );
             pr( newline );
