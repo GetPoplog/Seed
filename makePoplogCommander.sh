@@ -933,7 +933,7 @@ cat << \****
             execvp( shell_path, deque_as_array( argd ) );
         }
     } else if ( strchr( arg0, '=' ) != NULL ) {
-        //  If there is an '=' sign in the argument it is an environment variable.
+        // If there is an '=' sign in the argument it is an environment variable.
         vector_push( envv, arg0 );
         deque_pop_front( argd );
         return processArgs( argd, base, flags, envv );
@@ -945,8 +945,10 @@ cat << \****
         p = stpcpy( p, subpath );
         deque_push_front( argd, path );
         deque_push_front( argd, "pop11" );
+        // If execvp is successful, pop11 will responsible for returning the correct error code. 
         execvp( "pop11", deque_as_array( argd ) );
     }
+    // We only reach here if the execvp fails, which would be very unusual.
     perror( NULL );
     return EXIT_FAILURE;
 }
