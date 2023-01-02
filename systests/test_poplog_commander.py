@@ -100,13 +100,13 @@ class TestVariables:
     def test_error_message_on_invalid_var_spec(self):
         completed_process = run_poplog_commander(["FOO", "exec", "echo", "hello"])
         assert completed_process.returncode == 1
-        assert completed_process.stderr.decode('utf-8').strip() == "Cannot autoload a subcommand with this name: FOO exec echo hello"
+        assert completed_process.stderr.decode('utf-8').strip() == "Cannot autoload a subcommand with this name and arguments: FOO exec echo hello"
 
 
     def test_error_message_on_command(self):
         completed_process = run_poplog_commander(["asdf"])
         assert completed_process.returncode == 1
-        assert completed_process.stderr.decode('utf-8').strip() == "Cannot autoload a subcommand with this name: asdf"
+        assert completed_process.stderr.decode('utf-8').strip() == "Cannot autoload a subcommand with this name and arguments: asdf"
 
 
 class TestBuilds:
