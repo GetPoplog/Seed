@@ -1,0 +1,155 @@
+HELP KWARGS                                 Steve Leach, 13th Dec 04
+
+    uses kwargs
+
+This library adds a optional-arguments facility to Pop11.  This allows the
+programmer to define procedures that take both ordinary arguments and
+arguments that are named by keywords. Named arguments may be given
+defaults - in which case they are optional.
+
+It provides two syntax words lvars_kwargs and -&- plus a new define
+form :kwargs.
+
+
+-----------------------------------------------------------------------
+1  Typical Use
+-----------------------------------------------------------------------
+
+Keyword arguments are passed in a special way to procedures. Because
+of this, you cannot get them the same way are ordinary arguments. Instead
+you should use the syntax word lvars_kwargs.
+
+For example, this is how one might write a procedure that takes an
+ordinary input argument _n and a named argument _______reverse.  Note the
+use of the marker "-&-" to separate the ordinary argument from the
+named argument.
+
+    uses kwargs;
+
+    define upto() -> result with_nargs 1;
+        lvars_kwargs n -&- reverse = false;
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif
+    enddefine;
+
+lvars_kwargs has two jobs.  It declares the arguments and processes
+them by popping values off the stack or assigning defaults.  A default
+is defined by following the named argument with an equals sign and then
+the default expression.
+
+If a named argument has a default then it is said to be optional.  An
+optional named argument may be omitted when the procedure is called.
+This is one of the main points of having named arguments and the
+more common situation.
+
+To invoke a procedure that takes optional arguments is done using
+the -&- syntax.  Each named parameter is followed by an equals sign
+and then its value.
+
+    upto( 3 -&- reverse = true ) =>
+    ** [3 2 1]
+
+
+-----------------------------------------------------------------------
+2  Mandatory vs Optional Named Arguments
+-----------------------------------------------------------------------
+
+As mentioned above, named arguments usually have defaults and having a
+default makes the named argument optional. However, they do not have to
+have a default. In that case they become a mandatory named argument.
+That simply means that they must be supplied as named arguments with
+their values when they are used.
+
+For example,
+
+<<<EXAMPLE TO BE INSERTED HERE>>>
+
+
+-----------------------------------------------------------------------
+3  Details of lvars_kwargs
+-----------------------------------------------------------------------
+
+The full syntax of lvars_kwargs looks like this
+
+    lvars_kwargs _____________ORDINARY_ARGS -&- __________NAMED_ARGS;
+
+    _____________ORDINARY_ARGS ___::= _[dlocal_|procedure_] _____________VARIABLE_NAME
+
+    _________NAMED_ARG ___::= _____________VARIABLE_NAME _[= _____________DEFAULT_EXPR]
+              ___::= _____________________VARIABLE_NAME/KEYWORD _[= _____________DEFAULT_EXPR]
+
+A named argument actually has two parts, an internal variable name and
+an external keyword.  Usually these are the same name but you can make
+them different.  This is mainly useful when the external keyword you
+want clashes with a reserved name of some kind.
+
+The values of the named arguments are popped off the stack first.
+If the argument is named and optional and was omitted in the call, the
+default value or expression is used to obtain a single result which is
+used instead. (We cannot guarantee the order in which the defaults are
+assigned, so please avoid relying on this.)
+
+Note that default expressions are only run if the optional argument is
+not supplied.
+
+When all the named arguments have been processed, the ordinary
+arguments are assigned in the usual way.
+
+
+-----------------------------------------------------------------------
+4  define :kwargs
+-----------------------------------------------------------------------
+
+The define :kwargs syntax allows us to write procedures that used keyword
+parameters in a more natural way. Instead of writing
+
+    define upto() -> result with_nargs 1;
+        lvars_kwargs n -&- reverse = false;
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif
+    enddefine;
+
+we can write this:
+
+    define :kwargs upto( n -&- reverse = false ) -> result;
+        [% lvars i; for i from 1 to n do i endfor %] -> result;
+        if reverse then result.rev -> result endif;
+    enddefine;
+
+
+-----------------------------------------------------------------------
+5  Implementation
+-----------------------------------------------------------------------
+
+This implementation of optional arguments is designed to tradeoff several
+considerations.
+
+    #   Calling a kwarg-procedure without any optional
+        arguments has a miniscule overhead.
+
+    #   The cost of processing the optional arguments is low.
+
+    #   The cost of constructing a set of optional arguments is
+        low (statically rather than dynamically).  No heap store
+        is allocated when passing the arguments.
+
+To achieve this we arrange for -&- to leave the keywords in sorted order and
+to not push duplicates. This makes processing the arguments much more
+efficient. Note that it would still work even if the keyword/values were not
+sorted and it also works when there are duplicates. In summary:
+
+    -&- K1 = V1, K2 = V2, ..., K = Vn
+
+    where   n >= 1
+    and     K1 ... Kn are all distinct
+
+turns into
+
+    ___________BOTTOM_MARK, ___________BOTTOM_MARK, K'1, V'1, K'2, V'2, ...., K'n, V'n, ________TOP_MARK
+
+    where   K'1 < K'2 < ... < K'n
+    and     K'1 ... K'n is a permutation of K1, ..., Kn
+    and     V'1 ... V'n is the same permutation of V1, ... Vn
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
