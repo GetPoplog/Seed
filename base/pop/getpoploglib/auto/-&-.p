@@ -155,7 +155,6 @@ define syntax 12 -&- ;
 
     ;;; Add the base of the kwargs-pile.
     sysPUSHQ( pop_kwargs_bottom_mark );
-    sysPUSHS( undef );
 
     lvars k = sysNEW_LVAR();
     lvars keywords = [];

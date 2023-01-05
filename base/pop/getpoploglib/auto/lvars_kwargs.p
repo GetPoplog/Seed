@@ -15,8 +15,8 @@ keywords in SORTED order.  Here's a summary
 
 turns into the following stack-pattern (from bottom to top)
 
-    BOTTOM_MARK, BOTTOM_MARK,
-    K'1, V'1, K'2, V'2, ...., K'n, V'n, 
+    BOTTOM_MARK,
+    K'1, V'1, K'2, V'2, ..., K'n, V'n, 
     TOP_MARK
 
     where   K'1 < K'2 < ... < K'n
@@ -30,7 +30,7 @@ of the defaults. These must be provided using the optional arguments
 mechanism. e.g.
 
     ;;; The  following can only be satisfied by a stack that looks like:
-    ;;; VALUE_FOR_ALPHA, BOTTOM_MARK, BOTTOM_MARK, "beta", VALUE_FOR_BETA, TOP_MARK
+    ;;; VALUE_FOR_ALPHA, BOTTOM_MARK, "beta", VALUE_FOR_BETA, TOP_MARK
     lvars_named_args alpha -&- beta;
 
 NOTE 2
@@ -158,11 +158,14 @@ define plant_optional_args( optional_args, nondefault );
         mishap( uninitialised, 1, 'Defaultless named argument not assigned' )
     enddefine;
 
-    /*define lconstant peep( k, v );
-        sysPUSH( k );
-        sysPUSH( v );
-        sysCALLQ( procedure( k, v ); [k = ^k, v = ^v ] => endprocedure );
-    enddefine;*/
+    define lconstant get_next( kw, arg, label );
+        sysPUSHS( arg );
+        sysPOP( arg );
+        sysPUSHQ( pop_kwargs_bottom_mark );
+        sysCALL( "==" );
+        sysIFSO( label );
+        sysPOP( kw );
+    enddefine;
 
     /*
         lvars tmp_uninitialised_x = "x";
@@ -179,7 +182,7 @@ define plant_optional_args( optional_args, nondefault );
     /*
         if are_kwargs_present() then                            ;;; Removes the mark.
             lvars tmp_progress = false;                         ;;; Not == to any stacklength()
-            lvars ( tmp_arg, tmp_kw ) = ();                     ;;; Get current couple.
+            lvars ( tmp_kw, tmp_arg, quitflag ) = getnext();    ;;; Get current couple.
     */
     lvars tmp_progress = sysNEW_LVAR();
     lvars end_of_kwargs_processing = sysNEW_LABEL();
@@ -189,24 +192,22 @@ define plant_optional_args( optional_args, nondefault );
     sysPOP( tmp_progress );
     lvars tmp_kw = sysNEW_LVAR();
     lvars tmp_arg = sysNEW_LVAR();
-    sysPOP( tmp_arg );
-    sysPOP( tmp_kw );
+
+    lvars until_loop_start = sysNEW_LABEL();
+    lvars until_loop_end = sysNEW_LABEL();
+    get_next( tmp_kw, tmp_arg, until_loop_end );
 
     /*
-            while tmp_kw /== pop_kwargs_bottom_mark do
+            until quitflag do
     */
-    lvars while_loop_start = sysNEW_LABEL();
-    lvars while_loop_end = sysNEW_LABEL();
-    sysLABEL( while_loop_start );
-    plant_eq( tmp_kw, pop_kwargs_bottom_mark );
-    sysIFSO( while_loop_end );
+    sysLABEL( until_loop_start );
 
     /*          
                 if tmp_kw == "x" then
                     tmp_arg -> x;
                     false -> tmp_uninitialised_x;
-                    () -> ( tmp_kw, tmp_arg );
-                    quitif( tmp_kw == pop_kwargs_bottom_mark );
+                    getnext() -> ( tmp_kw, tmp_arg, quitflag );
+                    quitif( quitflag );
                 endif;
     */
     lvars vk;
@@ -225,12 +226,7 @@ define plant_optional_args( optional_args, nondefault );
             sysPOP( tmp_uninitialised_kw );
         endif;
 
-        sysPOP( tmp_arg );
-        sysPOP( tmp_kw );
-        ;;; peep( tmp_kw, tmp_arg );
-
-        plant_eq( tmp_kw, pop_kwargs_bottom_mark );
-        sysIFSO( while_loop_end );
+        get_next( tmp_kw, tmp_arg, until_loop_end );
 
         sysLABEL( done );
     endfor;
@@ -253,11 +249,11 @@ define plant_optional_args( optional_args, nondefault );
     );
     */
 
-    sysGOTO( while_loop_start );
+    sysGOTO( until_loop_start );
 
-    /*      endwhile
+    /*      enduntil
     */
-    sysLABEL( while_loop_end );
+    sysLABEL( until_loop_end );
 
     /*
             lvars uninitialised = tmp_uninitialised_x or tmp_uninitialised_y;
@@ -304,6 +300,17 @@ enddefine;
         stacklength() == 0 and () == pop_kwargs_top_mark
     enddefine;
 
+    define lconstant getnext() -> ( kw, arg, quitflag );
+        ;;; We will inline this function.
+        () -> arg;
+        arg == pop_kwargs_bottom_mark -> quitflag;
+        if quitflag then
+            undef
+        else
+            ()
+        endif -> kw
+    enddefine;
+
     lvars z;
     99 -> z;
     lvars y;
@@ -316,27 +323,27 @@ enddefine;
 
     if are_kwargs_present() then                            ;;; Removes the mark.
         lvars tmp_progress = false;                         ;;; Not == to any stacklength()
-        lvars ( tmp_kw, tmp_arg ) = ();                     ;;; Get current couple.
-        while tmp_kw /== pop_kwargs_bottom_mark do
+        lvars ( tmp_kw, tmp_arg, quitflag ) = getnext();    ;;; Get current couple.
+        until quitflag do
             if tmp_kw == "z" then
                 tmp_arg -> z;
-                () -> ( tmp_kw, tmp_arg );
-                quitif( tmp_kw == pop_kwargs_bottom_mark );
+                getnext() -> ( tmp_kw, tmp_arg, quitflag );
+                quitif( quitflag );
             endif;
             if tmp_kw == "y" then
                 tmp_arg -> y;
                 false -> tmp_uninitialised_y;
-                () -> ( tmp_kw, tmp_arg );
-                quitif( tmp_kw == pop_kwargs_bottom_mark );
+                getnext() -> ( tmp_kw, tmp_arg, quitflag );
+                quitif( quitflag );
             endif;
             if tmp_kw == "x" then
                 tmp_arg -> x;
                 false -> tmp_uninitialised_x;
-                () -> ( tmp_kw, tmp_arg );
-                quitif( tmp_kw == pop_kwargs_bottom_mark );
+                getnext() -> ( tmp_kw, tmp_arg, quitflag );
+                quitif( quitflag );
             endif;
             check_progress( tmp_progress, tmp_kw ) -> tmp_progress
-        endwhile;
+        enduntil
     endif;
 
     lvars uninitialised = tmp_uninitialised_x or tmp_uninitialised_y;

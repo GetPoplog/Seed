@@ -145,7 +145,7 @@ sorted and it also works when there are duplicates. In summary:
 
 turns into
 
-    ___________BOTTOM_MARK, ___________BOTTOM_MARK, K'1, V'1, K'2, V'2, ...., K'n, V'n, ________TOP_MARK
+    ___________BOTTOM_MARK, K'1, V'1, K'2, V'2, ...., K'n, V'n, ________TOP_MARK
 
     where   K'1 < K'2 < ... < K'n
     and     K'1 ... K'n is a permutation of K1, ..., Kn
