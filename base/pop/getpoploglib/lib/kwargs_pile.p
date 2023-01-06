@@ -10,6 +10,7 @@ section $-kwargs =>
     dict_to_kwargs_pile
     kwargs_pile_erase
     kwargs_pile_length
+    kwargs_pile_normalise
     ;
 
 ;;; Hack for -uses-.
@@ -44,8 +45,8 @@ define kwargs_pile_normalise() with_nargs 1;
         lvars k = p.front;
         if k == prev_k then
             () -> _;
-            sys_grbg_destpair( p );
-            restack X Y -> Y;
+            sys_grbg_destpair( p ) -> p -> _;
+            p
         else
             sys_grbg_destpair( p )
         endif;
