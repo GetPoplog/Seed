@@ -1,0 +1,52 @@
+HELP kwargs_pile                                Steve Leach, Jane 2023
+
+    uses kwargs_pile
+
+This is a library for managing a collection of paired key-value items
+that are sandwiched between -pop_kwargs_bottom_mark- and 
+-pop_kwargs_top_mark-. This 'pile' of values is used to pass keyword
+arguments to functions.
+
+new_kwargs_pile() -> PILE
+    Creates a new empty kwargs-pile i.e. BOTTOM; TOP
+
+
+kwargs_pile_erase( PILE )
+    Removes a kwargs pile from the stack.
+
+
+kwargs_pile_length( PILE ) -> N
+    Returns the number of key-value pairs in the pile, including 
+    any duplicate keys.
+
+
+kwargs_pile_normalise( PILE ) -> NORMALISED_PILE
+    Makes all the keys of the PILE unique by sorting the pairs into 
+    alphabetic order of keys and eliminating the pairs with duplicated
+    keys (higher pairs win).
+
+
+kwargs_pile_add( PILE, key, value ) -> PILE
+    Adds a key value pair into a kwargs-pile. It does not attempt to
+    eliminate duplicates or keep the pile sorted.
+
+
+kwargs_pile_extend( PILE, map_like ) -> PILE
+    Adds the entries of a property or dict into a kwargs-pile. It
+    does not attempt to eliminate duplicates or keep the pile sorted.
+
+
+kwargs_pile_to_dict( PILE ) -> dict
+    Creates a dict object from a kwargs-pile, consuming the pile.
+
+
+dict_to_kwargs_pile( dict ) -> PILE
+    Dumps a dict object's contents into a kwargs-pile.
+
+
+kwargs_pile_to_twinlists( PILE ) -> ( keys_list, values_list)
+    This function consumes a kwargs-pile and separates the keys and
+    values into two separate lists. The order of items in each list
+    is preserved.
+
+-----------------------------------------------------------------------
