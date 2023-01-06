@@ -1,0 +1,212 @@
+TEACH RESTACK                                   Steve Knight, Jan 1991
+
+-- Introduction -------------------------------------------------------
+
+The "restack" construct allows you to rearrange the topmost items on
+the stack.  For example, you can reverse the top three items on the 
+stack by writing
+
+    restack x y z -> z y x;
+
+The syntax of restack is
+
+    restack <input words> -> <output words>
+
+where <input words> and <output words> stands for a sequence of variable 
+names optionally separated by commas.  All the output-words must appear 
+in the  input-words and no input-word can occur twice.
+
+The effect of a restack is equivalent, but much more efficent, to:
+
+    procedure( <input words> );
+        <output words>;
+    endprocedure();
+
+Most of the time in Pop11, you don't have to be particularly interested 
+in the stack.  In fact, many programmers try to ignore the stack 
+altogether. However, there are a number of interesting programming 'idioms' 
+or techniques that are made possible by deliberately exploiting the fact 
+that the stack is completely open to the programmer.
+
+A familiar idiom to Pop11 programmers is the use of the stack in combination
+with list or vector brackets.  For example, you might write the familiar
+"flatten" or "fringe" function (that constructs a list of all the elements 
+in a tree, represented as a list of lists) like this:
+
+    define flatten( tree ); lvars tree;
+        define lconstant walk_fringe( t ); lvars t;
+            if t.islist then
+                applist( t, walk_fringe )
+            else
+                t
+            endif
+        enddefine;
+        [% walk_fringe( tree ) %]
+    enddefine;
+
+But there are several other ideas in this area.  How can you sum the 
+elements in a list?  Obviously you could write a "for" loop.  Try thinking 
+about this!
+
+    applist( 0, [2 4 6], nonop + ) =>
+    ** 12
+
+One rich source of ideas is the programming language FORTH.  FORTH is a 
+very low-level language which, like Pop11, has an 'open' stack.  Rather 
+remarkably, FORTH procedures have no local variables(!!)  Instead, the 
+FORTH programmer has to learn how to carefully manipulate the stack so 
+that the values they want are always on top of the stack (and in the right 
+order) when they are needed.
+
+To help them, the FORTH programmer has a number of simple stack manipulation
+routines.  The most frequently used ones are
+    dup     which duplicates the value on top         x -> x x
+    drop    which removes the topmost value           x ->
+    swap    which swaps the top two values            x y -> y x
+    rot     which rotates the top three stack values  x y z -> z x y
+    rot2    equal to two rot's                        x y z -> y z x
+    over    which copies the second value to the top  x y -> x y x
+Pop11 has the first two, which are "dup" and "erase" but not the other
+four.
+
+Now the lack of local variables is typically a "bad thing" -- at least
+from the viewpoint of conveniently writing programs.  However, when you
+get used to this way of writing routines, it is quite easy and SOMETIMES
+it is very elegant.  It is this idiom of pure stack-manipulation that
+restack helps you exploit on those occasions.
+
+
+-- General Style ------------------------------------------------------
+
+Just to get a flavour of this programming style, I've written a couple of
+functions in this style. These illustrate how it is _possible_ to write
+in this way.
+
+The first is the well-known factorial function and the second finds the 
+roots  of quadratic equations.  They aren't especially pretty to look at;
+their purpose is only to get you thinking in pure-stack operations and to 
+realise that it needs a different way of thinking.
+
+;;; Remember, we're not allowed to use any local variables!
+define factorial();
+    ;;; we want to compare the top of the stack with 0.  However, we'll
+    ;;; need it later.  This means we must take a copy using dup.
+    if dup() = 0 then
+        ;;; in this case, we don't need the input value any more.  We
+        ;;; drop it, using erase, and then push 1 as the result.
+        erase(); 1
+    else
+        ;;; we've got the input value N on top of the stack.  We now
+        ;;; want to compute N * factorial( N - 1 ).  This is especially
+        ;;; easy.
+        dup() - 1;      ;;; leaves N; N-1 on the stack
+        factorial();    ;;; N; factorial( N - 1 )
+        *;              ;;; then multiply
+    endif
+enddefine;
+
+Here's an even more grotesque example - finding the roots of the quadratic
+equation a*x**2 + b*x +c = 0.  First, we write it out in ordinary Pop11 
+code.
+
+    define roots( a, b, c ); lvars a, b, c;
+        lvars base = sqrt( b ** 2 - 4 * a * c );
+        lvars denom = 2 * a;
+        (-b + base) / denom;
+        (-b - base) / denom;
+    enddefine;
+
+Here it is, rather perversely, done without any local variables.
+
+    define swap( a, b ) -> ( b, a ); lvars a, b; enddefine;
+    define rot( a, b, c ) -> ( c, a, b ); lvars a, b, c; enddefine;
+    define rot2( a, b, c ) -> ( b, c, a ); lvars a, b, c; enddefine;
+    define over( a, b ) -> ( a, b, a ); lvars a, b; enddefine;
+
+    define roots();
+        ;;; a, b, c on the stack
+        rot2() * 2;     ;;; b, c, denom
+        dup() * 2;      ;;; b, c, denom, 4*a
+        rot2();         ;;; b, denom, 4*a, c
+        *;              ;;; b, denom, 4*a*c
+        rot2();         ;;; denom, 4*a*c, b
+        negate();       ;;; denom, 4*a*c, -b
+        dup() * dup();  ;;; denom, 4*a*c, -b, b**2
+        rot2() -;       ;;; denom, -b, b**2 - 4*a*c
+        sqrt();         ;;; denom, -b, base
+        over(); over(); ;;; denom, -b, base, -b, base
+        +;              ;;; denom, -b, base, -b+base
+        rot() -;        ;;; denom, -b+base, -b-base
+        rot(); over();  ;;; -b-base, denom, -b+base, denom
+        /;              ;;; -b-base, denom, root1
+        rot() /;        ;;; root1; root2
+    enddefine;
+
+These examples show:
+    1.  writing such code requires thinking about programming
+        in a different way,
+    2.  you only need a handful of stack operators,
+    3.  pure stack operator code is not always appropriate!
+
+
+-- Positive Examples --------------------------------------------------
+
+Here are a few examples that illustrate pure stack operations more 
+positively. They are all quite simple and use the stack operators very 
+sparingly to create elegant solutions.
+
+The first example is strikingly elegant in its use of the stack.  Suppose
+you were asked to write a function to generate the first N fibonacci 
+numbers as a list.  These are the numbers in the series 
+    1, 1, 2, 3, 5, 8, 13, ...
+where each number is the sum of the previous two.)  Almost everyone writes
+code looking a bit like this - for simplicity of presentation, I'll assume 
+that N >= 2:
+
+    define fibs( n ); lvars n;
+        lvars a = 1, b = 1;
+        [%
+            a; b;
+            repeat n-2 times
+                lvars c = a + b;
+                b -> a;
+                c -> b;
+                c;
+            endrepeat
+        %]
+    enddefine;
+
+However, all these variables simply get in the way.  The pure stack based
+approach brushes them aside!
+
+    define fibs( n ); lvars n;
+        [% 1; 1; repeat n-2 times over() + over() endrepeat %]
+    enddefine;
+
+The second example uses "swap" to create an elegant solution.  Suppose you had
+a list of vectors, and you wanted the third element from all these vectors
+
+    e.g.    index( [{a b c} {d e f} {g h i}] ) =>
+            ** [c f i]
+
+One might be tempted to write a "for" loop -- but that's the brute force
+approach.  You might write
+
+    maplist( L, procedure( v ); lvars v; v(3) endprocedure )
+
+but that's a rather bulky expression.  What you could try is pure stack
+manipulation:
+
+    maplist( L, swap(% 3 %) <> apply )
+
+There are many examples of this kind, where the pure stack manipulation
+combines nicely with the use of functional programming.
+
+The third example also illustrates a similar use of "swap".  Our task is
+to "reverse" a list:
+
+    define reverse( L ); lvars L;
+        applist( [], L, swap <> conspair )
+    enddefine;
+
+-----------------------------------------------------------------------

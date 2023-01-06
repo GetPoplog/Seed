@@ -1,0 +1,27 @@
+HELP sysRESTACK                                     Steve Leach, Jan 2023
+
+    sysRESTACK( inputs : List<Word>, outputs: List<Word> )
+
+This code-planting procedure plants code that rearranges the top items 
+of the stack. The inputs is a list of words that may contain no duplicates 
+and the outputs list must consist only of words from the inputs list. 
+
+It is equivalent to popping all the inputs into temporary variables and 
+then pushing the output variables - but typically generates better code.
+For example:
+
+    sysRESTACK( [ x y ], [ y ] )
+
+will generate
+
+     SWAP    1 2
+     ERASE   undef
+
+rather than this less efficient code that will typically need an extra 
+temporary variable:
+
+     POP tmp_lvar_1
+     ERASE
+     PUSH tmp_lvar_1
+
+-----------------------------------------------------------------------
