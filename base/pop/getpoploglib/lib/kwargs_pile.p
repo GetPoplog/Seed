@@ -11,6 +11,8 @@ section $-kwargs =>
     kwargs_pile_erase
     kwargs_pile_length
     kwargs_pile_normalise
+    kwargs_pile_add
+    kwargs_pile_extend
     ;
 
 ;;; Hack for -uses-.
