@@ -10,6 +10,18 @@
 #   description: <overview of changes since last releaes:str, required>
 #   changes: <list of changes:list[str], optional>
 #   bugfixes: <list of bugfixes:list[str], optional>
+"0.3.2":
+  author: Will Price
+  author_email: will.price94@gmail.com
+  datetime: 2024-07-09T20:57:00Z
+  description: |
+    Test OBS build (no material changes)
+"0.3.1":
+  author: Will Price
+  author_email: will.price94@gmail.com
+  datetime: 2024-07-09T20:40:00Z
+  description: |
+    Update build script to disable SSL verification for cs.bham curl commands
 "0.3.0":
   author: Will Price
   author_email: will.price94@gmail.com
