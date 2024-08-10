@@ -1,6 +1,6 @@
 compile_mode :pop11 +strict;
 
-section;
+section $-dict => newdict_from_twinlists;
 
 uses dict
 
