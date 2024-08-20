@@ -8,7 +8,7 @@ if identprops("namedtuple_key") then
 endif;
 
 ;;;
-;;; Pop-11 really does not like the identifier dollar_{ so we need to force
+;;; Pop-11 really does not like the identifier dollar_( so we need to force
 ;;; the assignment with some low-level code.
 ;;;
 ident_declare( "'dollar_('", "syntax", 0 );
