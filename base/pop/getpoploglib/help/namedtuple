@@ -1,0 +1,102 @@
+HELP NAMEDTUPLE                                   Stephen Leach Sep 2021
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<         NAMEDTUPLE          >>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<                             >>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+--------------
+1  Recognisers
+--------------
+
+is_null_namedtuple(namedtuple) -> bool
+        Returns true if namedtuple is empty, false otherwise.
+
+
+isnamedtuple(item) -> bool
+        Returns true if item is a namedtuple, false otherwise.
+
+
+---------------
+2  Constructors
+---------------
+
+newnamedtuple_from_assoclist(assoc_list) -> namedtuple
+        This constructs a namedtuple from an assoc-list i.e. a list of key/values
+        which are themselves a list of length 2 (or more). e.g.
+
+                newnamedtuple_from_assoclist([[a 1] [b 2]])
+
+        will return a namedtuple that maps the word "a" to 1 and "b" to 2.
+
+
+newnamedtuple_from_twinlists(keys_list, values_list) -> namedtuple
+        This constructs a namedtuple from two lists, being a list of keys and
+        a parallel list of values. The lists are not required to be of equal
+        length, the first N items are taken when N is the lesser of the
+        two lengths. e.g.
+
+                newnamedtuple_from_twinlists([a b], [1 2])
+
+        will return a namedtuple that maps the word "a" to 1 and "b" to 2.
+
+
+------------
+3  Accessors
+------------
+
+namedtuple_destkeys( namedtuple ) -> ( key1, key2, ..., keyN, N )
+        This returns all the keys of a namedtuple on the stack and a count of
+        the keys. The keys will be sorted in lexicographical order.
+
+
+dist_destvalues( namedtuple ) -> ( value1, value2, ..., valueN, N )
+        This returns all the values of a namedtuple on the stack and a count of
+        the values returned. The values are returned in the same order as
+        the keys.
+
+
+namedtuple( key ) -> value
+value -> namedtuple(key)
+subscrnamedtuple(key, namedtuple) -> value
+value -> subscrnamedtuple(key, namedtuple)
+        This returns or updates the value associated with the key in the
+        namedtuple. subscrnamedtuple is the class_apply of the namedtuple_key.
+
+
+----------------
+4  Miscellaneous
+----------------
+
+appnamedtuple(namedtuple, procedure )
+        Applies the  procedure  p  to  each  entry  in  the  namedtuple.  The
+        procedure p is applied as:
+
+            p(key, value)
+
+        for each key/value association in namedtuple.
+
+
+namedtuple_key -> key
+        Constant holding key structure for namedtuple
+
+
+namedtuple_length(namedtuple) -> N
+        Returns the number N of key/values pairs in namedtuple.
+
+
+nullnamedtuple -> namedtuple
+        An instance of an empty namedtuple object
+
+
+partapply_namedtuple(procedure, namedtuple) -> closure
+        Returns a closure with named frozval-slots. See HELP *
+        PARTAPPLY_NAMEDTUPLE.
+
+partapply_override(closure, list|namedtuple) -> closure
+        Copies a closure and updates the frozvals from the list or namedtuple.
+        See HELP * PARTAPPLY_OVERRIDE.
+
+
+--- Copyright (c) GetPoplog Sep 2021 -------------------------------------------
