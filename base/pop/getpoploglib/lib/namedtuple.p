@@ -26,7 +26,7 @@ define constant procedure clear_half( prop );
 enddefine;
 
 ;;; This table is used to ensure keysets are not usually duplicated.
-constant procedure namedtuple_table =
+constant procedure intern_table =
     newanyproperty(
         [], 8, 1, 8,
         syshash, nonop =, "tmpval",
@@ -223,7 +223,7 @@ define constant procedure fast_make_namedtuple_internal( key_index_list, values_
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> key_index_list;
     check_duplicates( key_index_list );
-    lvars interned_sorted_keys_vector = {% applist( key_index_list, front ) %}.namedtuple_table;
+    lvars interned_sorted_keys_vector = {% applist( key_index_list, front ) %}.intern_table;
 
     lvars N = interned_sorted_keys_vector.datalength;
 
@@ -294,7 +294,7 @@ define compile_newnamedtuple_to( closing_keyword ) -> actual_closer;
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> keys;
     check_duplicates( keys );
-    lvars keyset = {% applist( keys, front ) %}.namedtuple_table;
+    lvars keyset = {% applist( keys, front ) %}.intern_table;
     if keyset.datalength == 0 and ( POP11_CONSTRUCTOR_CONSTS && pop_pop11_flags /== 0 ) then
         sysPUSHQ( nullnamedtuple )
     else
