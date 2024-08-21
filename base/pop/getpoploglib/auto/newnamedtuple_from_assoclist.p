@@ -6,8 +6,8 @@ uses namedtuple
 
 define global constant procedure newnamedtuple_from_assoclist( list );
     fast_make_namedtuple_from_unsorted(
-        (#| applist( list, head |#),
-        (#| applist( list, procedure( p ); lvars p; p.fast_back.head endprocedure |#)
+        (#| applist( list, hd ) |#),
+        (#| applist( list, procedure( p ); lvars p; p.fast_back.hd endprocedure ) |#)
     )
 enddefine;
 

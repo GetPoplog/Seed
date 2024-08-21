@@ -70,7 +70,7 @@ define lconstant find( w, keyset, t );
     lvars lo = 1;
     lvars hi = keyset.datalength;
     repeat
-        if lo < hi then
+       if lo < hi then
             lvars mid = ( lo fi_+ hi ) fi_>> 1;
             lvars midkey = subscrv( mid, keyset );
             lvars cmp = alphabefore( w, midkey );
@@ -127,13 +127,14 @@ define global constant procedure appnamedtuple( t, procedure p );
             )
         endfor;
     elseif t.isnamedtuple2 then
-        ;;; Will work for all smalll namedtuple record-types.
+        ;;; Will work for all small namedtuple record-types.
         lvars i, n = t.datalength;
-        lvars keyset = class_access( 1, t.datakey )( t );
+        lvars tk = t.datakey;
+        lvars keyset = class_access( 1, tk )( t );
         fast_for i from 1 to keyset.datalength do
             p(
                 fast_subscrv( i, keyset ),
-                fast_subscrv( i fi_+ 1, t )
+                fast_subscrv( i,  t )        ;;; ABSTRACTION BREAKER.
             )
         endfor
     else
@@ -143,7 +144,7 @@ enddefine;
 
 define global constant procedure is_null_namedtuple( t );
     ;;; Zero-length named tuples are rare, so no dedicated record-type.
-    t,isnamedtupleN and t.namedtupleN_values.datalength == 0
+    t.isnamedtupleN and t.namedtupleN_values.datalength == 0
 enddefine;
 
 define prnamedtuple( t );
@@ -165,6 +166,10 @@ define prnamedtuple( t );
     unless t.is_null_namedtuple do pr( ' ' ) endunless;
     pr( ')' );
 enddefine;
+
+prnamedtuple -> namedtuple2_key.class_print;
+prnamedtuple -> namedtupleN_key.class_print;
+
 
 
 define lconstant procedure check_duplicates( key_index_list );
@@ -195,14 +200,13 @@ enddefine;
 ;;;    ...
 ;;;    N. valueN
 ;;;
-define fast_make_namedtuple_from_interned(N);
+define constant procedure fast_make_namedtuple_from_interned(N);
     if N == 2 then
         consnamedtuple2()
     else
         consvector(N).consnamedtupleN
     endif
 enddefine;
-
 
 ;;;
 ;;; This is a helper function for building named tuples. It takes a list
@@ -211,9 +215,9 @@ enddefine;
 ;;; are usable after this function has run. This allows the values vector to
 ;;; be sorted and the list of pairs to be returned to the heap.
 ;;;
-;;; newnamedtuple_internal<T>: [ pair< word, int > ] * { T } -> namedtuple< T >
+;;; fast_make_namedtuple_internal<T>( [ pair< word, int > ], { T } ) -> namedtuple< T >
 ;;;
-define constant newnamedtuple_internal( key_index_list, values_vector );
+define constant procedure fast_make_namedtuple_internal( key_index_list, values_vector );
     nc_listsort(
         key_index_list,
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
@@ -243,6 +247,24 @@ define constant newnamedtuple_internal( key_index_list, values_vector );
     while key_index_list.ispair do
         ( key_index_list.sys_grbg_destpair -> key_index_list ).sys_grbg_destpair -> _ -> _;
     endwhile;
+enddefine;
+
+;;; Arguments
+;;;   1. A counted pile of key-words.
+;;;   2. A counted pile of values.
+define constant procedure fast_make_namedtuple_from_unsorted(N);
+    lvars values = consvector( N );
+    lvars M = ();
+    if M /== N do
+        mishap( 'Mismatched keys and values while constructing namedtuple', [^M ^N] )
+    endif;
+    lvars key_index_list = [];
+    lvars i;
+    fast_for i from M by -1 to 1 do
+        lvars p = conspair( /*key*/, i );
+        conspair( p, key_index_list ) -> key_index_list;
+    endfor;
+    fast_make_namedtuple_internal( key_index_list, values )
 enddefine;
 
 include '$usepop/pop/lib/include/pop11_flags.ph';
