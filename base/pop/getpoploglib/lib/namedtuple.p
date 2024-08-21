@@ -54,12 +54,26 @@ defclass namedtuple2 {
     namedtuple2_value2
 };
 
+defclass namedtuple3 {
+    namedtuple3_keyset,
+    namedtuple3_value1,
+    namedtuple3_value2,
+    namedtuple3_value3
+};
+
+constant namedtuple_record_keys = [ ^namedtuple2_key ^namedtuple3_key ];
+
+define isnamedtuple_recordclass( t );
+    lvars k;
+    ( t.isrecordclass ->> k ) and fast_lmember( k, namedtuple_record_keys ) and k
+enddefine;
 
 define global constant procedure namedtuple_length( t );
+    lvars rec_key;
     if t.isnamedtupleN then
         t.namedtupleN_values.datalength
-    elseif t.isnamedtuple2 then
-        2
+    elseif t.isnamedtuple_recordclass ->> rec_key then
+        class_datasize( rec_key )
     else
         mishap( t, 1, 'Named-tuple required' )
     endif
@@ -91,7 +105,7 @@ define lconstant find( w, keyset, t );
     endrepeat
 enddefine;
 
-define global constant procedure subscr_namedtupleN( w, t );
+define constant procedure subscr_namedtupleN( w, t );
     lvars N = find( w, t.namedtupleN_keyset, t );
     subscrv( N, t.namedtupleN_values )
 enddefine;
@@ -101,21 +115,38 @@ define updaterof subscr_namedtupleN( item, w, t );
     item -> subscrv( N, t.namedtupleN_values )
 enddefine;
 
+
+define constant procedure subscr_namedtuple2( w, t );
+    lvars N = find( w, t.namedtuple2_keyset, t );
+    class_access( N, namedtuple2_key )( t )
+enddefine;
+
 define updaterof subscr_namedtuple2( item, w, t );
     lvars N = find( w, t.namedtuple2_keyset, t );
     lvars procedure accessor = class_access( N, namedtuple2_key );
     item -> accessor( t )
 enddefine;
 
-define global constant procedure subscr_namedtuple2( w, t );
-    lvars N = find( w, t.namedtuple2_keyset, t );
-    class_access( N, namedtuple2_key )( t )
+define constant procedure subscr_namedtuple_recordclass( w, t );
+    lvars rec_key = t.datakey;
+    lvars keyset = class_access( 1, rec_key )( t );
+    lvars N = find( w, keyset, t );
+    class_access( N, rec_key )( t )
+enddefine;
+
+define updaterof subscr_namedtuple_recordclass( item, w, t );
+    lvars rec_key = t.datakey;
+    lvars keyset = class_access( 1, rec_key )( t );
+    lvars N = find( w, keyset, t );
+    item -> class_access( N, rec_key )( t )
 enddefine;
 
 subscr_namedtupleN -> class_apply( namedtupleN_key );
 subscr_namedtuple2 -> class_apply( namedtuple2_key );
+subscr_namedtuple_recordclass -> class_apply( namedtuple3_key );
 
 define global constant procedure appnamedtuple( t, procedure p );
+    lvars rec_key;
     if t.isnamedtupleN then
         lvars keyset = t.namedtupleN_keyset;
         lvars values = t.namedtupleN_values;
@@ -126,11 +157,10 @@ define global constant procedure appnamedtuple( t, procedure p );
                 fast_subscrv( i, values )
             )
         endfor;
-    elseif t.isnamedtuple2 then
+    elseif t.isnamedtuple_recordclass ->> rec_key then
         ;;; Will work for all small namedtuple record-types.
         lvars i, n = t.datalength;
-        lvars tk = t.datakey;
-        lvars keyset = class_access( 1, tk )( t );
+        lvars keyset = class_access( 1, rec_key )( t );
         fast_for i from 1 to keyset.datalength do
             p(
                 fast_subscrv( i, keyset ),
@@ -168,6 +198,7 @@ define prnamedtuple( t );
 enddefine;
 
 prnamedtuple -> namedtuple2_key.class_print;
+prnamedtuple -> namedtuple3_key.class_print;
 prnamedtuple -> namedtupleN_key.class_print;
 
 
@@ -201,11 +232,15 @@ enddefine;
 ;;;    N. valueN
 ;;;
 define constant procedure fast_make_namedtuple_from_interned(N);
-    if N == 2 then
-        consnamedtuple2()
-    else
-        consvector(N).consnamedtupleN
-    endif
+    go_on N to Case:
+        Case 2:
+            return( consnamedtuple2() )
+        Case 3:
+            return( consnamedtuple3() )
+        else
+            return( consvector(N).consnamedtupleN )
+        endif
+    endgo_on
 enddefine;
 
 ;;;
