@@ -115,18 +115,6 @@ define updaterof subscr_namedtupleN( item, w, t );
     item -> subscrv( N, t.namedtupleN_values )
 enddefine;
 
-
-define constant procedure subscr_namedtuple2( w, t );
-    lvars N = find( w, t.namedtuple2_keyset, t );
-    class_access( N, namedtuple2_key )( t )
-enddefine;
-
-define updaterof subscr_namedtuple2( item, w, t );
-    lvars N = find( w, t.namedtuple2_keyset, t );
-    lvars procedure accessor = class_access( N, namedtuple2_key );
-    item -> accessor( t )
-enddefine;
-
 define constant procedure subscr_namedtuple_recordclass( w, t );
     lvars rec_key = t.datakey;
     lvars keyset = class_access( 1, rec_key )( t );
@@ -141,9 +129,14 @@ define updaterof subscr_namedtuple_recordclass( item, w, t );
     item -> class_access( N, rec_key )( t )
 enddefine;
 
+lblock
+    lvars rec_key;
+    for rec_key in namedtuple_record_keys do
+        subscr_namedtuple_recordclass -> class_apply( rec_key );
+    endfor
+endlblock;
 subscr_namedtupleN -> class_apply( namedtupleN_key );
-subscr_namedtuple2 -> class_apply( namedtuple2_key );
-subscr_namedtuple_recordclass -> class_apply( namedtuple3_key );
+
 
 define global constant procedure appnamedtuple( t, procedure p );
     lvars rec_key;
@@ -197,10 +190,13 @@ define prnamedtuple( t );
     pr( ')' );
 enddefine;
 
-prnamedtuple -> namedtuple2_key.class_print;
-prnamedtuple -> namedtuple3_key.class_print;
+lblock
+    lvars rec_key;
+    for rec_key in namedtuple_record_keys do
+        prnamedtuple -> rec_key.class_print;
+    endfor
+endlblock;
 prnamedtuple -> namedtupleN_key.class_print;
-
 
 
 define lconstant procedure check_duplicates( key_index_list );
@@ -234,12 +230,11 @@ enddefine;
 define constant procedure fast_make_namedtuple_from_interned(N);
     go_on N to Case:
         Case 2:
-            return( consnamedtuple2() )
+            return( consnamedtuple2() );
         Case 3:
-            return( consnamedtuple3() )
-        else
-            return( consvector(N).consnamedtupleN )
-        endif
+            return( consnamedtuple3() );
+        Case default:
+            return( consvector(N).consnamedtupleN );
     endgo_on
 enddefine;
 
