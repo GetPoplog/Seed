@@ -1,10 +1,10 @@
 compile_mode :pop11 +strict;
 
 section $-namedtuple =>
-    isnamedtuple namedtuple_length
+    isnamedtuple namedtuple_length nullnamedtuple
     subscr_namedtuple appnamedtuple is_null_namedtuple;
 
-#_IF not( isdefined( "namedtuple_key" ) )
+#_IF not( isdefined( "namedtupleN_key" ) )
 
 vars ejection_threshold = 1024;
 
@@ -40,31 +40,39 @@ constant procedure namedtuple_table =
         endprocedure
     );
 
-global constant namedtuple_key = conskey( "namedtuple", [ full full ] );
-global constant procedure isnamedtuple = namedtuple_key.class_recognise;
 
-constant procedure destnamedtuple = namedtuple_key.class_dest;
-constant procedure consnamedtuple = namedtuple_key.class_cons;
+defclass namedtupleN {
+    namedtupleN_keyset,
+    namedtupleN_values
+};
 
-;;; Not exported but retained for autoloading.
-constant procedure namedtuple_keys = class_access( 1, namedtuple_key );
-"namedtuple_keys" -> namedtuple_keys.pdprops;
+global constant nullnamedtuple = consnamedtupleN( {}.dup );
 
-;;; Not exported but retained for autoloading.
-constant procedure namedtuple_values = class_access( 2, namedtuple_key );
-"namedtuple_values" -> namedtuple_values.pdprops;
+defclass namedtuple2 {
+    namedtuple2_keyset,
+    namedtuple2_value1,
+    namedtuple2_value2
+};
 
-define global constant procedure namedtuple_length( nmtuple );
-    nmtuple.namedtuple_values.datalength
+
+define global constant procedure namedtuple_length( t );
+    if t.isnamedtupleN then
+        t.namedtupleN_values.datalength
+    elseif t.isnamedtuple2 then
+        2
+    else
+        mishap( t, 1, 'Named-tuple required' )
+    endif
 enddefine;
 
-define lconstant find( w, nmtuple );
+
+define lconstant find( w, keyset, t );
     lvars lo = 1;
-    lvars hi = nmtuple.namedtuple_values.datalength;
+    lvars hi = keyset.datalength;
     repeat
         if lo < hi then
             lvars mid = ( lo fi_+ hi ) fi_>> 1;
-            lvars midkey = subscrv( mid, nmtuple.namedtuple_keys );
+            lvars midkey = subscrv( mid, keyset );
             lvars cmp = alphabefore( w, midkey );
             if cmp then
                 if cmp == 1 then
@@ -75,44 +83,75 @@ define lconstant find( w, nmtuple );
             else
                 mid fi_+ 1 -> lo;
             endif
-        elseif lo == hi and w == subscrv( lo, nmtuple.namedtuple_keys ) then
+        elseif lo == hi and w == subscrv( lo, keyset ) then
             return( hi )
         else
-            mishap( 'Trying to index nmtuple with invalid', [ ^w ] )
+            mishap( 'Trying to index named tuple with invalid index', [ ^t ^w ] )
         endif
     endrepeat
 enddefine;
 
-define global constant procedure subscr_namedtuple( w, nmtuple );
-    subscrv( find( w, nmtuple ), nmtuple.namedtuple_values )
+define global constant procedure subscr_namedtupleN( w, t );
+    lvars N = find( w, t.namedtupleN_keyset, t );
+    subscrv( N, t.namedtupleN_values )
 enddefine;
 
-define updaterof subscr_namedtuple( item, w, nmtuple );
-    item -> subscrv( find( w, nmtuple ), nmtuple.namedtuple_values )
+define updaterof subscr_namedtupleN( item, w, t );
+    lvars N = find( w, t.namedtupleN_keyset, t );
+    item -> subscrv( N, t.namedtupleN_values )
 enddefine;
 
-subscr_namedtuple -> class_apply( namedtuple_key );
-
-define global constant procedure appnamedtuple( nmtuple, procedure p );
-    lvars i, n = nmtuple.namedtuple_length;
-    for i from 1 to n do
-        p(
-            fast_subscrv( i, nmtuple.namedtuple_keys ),
-            fast_subscrv( i, nmtuple.namedtuple_values )
-        )
-    endfor;
+define updaterof subscr_namedtuple2( item, w, t );
+    lvars N = find( w, t.namedtuple2_keyset, t );
+    lvars procedure accessor = class_access( N, namedtuple2_key );
+    item -> accessor( t )
 enddefine;
 
-define global constant procedure is_null_namedtuple( nmtuple );
-    nmtuple.namedtuple_values.datalength == 0
+define global constant procedure subscr_namedtuple2( w, t );
+    lvars N = find( w, t.namedtuple2_keyset, t );
+    class_access( N, namedtuple2_key )( t )
 enddefine;
 
-define prnamedtuple( nmtuple );
+subscr_namedtupleN -> class_apply( namedtupleN_key );
+subscr_namedtuple2 -> class_apply( namedtuple2_key );
+
+define global constant procedure appnamedtuple( t, procedure p );
+    if t.isnamedtupleN then
+        lvars keyset = t.namedtupleN_keyset;
+        lvars values = t.namedtupleN_values;
+        lvars i, n = keyset.datalength;
+        for i from 1 to n do
+            p(
+                fast_subscrv( i, keyset ),
+                fast_subscrv( i, values )
+            )
+        endfor;
+    elseif t.isnamedtuple2 then
+        ;;; Will work for all smalll namedtuple record-types.
+        lvars i, n = t.datalength;
+        lvars keyset = class_access( 1, t.datakey )( t );
+        fast_for i from 1 to keyset.datalength do
+            p(
+                fast_subscrv( i, keyset ),
+                fast_subscrv( i fi_+ 1, t )
+            )
+        endfor
+    else
+        mishap( t, 1, 'Named-tuple required' )
+    endif
+enddefine;
+
+define global constant procedure is_null_namedtuple( t );
+    ;;; Zero-length named tuples are rare, so no dedicated record-type.
+    t,isnamedtupleN and t.namedtupleN_values.datalength == 0
+enddefine;
+
+define prnamedtuple( t );
     pr( '$(' );
-    unless nmtuple.is_null_namedtuple do pr( ' ' ) endunless;
+    unless t.is_null_namedtuple do pr( ' ' ) endunless;
     dlvars first = true;
     appnamedtuple(
-        nmtuple,
+        t,
         procedure( k, v );
             unless first then
                 pr( ', ' )
@@ -123,11 +162,9 @@ define prnamedtuple( nmtuple );
             false -> first;
         endprocedure
     );
-    unless nmtuple.is_null_namedtuple do pr( ' ' ) endunless;
+    unless t.is_null_namedtuple do pr( ' ' ) endunless;
     pr( ')' );
 enddefine;
-
-prnamedtuple -> class_print( namedtuple_key );
 
 
 define lconstant procedure check_duplicates( key_index_list );
@@ -140,6 +177,32 @@ define lconstant procedure check_duplicates( key_index_list );
         endif
     endfor;
 enddefine;
+
+define lconstant procedure check_dups( keyset );
+    lvars tail;
+    for tail on keyset do
+        if tail.ispair then
+            if fast_front( tail ) == fast_front( fast_back( tail ) ) then
+                mishap( 'Trying to construct named tuple with non-unique key', [% front(tail) %] )
+            endif
+        endif
+    endfor;
+enddefine;
+
+;;; Arguments
+;;;    0. interned keyset (sorted vector of unique words)
+;;;    1. value1
+;;;    ...
+;;;    N. valueN
+;;;
+define fast_make_namedtuple_from_interned(N);
+    if N == 2 then
+        consnamedtuple2()
+    else
+        consvector(N).consnamedtupleN
+    endif
+enddefine;
+
 
 ;;;
 ;;; This is a helper function for building named tuples. It takes a list
@@ -156,23 +219,33 @@ define constant newnamedtuple_internal( key_index_list, values_vector );
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> key_index_list;
     check_duplicates( key_index_list );
-    lvars sorted_keys_vector = {% applist( key_index_list, front ) %};
-    lvars sorted_values_vector = fill(
-        lblock
-            lvars p;
-            for p in key_index_list do
-                subscrv( p.back, values_vector )
-            endfor
-        endlblock,
-        values_vector      ;;; !! reusing this vector !!
-    );
+    lvars interned_sorted_keys_vector = {% applist( key_index_list, front ) %}.namedtuple_table;
+
+    lvars N = interned_sorted_keys_vector.datalength;
+
+    interned_sorted_keys_vector;
+    lblock
+        lvars p;
+        for p in key_index_list do
+            subscrv( p.back, values_vector )
+        endfor
+    endlblock;
+
+
+    if N == 2 then
+        consnamedtuple2()
+    else
+        fill( values_vector );  ;;; !! reusing this vector !!
+        consnamedtupleN()
+    endif;
+
     ;;; Now we can free up the working store.
     while key_index_list.ispair do
         ( key_index_list.sys_grbg_destpair -> key_index_list ).sys_grbg_destpair -> _ -> _;
     endwhile;
-    ;;; And deliver the result.
-    consnamedtuple( sorted_keys_vector.namedtuple_table, sorted_values_vector )
 enddefine;
+
+include '$usepop/pop/lib/include/pop11_flags.ph';
 
 ;;; This is a non-exported helper function for writing syntax words.
 define compile_newnamedtuple_to( closing_keyword ) -> actual_closer;
@@ -199,14 +272,18 @@ define compile_newnamedtuple_to( closing_keyword ) -> actual_closer;
         procedure( x, y ); alphabefore( x.front, y.front ) endprocedure
     ) -> keys;
     check_duplicates( keys );
-    sysPUSHQ( {% applist( keys, front ) %} );
-    lvars p;
-    for p in keys do
-        sysPUSH( subscrv( p.back, tmpvars ) )
-    endfor;
-    sysPUSHQ( tmpvars.datalength );
-    sysCALL( "consvector" );
-    sysCALLQ( consnamedtuple );
+    lvars keyset = {% applist( keys, front ) %}.namedtuple_table;
+    if keyset.datalength == 0 and ( POP11_CONSTRUCTOR_CONSTS && pop_pop11_flags /== 0 ) then
+        sysPUSHQ( nullnamedtuple )
+    else
+        sysPUSHQ( keyset );
+        lvars p;
+        for p in keys do
+            sysPUSH( subscrv( p.back, tmpvars ) )
+        endfor;
+        sysPUSHQ( n );
+        sysCALLQ( fast_make_namedtuple_from_interned );
+    endif
 enddefine;
 
 #_ENDIF

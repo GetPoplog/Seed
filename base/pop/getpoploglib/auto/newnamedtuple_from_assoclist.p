@@ -5,17 +5,10 @@ section $-namedtuple => newnamedtuple_from_assoclist;
 uses namedtuple
 
 define global constant procedure newnamedtuple_from_assoclist( list );
-    lvars keys = [];
-    lvars values = {%
-        lvars p, n = 0;
-        for p in list do
-            n fi_+ 1 -> n;
-            lvars ( k, v ) = p.dest.hd;
-            conspair( conspair( k, n ), keys ) -> keys;
-            v ;;; put values in historical order into a vector.
-        endfor
-    %};
-    newnamedtuple_internal( keys, values )
+    fast_make_namedtuple_from_unsorted(
+        (#| applist( list, head |#),
+        (#| applist( list, procedure( p ); lvars p; p.fast_back.head endprocedure |#)
+    )
 enddefine;
 
 endsection;
