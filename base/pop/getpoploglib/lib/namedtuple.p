@@ -48,28 +48,20 @@ defclass namedtupleN {
 
 global constant nullnamedtuple = consnamedtupleN( {}.dup );
 
-defclass namedtuple2 {
-    namedtuple2_keyset,
-    namedtuple2_value1,
-    namedtuple2_value2
-};
+constant
+    LOW_RECORD_SIZE = 2,
+    LOW_RECORD_SIZE_1 = LOW_RECORD_SIZE - 1,
+    HIGH_RECORD_SIZE = 5;
 
-defclass namedtuple3 {
-    namedtuple3_keyset,
-    namedtuple3_value1,
-    namedtuple3_value2,
-    namedtuple3_value3
-};
-
-defclass namedtuple4 {
-    namedtuple4_keyset,
-    namedtuple4_value1,
-    namedtuple4_value2,
-    namedtuple4_value3,
-    namedtuple4_value4
-};
-
-constant namedtuple_record_keys = [ ^namedtuple2_key ^namedtuple3_key ^namedtuple4_key ];
+constant namedtuple_record_keys = [% ;;; ^namedtuple2_key ^namedtuple3_key ^namedtuple4_key ];
+    lblock
+        lvars i;
+        for i from LOW_RECORD_SIZE to HIGH_RECORD_SIZE do
+            conskey( ( 'namedtuple' >< i ).consword, [% dupnum( "full", i+1) %] )
+        endfor
+    endlblock
+%];
+constant namedtuple_record_keys_vector = namedtuple_record_keys.destlist.consvector;
 
 define isnamedtuple_recordclass( t );
     lvars k;
@@ -236,14 +228,12 @@ enddefine;
 ;;;    N. valueN
 ;;;
 define constant procedure fast_make_namedtuple_from_interned(N);
-    go_on N to Case:
-        Case 2:
-            return( consnamedtuple2() );
-        Case 3:
-            return( consnamedtuple3() );
-        Case default:
-            return( consvector(N).consnamedtupleN );
-    endgo_on
+    if fi_check( N, LOW_RECORD_SIZE, HIGH_RECORD_SIZE) then
+        lvars k = fast_subscrv( N fi_- LOW_RECORD_SIZE_1, namedtuple_record_keys_vector );
+        class_cons(k)()
+    else
+        consvector(N).consnamedtupleN
+    endif
 enddefine;
 
 ;;;
@@ -274,8 +264,9 @@ define constant procedure fast_make_namedtuple_internal( key_index_list, values_
     endlblock;
 
 
-    if N == 2 then
-        consnamedtuple2()
+    if fi_check( N, LOW_RECORD_SIZE, HIGH_RECORD_SIZE ) then
+        lvars k = fast_subscrv( N fi_- LOW_RECORD_SIZE_1, namedtuple_record_keys_vector );
+        class_cons( k )()
     else
         fill( values_vector );  ;;; !! reusing this vector !!
         consnamedtupleN()
