@@ -61,7 +61,15 @@ defclass namedtuple3 {
     namedtuple3_value3
 };
 
-constant namedtuple_record_keys = [ ^namedtuple2_key ^namedtuple3_key ];
+defclass namedtuple4 {
+    namedtuple4_keyset,
+    namedtuple4_value1,
+    namedtuple4_value2,
+    namedtuple4_value3,
+    namedtuple4_value4
+};
+
+constant namedtuple_record_keys = [ ^namedtuple2_key ^namedtuple3_key ^namedtuple4_key ];
 
 define isnamedtuple_recordclass( t );
     lvars k;
