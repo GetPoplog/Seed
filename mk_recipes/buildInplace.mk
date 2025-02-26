@@ -84,7 +84,7 @@ POP_COMPILER_TOOLS:=$(POPC) $(POPLIBR) $(POPLINK)
 	export POP__as
 	cd $(popsrc)
 	rm -f ./{popc,poplibr,poplink}.psv*
-	$(MK_CROSS) -d -a=$(POP_ARCH) popc poplibr poplink
+	$(MK_CROSS) -a=$(POP_ARCH) popc poplibr poplink
 	touch "$@"
 
 $(POPLINK): .proxy-pop-compiler-tool-images $(COREPOP)
@@ -112,7 +112,7 @@ SRC_WLB:=$(popobjlib)/src.wlb
 .proxy-wlb-objects: $(SRC_WLB_SRC) $(SRC_WLB_HEADERS) $(POPC)
 	cd $(popsrc)
 	rm -f $@
-	$(RUN_POPC) -c -nosys $(POP_ARCH)/*.[ps] ./*.p
+	$(RUN_POPC) -quiet -c -nosys $(POP_ARCH)/*.[ps] ./*.p
 	touch "$@"
 
 $(SRC_WLB): .proxy-wlb-objects $(POPLIBR)
@@ -133,7 +133,7 @@ VED_WLB:=$(popobjlib)/vedsrc.wlb
 .proxy-ved-wlb-objects : $(VED_WLB_SRC) $(VED_WLB_HEADERS) $(POPC)
 	cd $(usepop)/pop/ved/src
 	rm -f $@
-	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+	$(RUN_POPC) -quiet -c -nosys -wlib \( ../../src/ \) ./*.p
 	touch "$@"
 
 $(VED_WLB): $(popobjlib)/src.wlb .proxy-ved-wlb-objects $(POPLIBR)
@@ -171,7 +171,7 @@ XSRC_WLB:=$(popobjlib)/xsrc.wlb
 .proxy-xsrc-wlb-objects: $(XSRC_WLB_SRC) $(XSRC_WLB_HEADERS) $(XPW_TARGET) $(POPC)
 	cd $(usepop)/pop/x/src
 	rm -f $@
-	$(RUN_POPC) -c -nosys -wlib \( ../../src/ \) ./*.p
+	$(RUN_POPC) -quiet -c -nosys -wlib \( ../../src/ \) ./*.p
 	touch "$@"
 
 $(XSRC_WLB): $(popobjlib)/src.wlb .proxy-xsrc-wlb-objects $(POPLIBR)
@@ -224,25 +224,25 @@ BASEPOPS:=$(addprefix $(popsys)/,pop11 basepop11 basepop11.stb basepop11.map)
 $(popsavelib)/startup.psv: .proxy-basepops
 	source $(popcom)/popinit.sh
 	cd $(popsys)
-	./basepop11 %nort %noinit ../lib/lib/mkimage.p -nodebug -nonwriteable -install $@ startup
+	./basepop11 %nort %noinit ../lib/lib/mkimage.p -quiet -nodebug -nonwriteable -install $@ startup
 
 $(popsavelib)/clisp.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 clisp
-	$(RUN_MKIMAGE) -install -subsystem lisp $@ ../lisp/src/clisp.p
+	$(RUN_MKIMAGE) -quiet -install -subsystem lisp $@ ../lisp/src/clisp.p
 
 $(popsavelib)/prolog.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 prolog
-	$(RUN_MKIMAGE) -nodebug -install -flags prolog \( \) $@ ../plog/src/prolog.p
+	$(RUN_MKIMAGE) -quiet -nodebug -install -flags prolog \( \) $@ ../plog/src/prolog.p
 
 $(popsavelib)/pml.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/popenv.sh
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 pml
-	$(RUN_MKIMAGE) -nodebug -install -flags ml \( \) $@ ../pml/src/ml.p
+	$(RUN_MKIMAGE) -quiet -nodebug -install -flags ml \( \) $@ ../pml/src/ml.p
 
 .PHONY: images
 images: $(addsuffix .psv,$(addprefix $(popsavelib)/,startup clisp prolog pml))
@@ -252,7 +252,7 @@ $(popsavelib)/xved.psv: .proxy-basepops $(popsavelib)/startup.psv $(popsys)/pope
 	@rm -f $@
 	cd $(popsys)
 	ln -f basepop11 xved
-	$(RUN_MKIMAGE) -nodebug -nonwriteable -install -entry xved_standalone_setup $@ mkxved
+	$(RUN_MKIMAGE) -quiet -nodebug -nonwriteable -install -entry xved_standalone_setup $@ mkxved
 images: $(popsavelib)/xved.psv
 endif
 

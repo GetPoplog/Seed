@@ -1522,6 +1522,7 @@ define $-Pop$-Main();
             asm_only    = false,
             comp_only   = false,
             l_flag      = false,
+            q_flag      = false,
             out_dir     = false,
             link_args   = [],
             wlib_create = false,
@@ -1540,7 +1541,7 @@ define $-Pop$-Main();
     dlocal  pop_arglist,
             pop_file_versions = use_file_versions(),
             cucharout = cucharerr,
-            % file_create_control(dlocal_context) %,
+            % file_create_control(dlocal_context) %
         ;
 
 #_IF pop_debugging
@@ -1669,8 +1670,10 @@ define $-Pop$-Main();
 
                 elseif c == "l" then
                     ;;; list names of files compiled (now done
-                    ;;; automatically for more than 1 file)
-                    true -> l_flag
+                    ;;; automatically for more than 1 file). Explicitly
+                    ;;; clears -q_flag- if previously set.
+                    true -> l_flag;
+                    false -> q_flag;
 
                 elseif c == "m" then
                     ;;; define macro(s)
@@ -1697,6 +1700,11 @@ define $-Pop$-Main();
                 elseif c == "nosys" then
                     ;;; no system libraries
                     false -> syslib
+
+                elseif c == "quiet" then
+                    ;;; Explicitly quiet, will take precedence over l_flag.
+                    true -> q_flag;
+                    false -> l_flag;
 
                 elseif c == "u" then
                     ;;; use things
@@ -1757,8 +1765,16 @@ define $-Pop$-Main();
         endif;
 
     %] -> inter_args;
-    if n_compile > 1 then true -> l_flag endif;
 
+    ;;; Reconsider the l_flag (list files) based on whether q_flag (quiet) was explicitly set.
+    if q_flag then
+        ;;; Explicit quiet takes precedence. 
+        false -> l_flag;
+        false -> popgctrace;
+    elseif n_compile > 1 then
+        ;;; If q_flag not set l_flag allowed to stand. And apply this default rule.
+        true -> l_flag;
+    endif;
 
     define lconstant compile_file(source);
         lvars   nam, a_name, o_name, w_name, source, asm_extn;

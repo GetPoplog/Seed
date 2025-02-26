@@ -202,7 +202,7 @@ define lconstant loadfile(file);
         prolog_no_clauses   = not(prolog_debugging),
         prolog_tags         = prolog_debugging,
         pop_debugging       = prolog_debugging,
-        popgctrace          = true,
+        popgctrace          = prolog_debugging and 1,
 
         ;;; Make backslash an alphabeticiser
         % item_chartype(`\\`) % = 12

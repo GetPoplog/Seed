@@ -14,6 +14,10 @@ sysflush(popdevout, true);
 sysgarbage();
 max(popmemused + 8e5, popmemlim) -> popmemlim;
 
+#_IF not(DEF lisp_debugging)
+vars lisp_debugging = false;
+#_ENDIF
+
 
 /********************** Initialise a few things *****************************/
 
@@ -41,9 +45,11 @@ define global lisp_src_compile(file);
     dlocal
         lisp_system_building    =   true,
         pop_debugging           =   false,
-        popgctrace              =   true,
+        popgctrace              =   lisp_debugging and true,
         popsyscall              =   1,
-        subsystem_compile_warn  =   sysloadwarning,
+        subsystem_compile_warn  =   lisp_debugging and sysloadwarning or erase,
+        loadwarning             =   lisp_debugging and sysloadwarning or erase,
+        libwarning              =   lisp_debugging and syslibwarning or erase,
         pop_buffer_charout      =   false,
         ;
     if islist(file) then
