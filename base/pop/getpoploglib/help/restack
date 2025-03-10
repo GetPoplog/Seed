@@ -1,0 +1,63 @@
+HELP RESTACK                                    Steve Knight, Jan 1991
+
+restack id ... -> id ... ;
+
+ -- General Description
+ -- Basic Examples
+ -- Motivation
+ -- See also
+
+-- General Description ------------------------------------------------
+
+The purpose of the "restack" construct is to rearrange the topmost items on
+the stack.  For example, you can reverse the top three items on the stack by
+writing
+
+    restack x y z -> z y x;
+
+The syntax of restack is
+
+    restack <input words> -> <output words>
+
+where <input/output words> stands for a sequence of words optionally separated
+by commas.  All the output-words must appear in the input-words and no
+input-word can occur twice.
+
+The effect of a restack is equivalent to writing
+
+    procedure( <input words> );
+        <output words>;
+    endprocedure();
+
+But using -restack- is much more efficient as it plants in-line code. 
+
+
+-- Basic Examples -----------------------------------------------------
+
+    1, 2, 3; restack a b c -> c a b =>
+    ** 3 1 2
+
+    ;;; You can use restack to check the number of items on the stack!
+    restack x -> x;  ;;; with nothing on the stack!
+    ;;; MISHAP - STE: STACK EMPTY (missing argument? missing result?)
+    
+
+-- Motivation ---------------------------------------------------------
+
+In other stack-oriented programming languages, such as FORTH, there are a
+variety of operators for manipulating the stack without using local variables.
+And occasionally this is quite elegant to read and it is certainly quite
+efficient. 
+
+So rather than provide a collection of operators, restack is a 
+single syntax word that allows you to write any pure stack operation in a 
+convenient and efficient fashion.
+
+Although restack is not a feature that's likely to find everyday use, it
+is an easy to use, flexible and efficient feature.
+
+-- See Also -----------------------------------------------------------
+
+HELP * sysRESTACK a version of restack for code-planting
+
+-----------------------------------------------------------------------
